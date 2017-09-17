@@ -25,6 +25,7 @@
 
 # See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
 
+# V 1.0 release über Github
 package main;
 
 use DateTime;
@@ -434,7 +435,6 @@ END_MESSAGE
         chart.draw(data, options);}
     </script>
 END_MESSAGE
-
     return $retval;
 }
 
