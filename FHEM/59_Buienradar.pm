@@ -487,11 +487,11 @@ END_MESSAGE
 
     <p>Zur Visualisierung gibt es drei Funktionen:</p> 
     <ul>
-        <li><code>{Buienradar_HTML(<DEVICE>,<Pixel>)}</code> also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zur&uuml;ck, der l&auml;ngste Balken hat dann 500 Pixel
+        <li><code>{Buienradar_HTML( &lt;DEVICE&gt;, &lt;Pixel&gt;)}</code> also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zur&uuml;ck, der l&auml;ngste Balken hat dann 500 Pixel
             (nicht so schön ;-)) </li>
-        <li><code>{Buienradar_SVG(<DEVICE>)}</code>also z.B. {Buienradar_SVG("BR")} gibt eine mit der google Charts API generierte Grafik zur&uuml;ck</li>
+        <li><code>{Buienradar_SVG( &lt;DEVICE&gt;)}</code>also z.B. {Buienradar_SVG("BR")} gibt eine mit der google Charts API generierte Grafik zur&uuml;ck</li>
 <li><code> {Buienradar_logProxy(
-        <DEVICE>)}</code>also z.B. {Buienradar_logProxy("BR")} kann in Verbindung mit einem Logproxy Device die typischen FHEM
+         &lt;DEVICE&gt;)}</code>also z.B. {Buienradar_logProxy("BR")} kann in Verbindung mit einem Logproxy Device die typischen FHEM
             und FTUI Charts erstellen.</li>        
         </ul> 
 </ul>
