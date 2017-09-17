@@ -26,6 +26,7 @@
 # See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
 
 # V 1.0 release über Github
+
 package main;
 
 use DateTime;
@@ -479,21 +480,21 @@ END_MESSAGE
     </li>
     <li><code>rainAmount</code> Die Regenmenge die im kommenden Regenschauer herunterkommen soll</li>
 <li><code>rainBegin</code>Die Uhrzeit des kommenden
-    Regenbegins oder "unknown"</li>    
+    Regenbegins oder "unknown"</li>
     <li><code>rainEnd</code>Die Uhrzeit des kommenden Regenendes oder "unknown"</li>
 </ul>
 <a name="Buienradarfunctions"></a>
 <p><b>Funktionen</b></p>
 
-    <p>Zur Visualisierung gibt es drei Funktionen:</p> 
+    <p>Zur Visualisierung gibt es drei Funktionen:</p>
     <ul>
         <li><code>{Buienradar_HTML( &lt;DEVICE&gt;, &lt;Pixel&gt;)}</code> also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zur&uuml;ck, der l&auml;ngste Balken hat dann 500 Pixel
             (nicht so schön ;-)) </li>
         <li><code>{Buienradar_SVG( &lt;DEVICE&gt;)}</code>also z.B. {Buienradar_SVG("BR")} gibt eine mit der google Charts API generierte Grafik zur&uuml;ck</li>
 <li><code> {Buienradar_logProxy(
          &lt;DEVICE&gt;)}</code>also z.B. {Buienradar_logProxy("BR")} kann in Verbindung mit einem Logproxy Device die typischen FHEM
-            und FTUI Charts erstellen.</li>        
-        </ul> 
+            und FTUI Charts erstellen.</li>
+        </ul>
 </ul>
 
 =end html_DE
