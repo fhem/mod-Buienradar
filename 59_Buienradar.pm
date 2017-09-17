@@ -446,6 +446,25 @@ END_MESSAGE
 <a name="Buienradar"></a>
 <h3>Buienradar</h3>
 <ul>
+<p>Niederschlagsvorhersage auf Basis von freien Wetterdaten <a href="">https://www.buienradar.nl/overbuienradar/gratis-weerdata</a></p>
+<a name="Buienradardefine"></a>
+  <p><b>Define</b></p>
+  <ul> 
+  <p><code>define &lt;name&gt; Buienradar &lt;Logitudename&gt; &lt;Latitude&gt;</p>
+  </ul>
+   <a name="Bueinradarget"></a>
+  <p><b>Get</b></p>
+  <ul>
+    <li>
+    Folgende Werte kann man mit get abfragen:
+
+rainDuration: Die voraussichtliche Dauer des nächsten Schauers in Minuten
+startsIn: der Regen beginnt in x Minuten
+refresh: Neue Daten werde nonblocking abgefragt
+testVal: rechnet einen Buienradar Wert in mm/m² um ( zu Testzwecken)
+
+   </li>
+  </ul>
   <br>
 Folgende Readings bietet das Modul:
 rainNow: Die vorhergesagte Regenmenge für das aktuelle 5 Min. Intervall in mm/m² pro Stunden
@@ -453,21 +472,12 @@ rainAmount: Die Regenmenge die im kommenden Regenschauer herunterkommen soll
 rainBegin: Die Uhrzeit des kommenden Regenbegins oder "unknown"
 rainEnd: Die Uhrzeit des kommenden Regenendes oder "unknown"
 
-Folgende Werte kann man mit get abfragen:
-
-rainDuration: Die voraussichtliche Dauer des nächsten Schauers in Minuten
-startsIn: der Regen beginnt in x Minuten
-refresh: Neue Daten werde nonblocking abgefragt
-testVal: rechnet einen Buienradar Wert in mm/m² um ( zu Testzwecken)
-
-Zur Visualisierung gibt es drei Funktionen:
+<b>Zur Visualisierung gibt es drei Funktionen:</b>
 
 {Buienradar_HTML(<DEVICE>,<Pixel>)} also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zurück, der längste Balken hat dann 500 Pixel (nicht so schön ;-))
 {Buienradar_SVG(<DEVICE>)} also z.B. {Buienradar_SVG("BR")} gibt eine mit der google Charts API generierte Grafik zurück (siehe Anhang)
 {Buienradar_logProxy(<DEVICE>)} also z.B. {Buienradar_logProxy("BR")} kann in Verbindung mit einem Logproxy Device die typischen FHEM und FTUI Charts erstellen.
-  <a name="Buienradardefine"></a>
-  <b>Define</b>
-
+  
 </ul>
 
 =end html
