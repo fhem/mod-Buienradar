@@ -441,7 +441,7 @@ END_MESSAGE
 1;
 
 =pod
-=begin html
+=begin html_DE
 
 <a name="Buienradar"></a>
 <h3>Buienradar</h3>
@@ -496,5 +496,5 @@ END_MESSAGE
         </ul> 
 </ul>
 
-=end html
+=end html_DE
 =cut
