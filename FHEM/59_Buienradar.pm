@@ -445,56 +445,34 @@ END_MESSAGE
 =begin html_DE
 
 <a name="Buienradar"></a>
-<h3>Buienradar</h3>
+<h1>59_Buienradar</h1>
+<p>Niederschlagsvorhersage auf Basis von freien Wetterdaten der niederländischen Seite <a href="https://www.buienradar.nl/overbuienradar/gratis-weerdata">Buienradar</a></p>
+<h2>Define</h2>
+<p><code>define &lt;name&gt; Buienradar &lt;Logitude&gt; &lt;Latitude&gt;</code></p>
+<p>Die Geokoordinaten können weg gelassen werden falls es eine entsprechende Definition im <code>global</code> Device gibt.
+Das Modul benötigt die Perl Bibliothek <strong>DateTime</strong>, diese kann mit dem Befehl <code>cpan install DateTime</code> installiert werden.</p>
+<h2><a href="#get" aria-hidden="true" class="anchor" id="user-content-get"><svg aria-hidden="true" class="octicon octicon-link" height="16" version="1.1" viewBox="0 0 16 16" width="16"><path fill-rule="evenodd" d="M4 9h1v1H4c-1.5 0-3-1.69-3-3.5S2.55 3 4 3h4c1.45 0 3 1.69 3 3.5 0 1.41-.91 2.72-2 3.25V8.59c.58-.45 1-1.27 1-2.09C10 5.22 8.98 4 8 4H4c-.98 0-2 1.22-2 2.5S3 9 4 9zm9-3h-1v1h1c1 0 2 1.22 2 2.5S13.98 12 13 12H9c-.98 0-2-1.22-2-2.5 0-.83.42-1.64 1-2.09V6.25c-1.09.53-2 1.84-2 3.25C6 11.31 7.55 13 9 13h4c1.45 0 3-1.69 3-3.5S14.5 6 13 6z"></path></svg></a>Get</h2>
 <ul>
-    <p>Niederschlagsvorhersage auf Basis von freien Wetterdaten <a href="">https://www.buienradar.nl/overbuienradar/gratis-weerdata</a></p>
-    <BR>
-    <a name="Buienradardefine"></a>
-    <p><b>Define</b></p>
-    <ul>
-        <p><code>define &lt;name&gt; Buienradar &lt;Logitudename&gt; &lt;Latitude&gt;</code></p>
-    </ul>
-    <a name="Buienradarget"></a>
-    <p><b>Get</b></p>
-    <ul>
-        <p>Folgende Werte kann man mit get abfragen:</p>
-        <li>
-
-            <p><code>rainDuration</code> Die voraussichtliche Dauer des n&auml;chsten Schauers in Minuten</p>
-        </li>
-        <li>
-            <p><code>startsIn</code> Der Regen beginnt in x Minuten</p>
-        </li>
-        <li>
-            <p><code>refresh</code> Neue Daten werde nonblocking abgefragt/</p>
-        </li>
-        <li>
-            <p><code>testVal</code> Rechnet einen Buienradar Wert in mm/m² um ( zu Testzwecken)</p>
-        </li>
-    </ul>
-    <a name="Buienradarreadings"></a>
-    <p><b>Readings</b></p>
-    <p>Folgende Readings bietet das Modul:</p><br>
-    <ul><li>
-            <code>rainNow</code> Die vorhergesagte Regenmenge f&uuml;r das aktuelle 5 Min. Intervall in mm/m² pro Stunden
-    </li>
-    <li><code>rainAmount</code> Die Regenmenge die im kommenden Regenschauer herunterkommen soll</li>
-<li><code>rainBegin</code>Die Uhrzeit des kommenden
-    Regenbegins oder "unknown"</li>
-    <li><code>rainEnd</code>Die Uhrzeit des kommenden Regenendes oder "unknown"</li>
+<li><code>rainDuration</code> Die voraussichtliche Dauer des nächsten Schauers in Minuten</li>
+<li><code>startsIn</code> Der Regen beginnt in x Minuten</li>
+<li><code>refresh</code> Neue Daten werde nonblocking abgefragt/</li>
+<li><code>testVal</code> Rechnet einen Buienradar Wert in mm/m² um ( zu Testzwecken)</li>
 </ul>
-<a name="Buienradarfunctions"></a>
-<p><b>Funktionen</b></p>
-
-    <p>Zur Visualisierung gibt es drei Funktionen:</p>
-    <ul>
-        <li><code>{Buienradar_HTML( &lt;DEVICE&gt;, &lt;Pixel&gt;)}</code> also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zur&uuml;ck, der l&auml;ngste Balken hat dann 500 Pixel
-            (nicht so schön ;-)) </li>
-        <li><code>{Buienradar_SVG( &lt;DEVICE&gt;)}</code>also z.B. {Buienradar_SVG("BR")} gibt eine mit der google Charts API generierte Grafik zur&uuml;ck</li>
-<li><code> {Buienradar_logProxy(
-         &lt;DEVICE&gt;)}</code>also z.B. {Buienradar_logProxy("BR")} kann in Verbindung mit einem Logproxy Device die typischen FHEM
-            und FTUI Charts erstellen.</li>
-        </ul>
+<h2>Readings</h2>
+<ul>
+<li><code>rainMax</code> Die maximale Regenmenge für ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
+<li><code>rainDataStart</code> Begin der aktuellen Regenvorhersage. Triggert das Update der Graphen</li>
+<li><code>rainNow</code> Die vorhergesagte Regenmenge für das aktuelle 5 Min. Intervall in mm/m² pro Stunden</li>
+<li><code>rainAmount</code> Die Regenmenge die im kommenden Regenschauer herunterkommen soll</li>
+<li><code>rainBegin</code> Die Uhrzeit des kommenden Regenbegins oder "unknown"</li>
+<li><code>rainEnd</code> Die Uhrzeit des kommenden Regenendes oder "unknown"</li>
+</ul>
+<h2>Visualisierung</h2>
+<p>Zur Visualisierung gibt es drei Funktionen:</p>
+<ul>
+<li><code>{Buienradar_HTML(&lt;DEVICE&gt;,&lt;Width&gt;)}</code> also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zurück, der längste Balken hat dann 500 Pixel (nicht so schön ;-))</li>
+<li><code>{Buienradar_PNG(&lt;DEVICE&gt;)}</code> also z.B. {Buienradar_PNG("BR")} gibt eine mit der google Charts API generierte Grafik zurück</li>
+<li><code>{Buienradar_logProxy(&lt;DEVICE&gt;)}</code> also z.B. {Buienradar_logProxy("BR")} kann in Verbindung mit einem Logproxy Device die typischen FHEM und FTUI Charts erstellen.</li>
 </ul>
 
 =end html_DE
