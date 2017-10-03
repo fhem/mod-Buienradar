@@ -31,7 +31,6 @@
 package main;
 
 use DateTime;
-#use DateTime::Duration;
 
 use strict;
 use warnings;
@@ -331,12 +330,15 @@ sub Buienradar_ParseHttpResponse($) {
         my $rainbegin     = "unknown";
         my $rainend       = "unknown";
         my $rainDataStart = "unknown";
+        my $rainDataEnd = "unknown";
         my $rainData      = "";
         my $rainDataRaw   = "";
         my $rainMax       = 0;
+        my $rainLaMetric  = "";
         my $as_png        = "";
         my $rain          = 0;
         my $rainNow       = 0;
+        my $rainTotal     = 0;
         my $line          = 0;
         my $beginchanged  = 0;
         my $endchanged    = 0;
@@ -349,7 +351,7 @@ sub Buienradar_ParseHttpResponse($) {
 
             if ( $amount > 0 ) {
                 $rain = 10**( ( $amount - 109 ) / 32 );
-                $rainamount += $rain / 12;
+                $rainTotal += $rain / 12;
             }
             else {
                 $rain = 0;
@@ -363,8 +365,12 @@ sub Buienradar_ParseHttpResponse($) {
                 $rainData = sprintf( "%.3f", $rainamount );
                 $rainDataRaw = $rainamount;
             }
-
+             if ($line < 13)
+            {
+                $rainLaMetric .= int ($rainamount * 1000) . "," ;
+            }
             if ($parse) {
+                $rainamount += $rain / 12;
                 if ($beginchanged) {
                     if ( $amount > 0 ) {
                         $rainend = $rtime;
@@ -385,7 +391,7 @@ sub Buienradar_ParseHttpResponse($) {
             }
             
             $rainData .= ":" . sprintf( "%.3f", $rain );
-            
+            $rainDataEnd = $rtime;
             $rainDataRaw .= ":" . $amount;
             
             $rainMax = ( $rain > $rainMax ) ? $rain : $rainMax;
@@ -395,14 +401,17 @@ sub Buienradar_ParseHttpResponse($) {
               . sprintf( "%.3f", $rain ) ."],";
         }
         $as_png = substr( $as_png, 0, -1 );
-
+        $rainLaMetric = substr( $rainLaMetric, 0, -1 );
         $hash->{".SVG"} = $as_png;
         $hash->{STATE} = sprintf( "%.3f mm/h", $rainNow );
 
         readingsBeginUpdate($hash);
+        readingsBulkUpdateIfChanged( $hash, "rainTotal",sprintf( "%.3f", $rainTotal * 12 ) );
         readingsBulkUpdateIfChanged( $hash, "rainAmount",sprintf( "%.3f", $rainamount * 12 ) );
         readingsBulkUpdateIfChanged( $hash, "rainNow", $rainNow );
+        readingsBulkUpdateIfChanged( $hash, "rainLaMetric", $rainLaMetric );
         readingsBulkUpdateIfChanged( $hash, "rainDataStart", $rainDataStart );
+        readingsBulkUpdateIfChanged( $hash, "rainDataEnd", $rainDataEnd );
         $hash->{".rainData"} = $rainData ;
         $hash->{".rainDataRaw"} = $rainDataRaw ;
         readingsBulkUpdateIfChanged( $hash, "rainMax", sprintf( "%.3f", $rainMax ) );
@@ -531,30 +540,34 @@ See german documentation
 =begin html_DE
 
 <a name="Buienradar"></a>
-<h1>59_Buienradar</h1>
+<h2>59_Buienradar</h2>
 <p>Niederschlagsvorhersage auf Basis von freien Wetterdaten der niederländischen Seite <a href="https://www.buienradar.nl/overbuienradar/gratis-weerdata">Buienradar</a></p>
-<h2>Define</h2>
+<h3>Define</h3>
 <p><code>define &lt;name&gt; Buienradar &lt;Logitude&gt; &lt;Latitude&gt;</code></p>
-<p>Die Geokoordinaten können weg gelassen werden falls es eine entsprechende Definition im <code>global</code> Device gibt.
-Das Modul benötigt die Perl Bibliothek <strong>DateTime</strong>, diese kann mit dem Befehl <code>cpan install DateTime</code> installiert werden.</p>
-<h2>Get</h2>
+<p>Die Geokoordinaten k&ouml;önnen weg gelassen werden falls es eine entsprechende Definition im <code>global</code> Device gibt.
+Das Modul ben&ouml;tigt die Perl Bibliothek <strong>DateTime</strong>, diese kann mit dem Befehl <code>cpan install DateTime</code> installiert werden.</p>
+<h3>Get</h3>
 <ul>
-<li><code>rainDuration</code> Die voraussichtliche Dauer des nächsten Schauers in Minuten</li>
+<li><code>rainDuration</code> Die voraussichtliche Dauer des n&auml;chsten Schauers in Minuten</li>
 <li><code>startsIn</code> Der Regen beginnt in x Minuten</li>
 <li><code>refresh</code> Neue Daten werde nonblocking abgefragt/</li>
 <li><code>testVal</code> Rechnet einen Buienradar Wert in mm/m² um ( zu Testzwecken)</li>
 </ul>
-<h2>Readings</h2>
+<h3>Readings</h3>
 <ul>
-<li><code>rainMax</code> Die maximale Regenmenge für ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
+<li><code>rainMax</code> Die maximale Regenmenge f&uuml;r ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
 <li><code>rainDataStart</code> Begin der aktuellen Regenvorhersage. Triggert das Update der Graphen</li>
-<li><code>rainNow</code> Die vorhergesagte Regenmenge für das aktuelle 5 Min. Intervall in mm/m² pro Stunden</li>
+<li><code>rainNow</code> Die vorhergesagte Regenmenge f&uuml;r das aktuelle 5 Min. Intervall in mm/m² pro Stunden</li>
 <li><code>rainAmount</code> Die Regenmenge die im kommenden Regenschauer herunterkommen soll</li>
+<li><code>rainDataEnd</code> Ende der Regenvorhersage</li>
+<li><code>rainTotal</code> Die Regenmenge die in dem Vorhersage enthalten ist</li>
+<li><code>rainLametric</code> Die n&auml;chsten 12 Regenmengen aufbereitet für ein LaMetric Display</li>
 <li><code>rainBegin</code> Die Uhrzeit des kommenden Regenbegins oder "unknown"</li>
 <li><code>rainEnd</code> Die Uhrzeit des kommenden Regenendes oder "unknown"</li>
 </ul>
-<h2>Visualisierung</h2>
+<h3>Visualisierung</h3>
 <p>Zur Visualisierung gibt es drei Funktionen:</p>
+<p>Die Funktionen <code>Buienradar_HTML</code> und <code>Buienradar_PNG</code> k&ouml;nnen im  FHEMWEB verwendet werden. Die Funktion <code>Buienradar_logProxy</code> kann in Verbindung mit SVG oder im FTUI vorzugsweise mit dem Highchart Widget eingesetzt werden.</P>
 <ul>
 <li><code>{Buienradar_HTML(&lt;DEVICE&gt;,&lt;Width&gt;)}</code> also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zurück, der längste Balken hat dann 500 Pixel (nicht so schön ;-))</li>
 <li><code>{Buienradar_PNG(&lt;DEVICE&gt;)}</code> also z.B. {Buienradar_PNG("BR")} gibt eine mit der google Charts API generierte Grafik zurück</li>
