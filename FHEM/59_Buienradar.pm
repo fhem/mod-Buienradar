@@ -27,7 +27,6 @@
 
 # V 1.0 release über Github
 
-
 package main;
 
 use DateTime;
@@ -137,7 +136,8 @@ sub Buienradar_Get($$@) {
         return "no rain";
     }
     else {
-        return "Unknown argument $opt, choose one of testVal refresh:noArg startsIn:noArg rainDuration:noArg";
+        return
+"Unknown argument $opt, choose one of testVal refresh:noArg startsIn:noArg rainDuration:noArg";
     }
 }
 
@@ -195,7 +195,8 @@ sub Buienradar_Define($$) {
 
     Buienradar_RequestUpdate($hash);
     Buienradar_ScheduleUpdate($hash);
-    # InternalTimer( gettimeofday() + $hash->{INTERVAL},  "Buienradar_ScheduleUpdate", $hash, 0 );
+
+# InternalTimer( gettimeofday() + $hash->{INTERVAL},  "Buienradar_ScheduleUpdate", $hash, 0 );
 
     return undef;
 }
@@ -206,10 +207,12 @@ sub Buienradar_ScheduleUpdate($) {
     RemoveInternalTimer( $hash, "Buienradar_ScheduleUpdate" );
 
     if ( !$hash->{SHORTRELOAD} ) {
-        $nextupdate = gettimeofday() + $hash->{INTERVAL};
+       # $nextupdate = gettimeofday() + $hash->{INTERVAL};
+        $nextupdate = time() + $hash->{INTERVAL};
     }
     else {
-        $nextupdate = gettimeofday() + 90;
+        # $nextupdate = gettimeofday() + 90;
+        $nextupdate = time() + 90;
         delete $hash->{SHORTRELOAD};
     }
     InternalTimer( $nextupdate, "Buienradar_ScheduleUpdate", $hash );
@@ -238,7 +241,7 @@ sub Buienradar_HTML($;$) {
     my ( $name, $width ) = @_;
     my $hash = $defs{$name};
     my @values = split /:/, $hash->{".rainData"};
-    
+
     my $as_html = <<'END_MESSAGE';
 <style>
 
@@ -276,7 +279,6 @@ sub Buienradar_HTMLRaw($;$) {
     my ( $name, $width ) = @_;
     my $hash = $defs{$name};
     my @values = split /:/, $hash->{".rainDataRaw"};
-    
 
     my $as_html = <<'END_MESSAGE';
 <style>
@@ -320,8 +322,6 @@ sub Buienradar_ParseHttpResponse($) {
         Log3( $name, 3,
             "$name: error while requesting " . $param->{url} . " - $err" );
         $hash->{STATE}       = "Error: " . $err . " => " . $data;
-        $hash->{SHORTRELOAD} = 1;
-        Buienradar_ScheduleUpdate($hash);
     }
     elsif ( $data ne "" ) {
         Log3( $name, 5, "$name: returned: $data" );
@@ -330,7 +330,7 @@ sub Buienradar_ParseHttpResponse($) {
         my $rainbegin     = "unknown";
         my $rainend       = "unknown";
         my $rainDataStart = "unknown";
-        my $rainDataEnd = "unknown";
+        my $rainDataEnd   = "unknown";
         my $rainData      = "";
         my $rainDataRaw   = "";
         my $rainMax       = 0;
@@ -342,13 +342,13 @@ sub Buienradar_ParseHttpResponse($) {
         my $line          = 0;
         my $beginchanged  = 0;
         my $endchanged    = 0;
-        my $line          = 0;
         my $endline       = 0;
         my $parse         = 1;
 
         foreach ( split( /\n/, $data ) ) {
             my ( $amount, $rtime ) = ( split( /\|/, $_ ) )[ 0, 1 ];
-
+            $rtime = substr($rtime,0,-1);
+            
             if ( $amount > 0 ) {
                 $rain = 10**( ( $amount - 109 ) / 32 );
                 $rainTotal += $rain / 12;
@@ -361,13 +361,12 @@ sub Buienradar_ParseHttpResponse($) {
 
             if ( $line == 1 ) {
                 $rainNow = sprintf( "%.3f", $rainamount ) * 12;
-                $rainDataStart = substr( $rtime, 0, -1 );
+                $rainDataStart = $rtime;
                 $rainData = sprintf( "%.3f", $rainamount );
                 $rainDataRaw = $rainamount;
             }
-             if ($line < 13)
-            {
-                $rainLaMetric .= int ($rainamount * 1000) . "," ;
+            if ( $line < 13 ) {
+                $rainLaMetric .= int( $rainamount * 1000 ) . ",";
             }
             if ($parse) {
                 $rainamount += $rain / 12;
@@ -389,33 +388,37 @@ sub Buienradar_ParseHttpResponse($) {
                     }
                 }
             }
-            
+
             $rainData .= ":" . sprintf( "%.3f", $rain );
             $rainDataEnd = $rtime;
             $rainDataRaw .= ":" . $amount;
-            
+
             $rainMax = ( $rain > $rainMax ) ? $rain : $rainMax;
-            
+
             $as_png .= "['"
-              . ( ( $line % 2 ) ? substr( $rtime, 0, -1 ) : "" ) . "',"
-              . sprintf( "%.3f", $rain ) ."],";
+              . ( ( $line % 2 ) ?  $rtime : "" ) . "',"
+              . sprintf( "%.3f", $rain ) . "],";
         }
-        $as_png = substr( $as_png, 0, -1 );
+        $as_png       = substr( $as_png,       0, -1 );
         $rainLaMetric = substr( $rainLaMetric, 0, -1 );
-        $hash->{".SVG"} = $as_png;
+        $hash->{".PNG"} = $as_png;
         $hash->{STATE} = sprintf( "%.3f mm/h", $rainNow );
 
         readingsBeginUpdate($hash);
-        readingsBulkUpdateIfChanged( $hash, "rainTotal",sprintf( "%.3f", $rainTotal * 12 ) );
-        readingsBulkUpdateIfChanged( $hash, "rainAmount",sprintf( "%.3f", $rainamount * 12 ) );
-        readingsBulkUpdateIfChanged( $hash, "rainNow", $rainNow );
-        readingsBulkUpdateIfChanged( $hash, "rainLaMetric", $rainLaMetric );
+        readingsBulkUpdateIfChanged( $hash, "rainTotal",
+            sprintf( "%.3f", $rainTotal * 12 ) );
+        readingsBulkUpdateIfChanged( $hash, "rainAmount",
+            sprintf( "%.3f", $rainamount * 12 ) );
+        readingsBulkUpdateIfChanged( $hash, "rainNow",       $rainNow );
+        readingsBulkUpdateIfChanged( $hash, "rainLaMetric",  $rainLaMetric );
         readingsBulkUpdateIfChanged( $hash, "rainDataStart", $rainDataStart );
-        readingsBulkUpdateIfChanged( $hash, "rainDataEnd", $rainDataEnd );
-        $hash->{".rainData"} = $rainData ;
-        $hash->{".rainDataRaw"} = $rainDataRaw ;
-        readingsBulkUpdateIfChanged( $hash, "rainMax", sprintf( "%.3f", $rainMax ) );
-        readingsBulkUpdateIfChanged( $hash, "rainBegin", $rainbegin, $beginchanged );
+        readingsBulkUpdateIfChanged( $hash, "rainDataEnd",   $rainDataEnd );
+        $hash->{".rainData"}    = $rainData;
+        $hash->{".rainDataRaw"} = $rainDataRaw;
+        readingsBulkUpdateIfChanged( $hash, "rainMax",
+            sprintf( "%.3f", $rainMax ) );
+        readingsBulkUpdateIfChanged( $hash, "rainBegin", $rainbegin,
+            $beginchanged );
         readingsBulkUpdateIfChanged( $hash, "rainEnd", $rainend, $endchanged );
         readingsEndUpdate( $hash, 1 );
     }
@@ -423,10 +426,10 @@ sub Buienradar_ParseHttpResponse($) {
 
 sub Buienradar_logProxy($) {
     my ($name) = @_;
-    my $hash   = $defs{$name};
+    my $hash = $defs{$name};
     my @values = split /:/, $hash->{".rainData"};
-    
-    my $date   = DateTime->now;
+
+    my $date = DateTime->now;
     my $ret;
 
     my $date5m = DateTime::Duration->new( minutes => 5 );
@@ -449,10 +452,10 @@ sub Buienradar_logProxy($) {
 
 sub Buienradar_logProxyRaw($) {
     my ($name) = @_;
-    my $hash   = $defs{$name};
-    my @values = split /:/, $hash->{".rainDataRaw"} ;
-    
-    my $date   = DateTime->now;
+    my $hash = $defs{$name};
+    my @values = split /:/, $hash->{".rainDataRaw"};
+
+    my $date = DateTime->now;
     my $ret;
 
     my $date5m = DateTime::Duration->new( minutes => 5 );
@@ -475,8 +478,8 @@ sub Buienradar_logProxyRaw($) {
 
 sub Buienradar_PNG($) {
     my ($name) = @_;
-    my $retval = '<div id="chart_div_'.$name.'";';
-$retval .= <<'END_MESSAGE';
+    my $retval = '<div id="chart_div_' . $name . '";';
+    $retval .= <<'END_MESSAGE';
  style="width:100%; height:100%"></div>
 <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
  <script type="text/javascript">
@@ -488,13 +491,15 @@ $retval .= <<'END_MESSAGE';
           ['string', 'mm/m² per h'],
 END_MESSAGE
 
-    $retval .= $defs{$name}->{".SVG"};
+    $retval .= $defs{$name}->{".PNG"};
     $retval .= <<'END_MESSAGE';
 ]);
 
  var options = {
-          title: 'Niederschlag',
 END_MESSAGE
+
+    $retval .= 'title: "Niederschlag (' . $name .')",';
+
     $retval .= "subtitle: 'Vorhersage (" . $name . ")',";
 
     $retval .= <<'END_MESSAGE';
@@ -508,9 +513,9 @@ END_MESSAGE
         var my_div = document.getElementById(
 END_MESSAGE
 
-    $retval .='"chart_div_'.$name.'");';
+    $retval .= '"chart_div_' . $name . '");';
 
-$retval .= <<'END_MESSAGE';
+    $retval .= <<'END_MESSAGE';
         var chart = new google.visualization.AreaChart(my_div);
         google.visualization.events.addListener(chart, 'ready', function () {
         my_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
