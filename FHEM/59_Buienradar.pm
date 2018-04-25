@@ -25,7 +25,7 @@
 
 # See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
 
-# V 1.0 release über Github
+# V 1.1 release über Github
 
 package main;
 
@@ -45,6 +45,8 @@ sub Buienradar_Initialize($) {
     $hash->{GetFn}       = "Buienradar_Get";
     $hash->{FW_detailFn} = "Buienradar_detailFn";
     $hash->{AttrList}    = $readingFnAttributes;
+    $hash->{".rainData"} = "";
+    $hash->{".PNG"} = "";
 }
 
 sub Buienradar_detailFn($$$$) {
@@ -66,7 +68,7 @@ sub Buienradar_Undef($$) {
 
     my ( $hash, $arg ) = @_;
 
-    RemoveInternalTimer($hash);
+    RemoveInternalTimer( $hash, "Buienradar_Timer" );
     return undef;
 }
 
@@ -88,7 +90,7 @@ sub Buienradar_TimeCalc($$) {
 
     my $result = ( $AtimeA[0] - $AtimeB[0] ) * 60 + $AtimeA[1] - $AtimeB[1];
 
-    return $result;
+    return int($result);
 }
 
 ###################################
@@ -141,6 +143,14 @@ sub Buienradar_Get($$@) {
     }
 }
 
+sub Buienradar_TimeNowDiff {
+   my $begin = $_[0];
+   my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime(time);
+   my $result = 0;
+   $result = Buienradar_TimeCalc( $begin, "$hour:$min" );
+   return $result;
+}
+
 #####################################
 sub Buienradar_Define($$) {
 
@@ -152,8 +162,8 @@ sub Buienradar_Define($$) {
 
     if ( ( int(@a) == 2 ) && ( AttrVal( "global", "latitude", -255 ) != -255 ) )
     {
-        $latitude  = AttrVal( "global", "latitude",  51 );
-        $longitude = AttrVal( "global", "longitude", 7 );
+        $latitude  = AttrVal( "global", "latitude",  51.0 );
+        $longitude = AttrVal( "global", "longitude", 7.0 );
     }
     elsif ( int(@a) == 4 ) {
         $latitude  = $a[2];
@@ -169,9 +179,10 @@ sub Buienradar_Define($$) {
 
     my $name = $a[0];
 
-    # alle fünf Minuten
-    my $interval = 60 * 4;
+    # alle 2,5 Minuten
+    my $interval = 60 * 2.5;
 
+    $hash->{VERSION}   = "1.0";
     $hash->{INTERVAL}  = $interval;
     $hash->{LATITUDE}  = $latitude;
     $hash->{LONGITUDE} = $longitude;
@@ -193,37 +204,33 @@ sub Buienradar_Define($$) {
     $hash->{READINGS}{rainAmount}{TIME} = TimeNow();
     $hash->{READINGS}{rainAmount}{VAL}  = "init";
 
-    Buienradar_RequestUpdate($hash);
-    Buienradar_ScheduleUpdate($hash);
-
-# InternalTimer( gettimeofday() + $hash->{INTERVAL},  "Buienradar_ScheduleUpdate", $hash, 0 );
+    Buienradar_Timer($hash);
 
     return undef;
 }
 
-sub Buienradar_ScheduleUpdate($) {
+sub Buienradar_Timer($) {
     my ($hash) = @_;
     my $nextupdate = 0;
-    RemoveInternalTimer( $hash, "Buienradar_ScheduleUpdate" );
+    RemoveInternalTimer( $hash, "Buienradar_Timer" );
 
-    if ( !$hash->{SHORTRELOAD} ) {
-       # $nextupdate = gettimeofday() + $hash->{INTERVAL};
-        $nextupdate = time() + $hash->{INTERVAL};
-    }
-    else {
-        # $nextupdate = gettimeofday() + 90;
-        $nextupdate = time() + 90;
-        delete $hash->{SHORTRELOAD};
-    }
-    InternalTimer( $nextupdate, "Buienradar_ScheduleUpdate", $hash );
+    $nextupdate = int( time() + $hash->{INTERVAL} );
     $hash->{NEXTUPDATE} = FmtDateTime($nextupdate);
     Buienradar_RequestUpdate($hash);
+
+    InternalTimer( $nextupdate, "Buienradar_Timer", $hash );
 
     return 1;
 }
 
 sub Buienradar_RequestUpdate($) {
     my ($hash) = @_;
+
+    $hash->{URL} =
+      AttrVal( $hash->{NAME}, "BaseUrl", "http://gps.buienradar.nl/getrr.php" )
+      . "?lat="
+      . $hash->{LATITUDE} . "&lon="
+      . $hash->{LONGITUDE};
 
     my $param = {
         url      => $hash->{URL},
@@ -253,45 +260,7 @@ sub Buienradar_HTML($;$) {
   margin: 1px;
   color: white;
 }
-
-</style>
-<div class="BRchart">
-END_MESSAGE
-
-    $as_html .= "<BR>Niederschlag (<a href=./fhem?detail=$name>$name</a>)<BR>";
-
-    $as_html .= ReadingsVal( $name, "rainDataStart", "unknown" ) . "<BR>";
-    my $factor =
-      ( $width ? $width : 700 ) / ( 1 + ReadingsVal( $name, "rainMax", "0" ) );
-    foreach my $val (@values) {
-        $as_html .=
-            '<div style="width: '
-          . ( int( $val * $factor ) + 30 ) . 'px;">'
-          . sprintf( "%.3f", $val )
-          . '</div>';
-    }
-
-    $as_html .= "</DIV><BR>";
-    return ($as_html);
-}
-
-sub Buienradar_HTMLRaw($;$) {
-    my ( $name, $width ) = @_;
-    my $hash = $defs{$name};
-    my @values = split /:/, $hash->{".rainDataRaw"};
-
-    my $as_html = <<'END_MESSAGE';
-<style>
-
-.BRchart div {
-  font: 10px sans-serif;
-  background-color: steelblue;
-  text-align: right;
-  padding: 3px;
-  margin: 1px;
-  color: white;
-}
-
+ 
 </style>
 <div class="BRchart">
 END_MESSAGE
@@ -321,106 +290,142 @@ sub Buienradar_ParseHttpResponse($) {
     if ( $err ne "" ) {
         Log3( $name, 3,
             "$name: error while requesting " . $param->{url} . " - $err" );
-        $hash->{STATE}       = "Error: " . $err . " => " . $data;
+        $hash->{STATE} = "Error: " . $err . " => " . $data;
     }
     elsif ( $data ne "" ) {
-        Log3( $name, 5, "$name: returned: $data" );
-
-        my $rainamount    = 0.0;
-        my $rainbegin     = "unknown";
-        my $rainend       = "unknown";
-        my $rainDataStart = "unknown";
-        my $rainDataEnd   = "unknown";
-        my $rainData      = "";
-        my $rainDataRaw   = "";
-        my $rainMax       = 0;
-        my $rainLaMetric  = "";
-        my $as_png        = "";
-        my $rain          = 0;
-        my $rainNow       = 0;
-        my $rainTotal     = 0;
-        my $line          = 0;
-        my $beginchanged  = 0;
-        my $endchanged    = 0;
-        my $endline       = 0;
-        my $parse         = 1;
-
+        Log3( $name, 4, "$name: returned: $data" );
+        
+        my $validlines = 0;
         foreach ( split( /\n/, $data ) ) {
-            my ( $amount, $rtime ) = ( split( /\|/, $_ ) )[ 0, 1 ];
-            $rtime = substr($rtime,0,-1);
-            
-            if ( $amount > 0 ) {
-                $rain = 10**( ( $amount - 109 ) / 32 );
-                $rainTotal += $rain / 12;
+            if ( ( index( $_, "|" ) == 3 ) and ( index( $_, ":" ) == 6 ) ) {
+                $validlines += 1;
+                $err = "";
             }
             else {
-                $rain = 0;
+                $hash->{STATE} = "Error: Parser => " . $_;
+                $err = "Parser";
+                Log3( $name, 3, "$name: Parser Error in line : $_" );
             }
+        }
 
-            $line += 1;
+        Log3( $name, 4, "$name: Gültige Daten : $validlines" );
 
-            if ( $line == 1 ) {
-                $rainNow = sprintf( "%.3f", $rainamount ) * 12;
-                $rainDataStart = $rtime;
-                $rainData = sprintf( "%.3f", $rainamount );
-                $rainDataRaw = $rainamount;
-            }
-            if ( $line < 13 ) {
-                $rainLaMetric .= int( $rainamount * 1000 ) . ",";
-            }
-            if ($parse) {
-                $rainamount += $rain / 12;
-                if ($beginchanged) {
-                    if ( $amount > 0 ) {
-                        $rainend = $rtime;
-                    }
-                    else {
-                        $rainend    = $rtime;
-                        $endchanged = 1;
-                        $parse      = 0;      # Nur den ersten Schauer auswerten
-                    }
+        $hash->{VALIDLINES}  = $validlines;
+
+        if ( $validlines > 5 ) {
+
+            my $rainamount    = 0.000;
+            my $rainbegin     = "unknown";
+            my $rainend       = "unknown";
+            my $rainDataStart = "unknown";
+            my $rainDataEnd   = "unknown";
+            my $rainData      = "";
+            my $rainMax       = 0;
+            my $rainLaMetric  = "";
+            my $as_png        = "";
+            my $rain          = 0;
+            my $rainNow       = 0;
+            my $rainTotal     = 0;
+            my $line          = 0;
+            my $beginchanged  = 0;
+            my $startchanged  = 0;
+            my $endchanged    = 0;
+            my $endline       = 0;
+            my $parse         = 1;
+            my $tdiff         = 1;
+
+            Log3( $name, 4, "$name: Data: $data" );
+
+            foreach ( split( /\n/, $data ) ) {
+                my ( $amount, $rtime ) = ( split( /\|/, $_ ) )[ 0, 1 ];
+                $rtime = substr( $rtime, 0, -1 );
+                
+                if ( $amount > 0 ) {
+                    $rain = 10**( ( $amount - 109 ) / 32 );
+                    $rainTotal += $rain / 12;
                 }
                 else {
-                    if ( $amount > 0 ) {
-                        $rainbegin    = $rtime;
-                        $beginchanged = 1;
-                        $rainend      = $rtime;
+                    $rain = 0;
+                }
+
+                $line += 1;
+
+                $tdiff = Buienradar_TimeNowDiff($rtime);
+
+                if ( ($tdiff >= -4) and ($startchanged ==0 )) {
+                    Log3( $hash->{NAME}, 5, $hash->{NAME} . " RainDataStart detected" . $rtime );
+                    $rainNow       = sprintf( "%.3f", $rainamount ) * 12;
+                    $startchanged =1 ;
+                    $rainDataStart = $rtime;
+                    $rainData      = sprintf( "%.3f", $rainamount );
+                }
+                if ( $line < 13 ) {
+                    $rainLaMetric .= int( $rain * 1000 ) . ",";
+                }
+
+                if ($parse) {
+                    $rainamount += $rain / 12;
+                    if ($beginchanged) {
+                        if ( $amount > 0 ) {
+                            $rainend = $rtime;
+                        }
+                        else {
+                            $rainend    = $rtime;
+                            $endchanged = 1;
+                            $parse = 0;    # Nur den ersten Schauer auswerten
+                        }
+                    }
+                    else {
+                        if ( $amount > 0 ) {
+                            $rainbegin    = $rtime;
+                            $beginchanged = 1;
+                            $rainend      = $rtime;
+                        }
                     }
                 }
+
+                $rainData .= ":" . sprintf( "%.3f", $rain );
+                $rainDataEnd = $rtime;
+
+                $rainMax = ( $rain > $rainMax ) ? $rain : $rainMax;
+
+                $as_png .= "['"
+                  . ( ( $line % 2 ) ? $rtime : "" ) . "',"
+                  . sprintf( "%.3f", $rain ) . "],";
+
             }
 
-            $rainData .= ":" . sprintf( "%.3f", $rain );
-            $rainDataEnd = $rtime;
-            $rainDataRaw .= ":" . $amount;
+            # Letztes Komma entfernen
+            $as_png       = substr( $as_png,       0, -1 );
+            $rainLaMetric = substr( $rainLaMetric, 0, -1 );
 
-            $rainMax = ( $rain > $rainMax ) ? $rain : $rainMax;
+            $hash->{".PNG"} = $as_png;
+            $hash->{STATE} = sprintf( "%.3f mm/h", $rainNow );
 
-            $as_png .= "['"
-              . ( ( $line % 2 ) ?  $rtime : "" ) . "',"
-              . sprintf( "%.3f", $rain ) . "],";
+            readingsBeginUpdate($hash);
+            readingsBulkUpdate( $hash, "rainTotal",
+                sprintf( "%.3f", $rainTotal * 12 ) );
+            readingsBulkUpdate( $hash, "rainAmount",
+                sprintf( "%.3f", $rainamount * 12 ) );
+            readingsBulkUpdate( $hash, "rainNow",
+                sprintf( "%.3f mm/h", $rainNow ) );
+            if ( $validlines > 11 ) {
+                readingsBulkUpdate( $hash, "rainLaMetric",
+                    $rainLaMetric );
+            }
+            readingsBulkUpdate( $hash, "rainDataStart",
+                $rainDataStart);
+            readingsBulkUpdate( $hash, "rainDataEnd", $rainDataEnd );
+            $hash->{".rainData"} = $rainData;
+            readingsBulkUpdate( $hash, "rainMax",
+                sprintf( "%.3f", $rainMax ) );
+            readingsBulkUpdate( $hash, "rainBegin", $rainbegin,
+                $beginchanged );
+            readingsBulkUpdate( $hash, "rainEnd", $rainend,
+                $endchanged );
+            readingsEndUpdate( $hash, 1 );
+
         }
-        $as_png       = substr( $as_png,       0, -1 );
-        $rainLaMetric = substr( $rainLaMetric, 0, -1 );
-        $hash->{".PNG"} = $as_png;
-        $hash->{STATE} = sprintf( "%.3f mm/h", $rainNow );
-
-        readingsBeginUpdate($hash);
-        readingsBulkUpdateIfChanged( $hash, "rainTotal",
-            sprintf( "%.3f", $rainTotal * 12 ) );
-        readingsBulkUpdateIfChanged( $hash, "rainAmount",
-            sprintf( "%.3f", $rainamount * 12 ) );
-        readingsBulkUpdateIfChanged( $hash, "rainNow",       $rainNow );
-        readingsBulkUpdateIfChanged( $hash, "rainLaMetric",  $rainLaMetric );
-        readingsBulkUpdateIfChanged( $hash, "rainDataStart", $rainDataStart );
-        readingsBulkUpdateIfChanged( $hash, "rainDataEnd",   $rainDataEnd );
-        $hash->{".rainData"}    = $rainData;
-        $hash->{".rainDataRaw"} = $rainDataRaw;
-        readingsBulkUpdateIfChanged( $hash, "rainMax",
-            sprintf( "%.3f", $rainMax ) );
-        readingsBulkUpdateIfChanged( $hash, "rainBegin", $rainbegin,
-            $beginchanged );
-        readingsBulkUpdateIfChanged( $hash, "rainEnd", $rainend, $endchanged );
-        readingsEndUpdate( $hash, 1 );
     }
 }
 
@@ -428,32 +433,6 @@ sub Buienradar_logProxy($) {
     my ($name) = @_;
     my $hash = $defs{$name};
     my @values = split /:/, $hash->{".rainData"};
-
-    my $date = DateTime->now;
-    my $ret;
-
-    my $date5m = DateTime::Duration->new( minutes => 5 );
-
-    #$date5m->minutes=5;
-
-    my @startdate =
-      ( split /:/, ReadingsVal( $name, "rainDataStart", "12:00" ) );
-
-    $date->set( hour => $startdate[0], minute => $startdate[1], second => 0 );
-    my $max = 0;
-    foreach my $val (@values) {
-        $max = ( $val > $max ) ? $val : $max;
-        $ret .= $date->ymd . "_" . $date->hms . " " . $val . "\r\n";
-        $date += $date5m;
-    }
-
-    return ( $ret, 0, $max );
-}
-
-sub Buienradar_logProxyRaw($) {
-    my ($name) = @_;
-    my $hash = $defs{$name};
-    my @values = split /:/, $hash->{".rainDataRaw"};
 
     my $date = DateTime->now;
     my $ret;
@@ -498,7 +477,7 @@ END_MESSAGE
  var options = {
 END_MESSAGE
 
-    $retval .= 'title: "Niederschlag (' . $name .')",';
+    $retval .= 'title: "Niederschlag (' . $name . ')",';
 
     $retval .= "subtitle: 'Vorhersage (" . $name . ")',";
 
@@ -548,7 +527,7 @@ See german documentation
 <h2>59_Buienradar</h2>
 <p>Niederschlagsvorhersage auf Basis von freien Wetterdaten der niederländischen Seite <a href="https://www.buienradar.nl/overbuienradar/gratis-weerdata">Buienradar</a></p>
 <h3>Define</h3>
-<p><code>define &lt;name&gt; Buienradar &lt;Logitude&gt; &lt;Latitude&gt;</code></p>
+<p><code>define &lt;name&gt; Buienradar &lt;Latitude&gt; &lt;Logitude&gt;</code></p>
 <p>Die Geokoordinaten k&ouml;önnen weg gelassen werden falls es eine entsprechende Definition im <code>global</code> Device gibt.
 Das Modul ben&ouml;tigt die Perl Bibliothek <strong>DateTime</strong>, diese kann mit dem Befehl <code>cpan install DateTime</code> installiert werden.</p>
 <h3>Get</h3>
@@ -569,6 +548,12 @@ Das Modul ben&ouml;tigt die Perl Bibliothek <strong>DateTime</strong>, diese kan
 <li><code>rainLametric</code> Die n&auml;chsten 12 Regenmengen aufbereitet für ein LaMetric Display</li>
 <li><code>rainBegin</code> Die Uhrzeit des kommenden Regenbegins oder "unknown"</li>
 <li><code>rainEnd</code> Die Uhrzeit des kommenden Regenendes oder "unknown"</li>
+</ul>
+<h3>Attribute</h3>
+<br>
+Zu Testwecken habe ich ein internes Attribute definert, es kann nicht über die Oberfläche angelegt werden sondern nur per:<br>
+<ul>
+<code>attr &lt;Devicename&gt; BaseUrl http://gps.buienradar.nl/getrr.php</code>
 </ul>
 <h3>Visualisierung</h3>
 <p>Zur Visualisierung gibt es drei Funktionen:</p>
