@@ -2,7 +2,7 @@
 
 #
 #  59_Buienradar.pm
-#       2018 lubeda,  <>
+#       2018 lubeda
 #       2019 ff. Christoph Morrison, <fhem@christoph-jeschke.de>
 
 # Anyone is free to copy, modify, publish, use, compile, sell, or
