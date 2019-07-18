@@ -1,7 +1,7 @@
 Last Buienradar updates (18.07.2019)
 
+  ee368dd 18.07.2019 22:12 Cleanup
   e46156f 18.07.2019 19:08 Updated the documentation section
   4ea82aa 18.07.2019 19:07 Updated the header section
   6b00e6e 18.07.2019 19:04 Updated the header section
   cfb94ab 18.07.2019 19:04 Updated the post-commit hook
-  5393c3b 18.07.2019 18:53 Updated to JSON API (https://cdn-secure.buienalarm.nl/api/3.4/forecast.php)
