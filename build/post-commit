@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-module_file="FHEM/59_Twilight.pm"
+module_file="FHEM/59_Buienradar.pm"
 
 commandref_de_source="CommandRef.de.md"
 
@@ -31,7 +31,7 @@ substitute() {
     echo "" >> .${commandref_en_source}.html
     sed -i -ne "/^=begin html$/ {p; r .${commandref_en_source}.html" -e ":a; n; /^=end html$/ {p; b}; ba}; p" ${module_file}
 
-    sed -i -ne "/^=for :application\/json;q=META.json 59_Twilight.pm$/ {p; r ${meta_source}" -e ":a; n; /^=end :application\/json;q=META.json$/ {p; b}; ba}; p" ${module_file}
+    sed -i -ne "/^=for :application\/json;q=META.json ${module_file}$/ {p; r ${meta_source}" -e ":a; n; /^=end :application\/json;q=META.json$/ {p; b}; ba}; p" ${module_file}
 
     # clean up
     rm -rf .CommandRef.*
@@ -62,7 +62,7 @@ create_controlfile() {
 
 update_changed() {
     rm ${changed_file}
-    echo "Last Twilight updates ($(date +%d.%m.%Y))" > "${changed_file}"
+    echo "Last Buienradar updates ($(date +%d.%m.%Y))" > "${changed_file}"
     echo "" >> ${changed_file}
     git log -5 HEAD --pretty="  %h %ad %s" --date=format:"%d.%m.%Y %H:%M" FHEM/  >> ${changed_file}
 
