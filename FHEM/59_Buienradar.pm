@@ -30,7 +30,6 @@
 
 # See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
 
-# V 1.1 release über Github
 
 package main;
 
