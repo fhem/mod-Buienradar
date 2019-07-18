@@ -376,7 +376,7 @@ sub Buienradar_ParseHttpResponse($) {
 
 =item helper
 =item summary Rain prediction
-=item summary_DE Regenvorhersage auf Basis des Wetterdienstes Buienradar
+=item summary_DE Regenvorhersage auf Basis des Wetterdienstes buienradar.nl
 
 =begin html
 
