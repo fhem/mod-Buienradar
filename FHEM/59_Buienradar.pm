@@ -2,7 +2,7 @@
 
 #
 #  59_Buienradar.pm
-#       2018 lubeda
+#       2018 lubeda <>
 #       2019 ff. Christoph Morrison, <fhem@christoph-jeschke.de>
 
 # Anyone is free to copy, modify, publish, use, compile, sell, or
@@ -380,50 +380,13 @@ sub Buienradar_ParseHttpResponse($) {
 
 =begin html
 
-See german documentation
+
 
 =end html
 
 =begin html_DE
 
-<a name="Buienradar"></a>
-<h2>59_Buienradar</h2>
-<p>Niederschlagsvorhersage auf Basis von freien Wetterdaten der niederländischen Seite <a href="https://www.buienradar.nl/overbuienradar/gratis-weerdata">Buienradar</a></p>
-<h3>Define</h3>
-<p><code>define &lt;name&gt; Buienradar &lt;Latitude&gt; &lt;Logitude&gt;</code></p>
-<p>Die Geokoordinaten k&ouml;önnen weg gelassen werden falls es eine entsprechende Definition im <code>global</code> Device gibt.
-Das Modul ben&ouml;tigt die Perl Bibliothek <strong>DateTime</strong>, diese kann mit dem Befehl <code>cpan install DateTime</code> installiert werden.</p>
-<h3>Get</h3>
-<ul>
-<li><code>rainDuration</code> Die voraussichtliche Dauer des n&auml;chsten Schauers in Minuten</li>
-<li><code>startsIn</code> Der Regen beginnt in x Minuten</li>
-<li><code>refresh</code> Neue Daten werde nonblocking abgefragt/</li>
-<li><code>testVal</code> Rechnet einen Buienradar Wert in mm/m² um ( zu Testzwecken)</li>
-</ul>
-<h3>Readings</h3>
-<ul>
-<li><code>rainMax</code> Die maximale Regenmenge f&uuml;r ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
-<li><code>rainDataStart</code> Begin der aktuellen Regenvorhersage. Triggert das Update der Graphen</li>
-<li><code>rainNow</code> Die vorhergesagte Regenmenge f&uuml;r das aktuelle 5 Min. Intervall in mm/m² pro Stunden</li>
-<li><code>rainAmount</code> Die Regenmenge die im kommenden Regenschauer herunterkommen soll</li>
-<li><code>rainDataEnd</code> Ende der Regenvorhersage</li>
-<li><code>rainTotal</code> Die Regenmenge die in dem Vorhersage enthalten ist</li>
-<li><code>rainLametric</code> Die n&auml;chsten 12 Regenmengen aufbereitet für ein LaMetric Display</li>
-<li><code>rainBegin</code> Die Uhrzeit des kommenden Regenbegins oder "unknown"</li>
-<li><code>rainEnd</code> Die Uhrzeit des kommenden Regenendes oder "unknown"</li>
-</ul>
-<h3>Attribute</h3>
-<br>
-Zu Testwecken habe ich ein internes Attribute definert, es kann nicht über die Oberfläche angelegt werden sondern nur per:<br>
-<ul>
-<code>attr &lt;Devicename&gt; BaseUrl http://gps.buienradar.nl/getrr.php</code>
-</ul>
-<h3>Visualisierung</h3>
-<p>Zur Visualisierung gibt es drei Funktionen:</p>
-<p>Die Funktionen <code>Buienradar_HTML</code> und <code>Buienradar_PNG</code> k&ouml;nnen im  FHEMWEB verwendet werden. Die Funktion <code>Buienradar_logProxy</code> kann in Verbindung mit SVG oder im FTUI vorzugsweise mit dem Highchart Widget eingesetzt werden.</P>
-<ul>
-<li><code>{Buienradar_HTML(&lt;DEVICE&gt;,&lt;Width&gt;)}</code> also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zurück, der längste Balken hat dann 500 Pixel (nicht so schön ;-))</li>
-</ul>
+
 
 =end html_DE
 
