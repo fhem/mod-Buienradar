@@ -355,7 +355,7 @@ sub Buienradar_ParseHttpResponse($) {
                 };
             }
 
-            $hash->{STATE} = sprintf( "%.3f mm/h", $rainNow );
+            $hash->{STATE} = sprintf( "%.3f", $rainNow );
 
             readingsBeginUpdate($hash);
                 readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
