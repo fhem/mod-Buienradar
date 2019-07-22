@@ -11,7 +11,6 @@ Vagrant.configure("2") do |config|
 
     config.vm.define "fhem-buienradar" do |machine|
       machine.vm.box = "debian/contrib-buster64"
-      machine.vm.box_version = "9.99.2"
 
         machine.vm.network "public_network", bridge: [
             "en0: WLAN (AirPort)",
