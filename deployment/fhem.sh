@@ -45,6 +45,11 @@ function add_sudoers {
     chmod 0440 "${sudoers_file}"
 }
 
+function perl_modules {
+    cpanm install DateTime
+}
+
+perl_modules
 install_fhem
 install_cfg
 install_modules
