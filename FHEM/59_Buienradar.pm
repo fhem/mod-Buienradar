@@ -43,6 +43,8 @@ use Time::Seconds;
 use POSIX;
 use Data::Dumper;
 
+our $device;
+
 #####################################
 sub Buienradar_Initialize($) {
 
@@ -187,8 +189,9 @@ sub Buienradar_Define($$) {
     $hash->{STATE} = "Initialized";
 
     my $name = $a[0];
+    $device = $name;
 
-    # alle 2,5 Minuten
+        # alle 2,5 Minuten
     my $interval = 60 * 2.5;
 
     $hash->{VERSION}    = "1.0";
@@ -313,7 +316,7 @@ sub Buienradar_ParseHttpResponse($) {
         my $forecast_data = JSON::from_json($data);
         my @precip = @{$forecast_data->{"precip"}};
 
-        Debug(Dumper @precip);
+        Debugging(Dumper @precip);
 
         $hash->{DATA} = join(", ", @precip);
 
@@ -368,6 +371,12 @@ sub Buienradar_ParseHttpResponse($) {
         }
     }
 }
+
+sub Debugging {
+    local $OFS = ", ";
+    Debug("@_") if AttrVal("global", "verbose", undef) eq "5" or AttrVal($name, "debug", 0) eq "1";
+}
+
 
 1;
 
