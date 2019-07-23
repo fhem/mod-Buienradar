@@ -70,9 +70,9 @@ sub Buienradar_detailFn($$$$) {
 
     return
         Buienradar_HTML( $hash->{NAME} )
-      . "<br><a href="
+      . "<p><a href="
       . $hash->{URL}
-      . " target=_blank>open data in new window</a><br>";
+      . " target=_blank>Raw JSON data (new window)</a></p>";
 }
 
 #####################################
