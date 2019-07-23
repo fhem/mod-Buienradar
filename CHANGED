@@ -1,6 +1,6 @@
 Last Buienradar updates (23.07.2019)
-  fb6e88d 23.07.2019 21:11 Fixed issue with missing $name → should be $device
+  bc5c263 23.07.2019 21:25 [BUIENRADAR-5] moved form direct hash modification to using the proper API functions
+  37656a1 23.07.2019 21:11 [BUIENRADAR-4] added version information, bump to 2.1.0
   71e29e3 23.07.2019 20:52 [BUIENRADAR-3] use JSON::MaybeXS for (probably) getting faster and free code if available
   140a2f5 23.07.2019 20:33 [BUIENRADAR-1] moved everything from main:: to FHEM::Buienradar::, keeping the functionallity
   d661ff9 23.07.2019 20:16 [BUIENRADAR-2] adjusted link to raw data
-  b18099b 23.07.2019 18:59 Fixed issue with missing $name → should be $device
