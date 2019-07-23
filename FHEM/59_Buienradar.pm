@@ -287,18 +287,13 @@ sub Define($$) {
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
     $hash->{".HTML"}    = "<DIV>";
-    $hash->{READINGS}{rainBegin}{TIME} = ::TimeNow();
-    $hash->{READINGS}{rainBegin}{VAL}  = "unknown";
 
-    $hash->{READINGS}{rainDataStart}{TIME} = ::TimeNow();
-    $hash->{READINGS}{rainDataStart}{VAL}  = "unknown";
-
-    $hash->{READINGS}{rainNow}{TIME}    = ::TimeNow();
-    $hash->{READINGS}{rainNow}{VAL}     = "unknown";
-    $hash->{READINGS}{rainEnd}{TIME}    = ::TimeNow();
-    $hash->{READINGS}{rainEnd}{VAL}     = "unknown";
-    $hash->{READINGS}{rainAmount}{TIME} = ::TimeNow();
-    $hash->{READINGS}{rainAmount}{VAL}  = "init";
+    ::readingsBeginUpdate($hash);
+        ::readingsBulkUpdate( $hash, "rainNow", "unknown" );
+        ::readingsBulkUpdate( $hash, "rainDataStart", "unknown");
+        ::readingsBulkUpdate( $hash, "rainBegin", "unknown");
+        ::readingsBulkUpdate( $hash, "rainEnd", "unknown");
+    ::readingsEndUpdate( $hash, 1 );
 
     Timer($hash);
 
