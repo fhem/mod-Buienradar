@@ -305,6 +305,8 @@ sub Buienradar_ParseHttpResponse($) {
     my $hash = $param->{hash};
     my $name = $hash->{NAME};
 
+    Debugging(Dumper $data);
+
     my %precipitation_forecast;
 
     if ( $err ne "" ) {

@@ -1,6 +1,6 @@
 Last Buienradar updates (23.07.2019)
+  ef80032 23.07.2019 11:07 Fixed error with $OFS not known because English was not loaded.
   0933060 22.07.2019 20:30 Do not use units in the state. It's a decision for the user, not for the developer
   3b93ae4 22.07.2019 20:27 Silenced the debugging messages if debugging ist globally or locally not explicitly wanted
   ee368dd 18.07.2019 22:12 Cleanup
   e46156f 18.07.2019 19:08 Updated the documentation section
-  4ea82aa 18.07.2019 19:07 Updated the header section
