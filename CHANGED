@@ -1,6 +1,6 @@
 Last Buienradar updates (23.07.2019)
-  ef80032 23.07.2019 11:07 Fixed error with $OFS not known because English was not loaded.
-  0933060 22.07.2019 20:30 Do not use units in the state. It's a decision for the user, not for the developer
-  3b93ae4 22.07.2019 20:27 Silenced the debugging messages if debugging ist globally or locally not explicitly wanted
-  ee368dd 18.07.2019 22:12 Cleanup
-  e46156f 18.07.2019 19:08 Updated the documentation section
+  fb6e88d 23.07.2019 21:11 Fixed issue with missing $name → should be $device
+  71e29e3 23.07.2019 20:52 [BUIENRADAR-3] use JSON::MaybeXS for (probably) getting faster and free code if available
+  140a2f5 23.07.2019 20:33 [BUIENRADAR-1] moved everything from main:: to FHEM::Buienradar::, keeping the functionallity
+  d661ff9 23.07.2019 20:16 [BUIENRADAR-2] adjusted link to raw data
+  b18099b 23.07.2019 18:59 Fixed issue with missing $name → should be $device

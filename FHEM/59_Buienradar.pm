@@ -44,8 +44,10 @@ use POSIX;
 use Data::Dumper;
 use English;
 use GPUtils qw(GP_Import GP_Export);
+use feature "switch";
 
 our $device;
+our $version = '2.1.0';
 
 GP_Export(
     qw(
@@ -190,6 +192,12 @@ sub Get($$@) {
 
     return "\"get $name\" needs at least one argument" unless ( defined($opt) );
 
+    given($opt) {
+        when ("version") {
+            return $version;
+        }
+    }
+
     if ( $opt eq "testVal" ) {
 
         #return  @args;
@@ -229,7 +237,7 @@ sub Get($$@) {
     }
     else {
         return
-"Unknown argument $opt, choose one of testVal refresh:noArg startsIn:noArg rainDuration:noArg";
+"Unknown argument $opt, choose one of version:noArg testVal refresh:noArg startsIn:noArg rainDuration:noArg";
     }
 }
 
@@ -273,7 +281,7 @@ sub Define($$) {
         # alle 2,5 Minuten
     my $interval = 60 * 2.5;
 
-    $hash->{VERSION}    = "1.0";
+    $hash->{VERSION}                    = $version;
     $hash->{INTERVAL}   = $interval;
     $hash->{LATITUDE}   = $latitude;
     $hash->{LONGITUDE}  = $longitude;
@@ -500,7 +508,7 @@ sub Debugging {
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "0.0.1",
+    "version": "2.1.0",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
