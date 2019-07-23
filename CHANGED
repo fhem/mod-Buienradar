@@ -1,4 +1,4 @@
-Last Buienradar updates (22.07.2019)
+Last Buienradar updates (23.07.2019)
   0933060 22.07.2019 20:30 Do not use units in the state. It's a decision for the user, not for the developer
   3b93ae4 22.07.2019 20:27 Silenced the debugging messages if debugging ist globally or locally not explicitly wanted
   ee368dd 18.07.2019 22:12 Cleanup

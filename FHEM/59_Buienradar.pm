@@ -42,6 +42,7 @@ use List::Util;
 use Time::Seconds;
 use POSIX;
 use Data::Dumper;
+use English;
 
 our $device;
 
@@ -374,7 +375,7 @@ sub Buienradar_ParseHttpResponse($) {
 
 sub Debugging {
     local $OFS = ", ";
-    Debug("@_") if AttrVal("global", "verbose", undef) eq "5" or AttrVal($name, "debug", 0) eq "1";
+    Debug("@_") if AttrVal("global", "verbose", undef) eq "5" or AttrVal($device, "debug", 0) eq "1";
 }
 
 
@@ -399,3 +400,79 @@ sub Debugging {
 =end html_DE
 
 =cut
+
+=for :application/json;q=META.json 59_Buienradar.pm
+{
+    "abstract": "FHEM module for precipiation forecasts basing on buienradar.nl",
+    "x_lang": {
+        "de": {
+            "abstract": "FHEM-Modul f&uuml;r Regen- und Regenmengenvorhersagen auf Basis von buienradar.nl"
+        }
+    },
+    "keywords": [
+        "Buienradar",
+        "Precipiation",
+        "Rengenmenge",
+        "Regenvorhersage",
+        "hoeveelheid regen",
+        "regenvoorspelling",
+        "Niederschlag"
+    ],
+    "release_status": "development",
+    "license": "Unlicense",
+    "version": "0.0.1",
+    "author": [
+        "Christoph Morrison <post@christoph-jeschke.de>"
+    ],
+    "resources": {
+        "homepage": "https://github.com/fhem/mod-Buienradar/",
+        "x_homepage_title": "Module homepage",
+        "license": [
+            "https://github.com/fhem/mod-Buienradar/blob/master/LICENSE"
+        ],
+        "bugtracker": {
+            "web": "https://github.com/fhem/mod-Buienradar/issues"
+        },
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/fhem/mod-Buienradar.git",
+            "web": "https://github.com/fhem/mod-Buienradar.git",
+            "x_branch": "master",
+            "x_development": {
+                "type": "git",
+                "url": "https://github.com/fhem/mod-Buienradar.git",
+                "web": "https://github.com/fhem/mod-Buienradar/tree/development",
+                "x_branch": "development"
+            },
+            "x_filepath": "",
+            "x_raw": ""
+        },
+        "x_wiki": {
+            "title": "Buienradar",
+            "web": "https://wiki.fhem.de/wiki/Buienradar"
+        }
+    },
+    "x_fhem_maintainer": [
+        "jeschkec"
+    ],
+    "x_fhem_maintainer_github": [
+        "christoph-morrison"
+    ],
+    "prereqs": {
+        "runtime": {
+            "requires": {
+                "FHEM": 5.00918799,
+                "perl": 5.10,
+                "Meta": 0,
+                "JSON": 0
+            },
+            "recommends": {
+            
+            },
+            "suggests": {
+            
+            }
+        }
+    }
+}
+=end :application/json;q=META.json
