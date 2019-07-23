@@ -1,5 +1,10 @@
 # This is free and unencumbered software released into the public domain.
 
+#
+#  59_Buienradar.pm
+#       2018 lubeda
+#       2019 ff. Christoph Morrison, <fhem@christoph-jeschke.de>
+
 # Anyone is free to copy, modify, publish, use, compile, sell, or
 # distribute this software, either in source code form or as a compiled
 # binary, for any purpose, commercial or non-commercial, and by any
@@ -25,54 +30,139 @@
 
 # See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
 
-# V 1.1 release über Github
 
-package main;
-
-use DateTime;
+package FHEM::Buienradar;
 
 use strict;
 use warnings;
 use HttpUtils;
+use DateTime;
+use JSON;
+use List::Util;
+use Time::Seconds;
+use POSIX;
+use Data::Dumper;
+use English;
+use GPUtils qw(GP_Import GP_Export);
+
+our $device;
+
+GP_Export(
+    qw(
+        Initialize
+    )
+);
+
+# try to use JSON::MaybeXS wrapper
+#   for chance of better performance + open code
+eval {
+    require JSON::MaybeXS;
+    import JSON::MaybeXS qw( decode_json encode_json );
+    1;
+};
+
+if ($@) {
+    $@ = undef;
+
+    # try to use JSON wrapper
+    #   for chance of better performance
+    eval {
+
+        # JSON preference order
+        local $ENV{PERL_JSON_BACKEND} =
+            'Cpanel::JSON::XS,JSON::XS,JSON::PP,JSON::backportPP'
+            unless ( defined( $ENV{PERL_JSON_BACKEND} ) );
+
+        require JSON;
+        import JSON qw( decode_json encode_json );
+        1;
+    };
+
+    if ($@) {
+        $@ = undef;
+
+        # In rare cases, Cpanel::JSON::XS may
+        #   be installed but JSON|JSON::MaybeXS not ...
+        eval {
+            require Cpanel::JSON::XS;
+            import Cpanel::JSON::XS qw(decode_json encode_json);
+            1;
+        };
+
+        if ($@) {
+            $@ = undef;
+
+            # In rare cases, JSON::XS may
+            #   be installed but JSON not ...
+            eval {
+                require JSON::XS;
+                import JSON::XS qw(decode_json encode_json);
+                1;
+            };
+
+            if ($@) {
+                $@ = undef;
+
+                # Fallback to built-in JSON which SHOULD
+                #   be available since 5.014 ...
+                eval {
+                    require JSON::PP;
+                    import JSON::PP qw(decode_json encode_json);
+                    1;
+                };
+
+                if ($@) {
+                    $@ = undef;
+
+                    # Fallback to JSON::backportPP in really rare cases
+                    require JSON::backportPP;
+                    import JSON::backportPP qw(decode_json encode_json);
+                    1;
+                }
+            }
+        }
+    }
+}
 
 #####################################
-sub Buienradar_Initialize($) {
+sub Initialize($) {
 
     my ($hash) = @_;
 
-    $hash->{DefFn}       = "Buienradar_Define";
-    $hash->{UndefFn}     = "Buienradar_Undef";
-    $hash->{GetFn}       = "Buienradar_Get";
-    $hash->{FW_detailFn} = "Buienradar_detailFn";
-    $hash->{AttrList}    = $readingFnAttributes;
+    $hash->{DefFn}       = "FHEM::Buienradar::Define";
+    $hash->{UndefFn}     = "FHEM::Buienradar::Undefine";
+    $hash->{GetFn}       = "FHEM::Buienradar::Get";
+    $hash->{FW_detailFn} = "FHEM::Buienradar::Detail";
+    $hash->{AttrList}    = $::readingFnAttributes;
     $hash->{".rainData"} = "";
     $hash->{".PNG"} = "";
+    $hash->{REGION} = 'de';
 }
 
-sub Buienradar_detailFn($$$$) {
+sub Detail($$$$) {
     my ( $FW_wname, $d, $room, $pageHash ) =
       @_;    # pageHash is set for summaryFn.
-    my $hash = $defs{$d};
+    my $hash = $::defs{$d};
 
     return if ( !defined( $hash->{URL} ) );
 
     return
-        Buienradar_HTML( $hash->{NAME} )
-      . "<br><a href="
+        HTML( $hash->{NAME} )
+      . "<p><a href="
       . $hash->{URL}
-      . " target=_blank>open data in new window</a><br>";
+      . " target=_blank>Raw JSON data (new window)</a></p>";
 }
 
 #####################################
-sub Buienradar_Undef($$) {
+sub Undefine($$) {
 
     my ( $hash, $arg ) = @_;
 
-    RemoveInternalTimer( $hash, "Buienradar_Timer" );
+    ::RemoveInternalTimer( $hash, "Buienradar_Timer" );
     return undef;
 }
 
-sub Buienradar_TimeCalc($$) {
+sub TimeCalc($$) {
 
     # TimeA - TimeB
     my ( $timeA, $timeB ) = @_;
@@ -94,7 +184,7 @@ sub Buienradar_TimeCalc($$) {
 }
 
 ###################################
-sub Buienradar_Get($$@) {
+sub Get($$@) {
 
     my ( $hash, $name, $opt, @args ) = @_;
 
@@ -106,10 +196,10 @@ sub Buienradar_Get($$@) {
         return 10**( ( $args[0] - 109 ) / 32 );
     }
     elsif ( $opt eq "rainDuration" ) {
-        my $begin = ReadingsVal( $name, "rainBegin", "00:00" );
-        my $end   = ReadingsVal( $name, "rainEnd",   "00:00" );
+        my $begin = ::ReadingsVal( $name, "rainBegin", "00:00" );
+        my $end   = ::ReadingsVal( $name, "rainEnd",   "00:00" );
         if ( $begin ne $end ) {
-            return Buienradar_TimeCalc( $end, $begin );
+            return TimeCalc( $end, $begin );
         }
         else {
             return "unknown";
@@ -117,18 +207,18 @@ sub Buienradar_Get($$@) {
     }
 
     elsif ( $opt eq "refresh" ) {
-        Buienradar_RequestUpdate($hash);
+        RequestUpdate($hash);
         return "";
     }
     elsif ( $opt eq "startsIn" ) {
-        my $begin = ReadingsVal( $name, "rainBegin", "unknown" );
+        my $begin = ::ReadingsVal( $name, "rainBegin", "unknown" );
         my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
           localtime(time);
         my $result = "";
 
         if ( $begin ne "unknown" ) {
 
-            $result = Buienradar_TimeCalc( $begin, "$hour:$min" );
+            $result = TimeCalc( $begin, "$hour:$min" );
 
             if ( $result < 0 ) {
                 $result = "raining";
@@ -143,16 +233,16 @@ sub Buienradar_Get($$@) {
     }
 }
 
-sub Buienradar_TimeNowDiff {
+sub TimeNowDiff {
    my $begin = $_[0];
    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime(time);
    my $result = 0;
-   $result = Buienradar_TimeCalc( $begin, "$hour:$min" );
+   $result = TimeCalc( $begin, "$hour:$min" );
    return $result;
 }
 
 #####################################
-sub Buienradar_Define($$) {
+sub Define($$) {
 
     my ( $hash, $def ) = @_;
 
@@ -160,10 +250,10 @@ sub Buienradar_Define($$) {
     my $latitude;
     my $longitude;
 
-    if ( ( int(@a) == 2 ) && ( AttrVal( "global", "latitude", -255 ) != -255 ) )
+    if ( ( int(@a) == 2 ) && ( ::AttrVal( "global", "latitude", -255 ) != -255 ) )
     {
-        $latitude  = AttrVal( "global", "latitude",  51.0 );
-        $longitude = AttrVal( "global", "longitude", 7.0 );
+        $latitude  = ::AttrVal( "global", "latitude",  51.0 );
+        $longitude = ::AttrVal( "global", "longitude", 7.0 );
     }
     elsif ( int(@a) == 4 ) {
         $latitude  = $a[2];
@@ -178,75 +268,81 @@ sub Buienradar_Define($$) {
     $hash->{STATE} = "Initialized";
 
     my $name = $a[0];
+    $device = $name;
 
-    # alle 2,5 Minuten
+        # alle 2,5 Minuten
     my $interval = 60 * 2.5;
 
-    $hash->{VERSION}   = "1.0";
-    $hash->{INTERVAL}  = $interval;
-    $hash->{LATITUDE}  = $latitude;
-    $hash->{LONGITUDE} = $longitude;
-    $hash->{URL} =
-        "http://gps.buienradar.nl/getrr.php?lat="
-      . $hash->{LATITUDE} . "&lon="
-      . $hash->{LONGITUDE};
-    $hash->{".HTML"}                   = "<DIV>";
-    $hash->{READINGS}{rainBegin}{TIME} = TimeNow();
+    $hash->{VERSION}    = "1.0";
+    $hash->{INTERVAL}   = $interval;
+    $hash->{LATITUDE}   = $latitude;
+    $hash->{LONGITUDE}  = $longitude;
+    $hash->{URL}        = undef;
+    $hash->{".HTML"}    = "<DIV>";
+    $hash->{READINGS}{rainBegin}{TIME} = ::TimeNow();
     $hash->{READINGS}{rainBegin}{VAL}  = "unknown";
 
-    $hash->{READINGS}{rainDataStart}{TIME} = TimeNow();
+    $hash->{READINGS}{rainDataStart}{TIME} = ::TimeNow();
     $hash->{READINGS}{rainDataStart}{VAL}  = "unknown";
 
-    $hash->{READINGS}{rainNow}{TIME}    = TimeNow();
+    $hash->{READINGS}{rainNow}{TIME}    = ::TimeNow();
     $hash->{READINGS}{rainNow}{VAL}     = "unknown";
-    $hash->{READINGS}{rainEnd}{TIME}    = TimeNow();
+    $hash->{READINGS}{rainEnd}{TIME}    = ::TimeNow();
     $hash->{READINGS}{rainEnd}{VAL}     = "unknown";
-    $hash->{READINGS}{rainAmount}{TIME} = TimeNow();
+    $hash->{READINGS}{rainAmount}{TIME} = ::TimeNow();
     $hash->{READINGS}{rainAmount}{VAL}  = "init";
 
-    Buienradar_Timer($hash);
+    Timer($hash);
 
     return undef;
 }
 
-sub Buienradar_Timer($) {
+sub Timer($) {
     my ($hash) = @_;
     my $nextupdate = 0;
-    RemoveInternalTimer( $hash, "Buienradar_Timer" );
+    ::RemoveInternalTimer( $hash, "Buienradar_Timer" );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
-    $hash->{NEXTUPDATE} = FmtDateTime($nextupdate);
-    Buienradar_RequestUpdate($hash);
+    $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
+    RequestUpdate($hash);
 
-    InternalTimer( $nextupdate, "Buienradar_Timer", $hash );
+    ::InternalTimer( $nextupdate, "Buienradar_Timer", $hash );
 
     return 1;
 }
 
-sub Buienradar_RequestUpdate($) {
+sub RequestUpdate($) {
     my ($hash) = @_;
 
+    #   @todo: https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=51.6&lon=7.3&region=de&unit=mm/u
     $hash->{URL} =
-      AttrVal( $hash->{NAME}, "BaseUrl", "http://gps.buienradar.nl/getrr.php" )
-      . "?lat="
-      . $hash->{LATITUDE} . "&lon="
-      . $hash->{LONGITUDE};
+      ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php" )
+        . "?lat="       . $hash->{LATITUDE}
+        . "&lon="       . $hash->{LONGITUDE}
+        . '&region='    . 'nl'
+        . '&unit='      . 'mm/u';
+
+    # $hash->{URL} =
+    #     AttrVal( $hash->{NAME}, "BaseUrl", "http://gps.buienradar.nl/getrr.php" )
+    #         . "?lat="
+    #         . $hash->{LATITUDE} . "&lon="
+    #         . $hash->{LONGITUDE};
 
     my $param = {
         url      => $hash->{URL},
         timeout  => 10,
         hash     => $hash,
         method   => "GET",
-        callback => \&Buienradar_ParseHttpResponse
+        callback => \&ParseHttpResponse
     };
 
-    HttpUtils_NonblockingGet($param);
-    Log3( $hash->{NAME}, 4, $hash->{NAME} . ": Update requested" );
+    ::HttpUtils_NonblockingGet($param);
+    ::Log3( $hash->{NAME}, 4, $hash->{NAME} . ": Update requested" );
 }
 
-sub Buienradar_HTML($;$) {
+sub HTML($;$) {
     my ( $name, $width ) = @_;
-    my $hash = $defs{$name};
+    my $hash = $::defs{$name};
     my @values = split /:/, $hash->{".rainData"};
 
     my $as_html = <<'END_MESSAGE';
@@ -267,9 +363,9 @@ END_MESSAGE
 
     $as_html .= "<BR>Niederschlag (<a href=./fhem?detail=$name>$name</a>)<BR>";
 
-    $as_html .= ReadingsVal( $name, "rainDataStart", "unknown" ) . "<BR>";
+    $as_html .= ::ReadingsVal( $name, "rainDataStart", "unknown" ) . "<BR>";
     my $factor =
-      ( $width ? $width : 700 ) / ( 1 + ReadingsVal( $name, "rainMax", "0" ) );
+      ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, "rainMax", "0" ) );
     foreach my $val (@values) {
         $as_html .=
             '<div style="width: '
@@ -282,288 +378,181 @@ END_MESSAGE
     return ($as_html);
 }
 
-sub Buienradar_ParseHttpResponse($) {
+sub ParseHttpResponse($) {
     my ( $param, $err, $data ) = @_;
     my $hash = $param->{hash};
     my $name = $hash->{NAME};
 
+    Debugging(Dumper $data);
+
+    my %precipitation_forecast;
+
     if ( $err ne "" ) {
-        Log3( $name, 3,
-            "$name: error while requesting " . $param->{url} . " - $err" );
+        ::Log3( $name, 3, "$name: error while requesting " . $param->{url} . " - $err" );
         $hash->{STATE} = "Error: " . $err . " => " . $data;
     }
     elsif ( $data ne "" ) {
-        Log3( $name, 4, "$name: returned: $data" );
+        ::Log3( $name, 3, "$name: returned: $data" );
         
-        my $validlines = 0;
-        foreach ( split( /\n/, $data ) ) {
-            if ( ( index( $_, "|" ) == 3 ) and ( index( $_, ":" ) == 6 ) ) {
-                $validlines += 1;
-                $err = "";
-            }
-            else {
-                $hash->{STATE} = "Error: Parser => " . $_;
-                $err = "Parser";
-                Log3( $name, 3, "$name: Parser Error in line : $_" );
-            }
-        }
+        my $forecast_data = JSON::from_json($data);
+        my @precip = @{$forecast_data->{"precip"}};
 
-        Log3( $name, 4, "$name: Gültige Daten : $validlines" );
+        Debugging(Dumper @precip);
 
-        $hash->{VALIDLINES}  = $validlines;
+        $hash->{DATA} = join(", ", @precip);
 
-        if ( $validlines > 5 ) {
+        if (scalar @precip > 0) {
+            my $rainLaMetric    = join(',', map {$_ * 1000} @precip[0..11]);
+            my $rainTotal       = List::Util::sum @precip;
+            my $rainMax         = List::Util::max @precip;
+            my $rainStart       = undef;
+            my $rainEnd         = undef;
+            my $dataStart       = $forecast_data->{start};
+            my $dataEnd         = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
+            my $forecast_start  = $dataStart;
+            my $rainNow         = undef;
 
-            my $rainamount    = 0.000;
-            my $rainbegin     = "unknown";
-            my $rainend       = "unknown";
-            my $rainDataStart = "unknown";
-            my $rainDataEnd   = "unknown";
-            my $rainData      = "";
-            my $rainMax       = 0;
-            my $rainLaMetric  = "";
-            my $as_png        = "";
-            my $rain          = 0;
-            my $rainNow       = 0;
-            my $rainTotal     = 0;
-            my $line          = 0;
-            my $beginchanged  = 0;
-            my $startchanged  = 0;
-            my $endchanged    = 0;
-            my $endline       = 0;
-            my $parse         = 1;
-            my $tdiff         = 1;
+            for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
+                my $start    = $forecast_start + $precip_index * 5 * ONE_MINUTE;
+                my $end      = $start + 5 * ONE_MINUTE;
+                my $precip   = $precip[$precip_index];
 
-            Log3( $name, 4, "$name: Data: $data" );
-
-            foreach ( split( /\n/, $data ) ) {
-                my ( $amount, $rtime ) = ( split( /\|/, $_ ) )[ 0, 1 ];
-                $rtime = substr( $rtime, 0, -1 );
-                
-                if ( $amount > 0 ) {
-                    $rain = 10**( ( $amount - 109 ) / 32 );
-                    $rainTotal += $rain / 12;
-                }
-                else {
-                    $rain = 0;
+                if (!$rainStart and $precip > 0) {
+                    $rainStart  = $start;
                 }
 
-                $line += 1;
-
-                $tdiff = Buienradar_TimeNowDiff($rtime);
-
-                if ( ($tdiff >= -4) and ($startchanged ==0 )) {
-                    Log3( $hash->{NAME}, 5, $hash->{NAME} . " RainDataStart detected" . $rtime );
-                    $rainNow       = sprintf( "%.3f", $rainamount ) * 12;
-                    $startchanged =1 ;
-                    $rainDataStart = $rtime;
-                    $rainData      = sprintf( "%.3f", $rainamount );
-                }
-                if ( $line < 13 ) {
-                    $rainLaMetric .= int( $rain * 1000 ) . ",";
+                if (!$rainEnd and $rainStart and $precip == 0) {
+                    $rainEnd    = $start;
                 }
 
-                if ($parse) {
-                    $rainamount += $rain / 12;
-                    if ($beginchanged) {
-                        if ( $amount > 0 ) {
-                            $rainend = $rtime;
-                        }
-                        else {
-                            $rainend    = $rtime;
-                            $endchanged = 1;
-                            $parse = 0;    # Nur den ersten Schauer auswerten
-                        }
-                    }
-                    else {
-                        if ( $amount > 0 ) {
-                            $rainbegin    = $rtime;
-                            $beginchanged = 1;
-                            $rainend      = $rtime;
-                        }
-                    }
+                if (!$rainNow and gmtime ~~ [$start..$end]) {
+                    $rainNow    = $precip;
                 }
 
-                $rainData .= ":" . sprintf( "%.3f", $rain );
-                $rainDataEnd = $rtime;
-
-                $rainMax = ( $rain > $rainMax ) ? $rain : $rainMax;
-
-                $as_png .= "['"
-                  . ( ( $line % 2 ) ? $rtime : "" ) . "',"
-                  . sprintf( "%.3f", $rain ) . "],";
-
+                $precipitation_forecast{$start} = {
+                    'start'        => $start,
+                    'end'          => $end,
+                    'precipiation' => $precip,
+                };
             }
 
-            # Letztes Komma entfernen
-            $as_png       = substr( $as_png,       0, -1 );
-            $rainLaMetric = substr( $rainLaMetric, 0, -1 );
+            $hash->{STATE} = sprintf( "%.3f", $rainNow );
 
-            $hash->{".PNG"} = $as_png;
-            $hash->{STATE} = sprintf( "%.3f mm/h", $rainNow );
-
-            readingsBeginUpdate($hash);
-            readingsBulkUpdate( $hash, "rainTotal",
-                sprintf( "%.3f", $rainTotal * 12 ) );
-            readingsBulkUpdate( $hash, "rainAmount",
-                sprintf( "%.3f", $rainamount * 12 ) );
-            readingsBulkUpdate( $hash, "rainNow",
-                sprintf( "%.3f mm/h", $rainNow ) );
-            if ( $validlines > 11 ) {
-                readingsBulkUpdate( $hash, "rainLaMetric",
-                    $rainLaMetric );
-            }
-            readingsBulkUpdate( $hash, "rainDataStart",
-                $rainDataStart);
-            readingsBulkUpdate( $hash, "rainDataEnd", $rainDataEnd );
-            $hash->{".rainData"} = $rainData;
-            readingsBulkUpdate( $hash, "rainMax",
-                sprintf( "%.3f", $rainMax ) );
-            readingsBulkUpdate( $hash, "rainBegin", $rainbegin,
-                $beginchanged );
-            readingsBulkUpdate( $hash, "rainEnd", $rainend,
-                $endchanged );
-            readingsEndUpdate( $hash, 1 );
-
+            ::readingsBeginUpdate($hash);
+                ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
+                ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainTotal) );
+                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f mm/h", $rainNow ) );
+                ::readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
+                ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
+                ::readingsBulkUpdate( $hash, "rainDataEnd", strftime "%R", localtime $dataEnd );
+                ::readingsBulkUpdate( $hash, "rainMax", sprintf( "%.3f", $rainMax ) );
+                ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
+                ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
+            ::readingsEndUpdate( $hash, 1 );
         }
     }
 }
 
-sub Buienradar_logProxy($) {
-    my ($name) = @_;
-    my $hash = $defs{$name};
-    my @values = split /:/, $hash->{".rainData"};
-
-    my $date = DateTime->now;
-    my $ret;
-
-    my $date5m = DateTime::Duration->new( minutes => 5 );
-
-    #$date5m->minutes=5;
-
-    my @startdate =
-      ( split /:/, ReadingsVal( $name, "rainDataStart", "12:00" ) );
-
-    $date->set( hour => $startdate[0], minute => $startdate[1], second => 0 );
-    my $max = 0;
-    foreach my $val (@values) {
-        $max = ( $val > $max ) ? $val : $max;
-        $ret .= $date->ymd . "_" . $date->hms . " " . $val . "\r\n";
-        $date += $date5m;
-    }
-
-    return ( $ret, 0, $max );
+sub Debugging {
+    local $OFS = ", ";
+    ::Debug("@_") if ::AttrVal("global", "verbose", undef) eq "5" or ::AttrVal($device, "debug", 0) eq "1";
 }
 
-sub Buienradar_PNG($) {
-    my ($name) = @_;
-    my $retval = '<div id="chart_div_' . $name . '";';
-    $retval .= <<'END_MESSAGE';
- style="width:100%; height:100%"></div>
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
- <script type="text/javascript">
-
-     google.charts.load("current", {packages:["corechart"]});
-      google.charts.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([
-          ['string', 'mm/m² per h'],
-END_MESSAGE
-
-    $retval .= $defs{$name}->{".PNG"};
-    $retval .= <<'END_MESSAGE';
-]);
-
- var options = {
-END_MESSAGE
-
-    $retval .= 'title: "Niederschlag (' . $name . ')",';
-
-    $retval .= "subtitle: 'Vorhersage (" . $name . ")',";
-
-    $retval .= <<'END_MESSAGE';
-          hAxis: {slantedText:true, slantedTextAngle:45,
-              textStyle: {
-              fontSize: 10}
-              },
-          vAxis: {minValue: 0}
-        };
-
-        var my_div = document.getElementById(
-END_MESSAGE
-
-    $retval .= '"chart_div_' . $name . '");';
-
-    $retval .= <<'END_MESSAGE';
-        var chart = new google.visualization.AreaChart(my_div);
-        google.visualization.events.addListener(chart, 'ready', function () {
-        my_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
-    });
-
-        chart.draw(data, options);}
-    </script>
-END_MESSAGE
-    return $retval;
-}
 
 1;
 
 =pod
-item helper
 
+=item helper
 =item summary Rain prediction
-
-=item summary_DE Regenvorhersage auf Basis des Wetterdienstes Buienradar
+=item summary_DE Regenvorhersage auf Basis des Wetterdienstes buienradar.nl
 
 =begin html
 
-See german documentation
+
 
 =end html
 
 =begin html_DE
 
-<a name="Buienradar"></a>
-<h2>59_Buienradar</h2>
-<p>Niederschlagsvorhersage auf Basis von freien Wetterdaten der niederländischen Seite <a href="https://www.buienradar.nl/overbuienradar/gratis-weerdata">Buienradar</a></p>
-<h3>Define</h3>
-<p><code>define &lt;name&gt; Buienradar &lt;Latitude&gt; &lt;Logitude&gt;</code></p>
-<p>Die Geokoordinaten k&ouml;önnen weg gelassen werden falls es eine entsprechende Definition im <code>global</code> Device gibt.
-Das Modul ben&ouml;tigt die Perl Bibliothek <strong>DateTime</strong>, diese kann mit dem Befehl <code>cpan install DateTime</code> installiert werden.</p>
-<h3>Get</h3>
-<ul>
-<li><code>rainDuration</code> Die voraussichtliche Dauer des n&auml;chsten Schauers in Minuten</li>
-<li><code>startsIn</code> Der Regen beginnt in x Minuten</li>
-<li><code>refresh</code> Neue Daten werde nonblocking abgefragt/</li>
-<li><code>testVal</code> Rechnet einen Buienradar Wert in mm/m² um ( zu Testzwecken)</li>
-</ul>
-<h3>Readings</h3>
-<ul>
-<li><code>rainMax</code> Die maximale Regenmenge f&uuml;r ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
-<li><code>rainDataStart</code> Begin der aktuellen Regenvorhersage. Triggert das Update der Graphen</li>
-<li><code>rainNow</code> Die vorhergesagte Regenmenge f&uuml;r das aktuelle 5 Min. Intervall in mm/m² pro Stunden</li>
-<li><code>rainAmount</code> Die Regenmenge die im kommenden Regenschauer herunterkommen soll</li>
-<li><code>rainDataEnd</code> Ende der Regenvorhersage</li>
-<li><code>rainTotal</code> Die Regenmenge die in dem Vorhersage enthalten ist</li>
-<li><code>rainLametric</code> Die n&auml;chsten 12 Regenmengen aufbereitet für ein LaMetric Display</li>
-<li><code>rainBegin</code> Die Uhrzeit des kommenden Regenbegins oder "unknown"</li>
-<li><code>rainEnd</code> Die Uhrzeit des kommenden Regenendes oder "unknown"</li>
-</ul>
-<h3>Attribute</h3>
-<br>
-Zu Testwecken habe ich ein internes Attribute definert, es kann nicht über die Oberfläche angelegt werden sondern nur per:<br>
-<ul>
-<code>attr &lt;Devicename&gt; BaseUrl http://gps.buienradar.nl/getrr.php</code>
-</ul>
-<h3>Visualisierung</h3>
-<p>Zur Visualisierung gibt es drei Funktionen:</p>
-<p>Die Funktionen <code>Buienradar_HTML</code> und <code>Buienradar_PNG</code> k&ouml;nnen im  FHEMWEB verwendet werden. Die Funktion <code>Buienradar_logProxy</code> kann in Verbindung mit SVG oder im FTUI vorzugsweise mit dem Highchart Widget eingesetzt werden.</P>
-<ul>
-<li><code>{Buienradar_HTML(&lt;DEVICE&gt;,&lt;Width&gt;)}</code> also z.B. {Buienradar_HTML("BR",500)} gibt eine reine HTML Liste zurück, der längste Balken hat dann 500 Pixel (nicht so schön ;-))</li>
-<li><code>{Buienradar_PNG(&lt;DEVICE&gt;)}</code> also z.B. {Buienradar_PNG("BR")} gibt eine mit der google Charts API generierte Grafik zurück</li>
-<li><code>{Buienradar_logProxy(&lt;DEVICE&gt;)}</code> also z.B. {Buienradar_logProxy("BR")} kann in Verbindung mit einem Logproxy Device die typischen FHEM und FTUI Charts erstellen.</li>
-</ul>
+
 
 =end html_DE
 
 =cut
+
+=for :application/json;q=META.json 59_Buienradar.pm
+{
+    "abstract": "FHEM module for precipiation forecasts basing on buienradar.nl",
+    "x_lang": {
+        "de": {
+            "abstract": "FHEM-Modul f&uuml;r Regen- und Regenmengenvorhersagen auf Basis von buienradar.nl"
+        }
+    },
+    "keywords": [
+        "Buienradar",
+        "Precipiation",
+        "Rengenmenge",
+        "Regenvorhersage",
+        "hoeveelheid regen",
+        "regenvoorspelling",
+        "Niederschlag"
+    ],
+    "release_status": "development",
+    "license": "Unlicense",
+    "version": "0.0.1",
+    "author": [
+        "Christoph Morrison <post@christoph-jeschke.de>"
+    ],
+    "resources": {
+        "homepage": "https://github.com/fhem/mod-Buienradar/",
+        "x_homepage_title": "Module homepage",
+        "license": [
+            "https://github.com/fhem/mod-Buienradar/blob/master/LICENSE"
+        ],
+        "bugtracker": {
+            "web": "https://github.com/fhem/mod-Buienradar/issues"
+        },
+        "repository": {
+            "type": "git",
+            "url": "https://github.com/fhem/mod-Buienradar.git",
+            "web": "https://github.com/fhem/mod-Buienradar.git",
+            "x_branch": "master",
+            "x_development": {
+                "type": "git",
+                "url": "https://github.com/fhem/mod-Buienradar.git",
+                "web": "https://github.com/fhem/mod-Buienradar/tree/development",
+                "x_branch": "development"
+            },
+            "x_filepath": "",
+            "x_raw": ""
+        },
+        "x_wiki": {
+            "title": "Buienradar",
+            "web": "https://wiki.fhem.de/wiki/Buienradar"
+        }
+    },
+    "x_fhem_maintainer": [
+        "jeschkec"
+    ],
+    "x_fhem_maintainer_github": [
+        "christoph-morrison"
+    ],
+    "prereqs": {
+        "runtime": {
+            "requires": {
+                "FHEM": 5.00918799,
+                "perl": 5.10,
+                "Meta": 0,
+                "JSON": 0
+            },
+            "recommends": {
+            
+            },
+            "suggests": {
+            
+            }
+        }
+    }
+}
+=end :application/json;q=META.json

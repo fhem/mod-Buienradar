@@ -1,1 +1,2 @@
-UPD 2018-04-23_16:24:00 18239 FHEM/59_Buienradar.pm
+DEL ./FHEM/59_Buienradar.pm
+UPD 2019-07-23_18:58:46 13875 FHEM/59_Buienradar.pm
