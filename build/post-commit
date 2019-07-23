@@ -31,7 +31,7 @@ substitute() {
     echo "" >> .${commandref_en_source}.html
     sed -i -ne "/^=begin html$/ {p; r .${commandref_en_source}.html" -e ":a; n; /^=end html$/ {p; b}; ba}; p" ${module_file}
 
-    sed -i -ne "/^=for :application\/json;q=META.json ${module_file}$/ {p; r ${meta_source}" -e ":a; n; /^=end :application\/json;q=META.json$/ {p; b}; ba}; p" ${module_file}
+    sed -i -ne "/^=for :application\/json;q=META.json 59_Buienradar.pm$/ {p; r ${meta_source}" -e ":a; n; /^=end :application\/json;q=META.json$/ {p; b}; ba}; p" ${module_file}
 
     # clean up
     rm -rf .CommandRef.*
