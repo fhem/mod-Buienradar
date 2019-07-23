@@ -31,7 +31,7 @@
 # See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
 
 
-package main;
+package FHEM::Buienradar;
 
 use strict;
 use warnings;
@@ -43,48 +43,55 @@ use Time::Seconds;
 use POSIX;
 use Data::Dumper;
 use English;
+use GPUtils qw(GP_Import GP_Export);
 
 our $device;
 
+GP_Export(
+    qw(
+        Initialize
+    )
+);
+
 #####################################
-sub Buienradar_Initialize($) {
+sub Initialize($) {
 
     my ($hash) = @_;
 
-    $hash->{DefFn}       = "Buienradar_Define";
-    $hash->{UndefFn}     = "Buienradar_Undef";
-    $hash->{GetFn}       = "Buienradar_Get";
-    $hash->{FW_detailFn} = "Buienradar_detailFn";
-    $hash->{AttrList}    = $readingFnAttributes;
+    $hash->{DefFn}       = "FHEM::Buienradar::Define";
+    $hash->{UndefFn}     = "FHEM::Buienradar::Undefine";
+    $hash->{GetFn}       = "FHEM::Buienradar::Get";
+    $hash->{FW_detailFn} = "FHEM::Buienradar::Detail";
+    $hash->{AttrList}    = $::readingFnAttributes;
     $hash->{".rainData"} = "";
     $hash->{".PNG"} = "";
     $hash->{REGION} = 'de';
 }
 
-sub Buienradar_detailFn($$$$) {
+sub Detail($$$$) {
     my ( $FW_wname, $d, $room, $pageHash ) =
       @_;    # pageHash is set for summaryFn.
-    my $hash = $defs{$d};
+    my $hash = $::defs{$d};
 
     return if ( !defined( $hash->{URL} ) );
 
     return
-        Buienradar_HTML( $hash->{NAME} )
+        HTML( $hash->{NAME} )
       . "<p><a href="
       . $hash->{URL}
       . " target=_blank>Raw JSON data (new window)</a></p>";
 }
 
 #####################################
-sub Buienradar_Undef($$) {
+sub Undefine($$) {
 
     my ( $hash, $arg ) = @_;
 
-    RemoveInternalTimer( $hash, "Buienradar_Timer" );
+    ::RemoveInternalTimer( $hash, "Buienradar_Timer" );
     return undef;
 }
 
-sub Buienradar_TimeCalc($$) {
+sub TimeCalc($$) {
 
     # TimeA - TimeB
     my ( $timeA, $timeB ) = @_;
@@ -106,7 +113,7 @@ sub Buienradar_TimeCalc($$) {
 }
 
 ###################################
-sub Buienradar_Get($$@) {
+sub Get($$@) {
 
     my ( $hash, $name, $opt, @args ) = @_;
 
@@ -118,10 +125,10 @@ sub Buienradar_Get($$@) {
         return 10**( ( $args[0] - 109 ) / 32 );
     }
     elsif ( $opt eq "rainDuration" ) {
-        my $begin = ReadingsVal( $name, "rainBegin", "00:00" );
-        my $end   = ReadingsVal( $name, "rainEnd",   "00:00" );
+        my $begin = ::ReadingsVal( $name, "rainBegin", "00:00" );
+        my $end   = ::ReadingsVal( $name, "rainEnd",   "00:00" );
         if ( $begin ne $end ) {
-            return Buienradar_TimeCalc( $end, $begin );
+            return TimeCalc( $end, $begin );
         }
         else {
             return "unknown";
@@ -129,18 +136,18 @@ sub Buienradar_Get($$@) {
     }
 
     elsif ( $opt eq "refresh" ) {
-        Buienradar_RequestUpdate($hash);
+        RequestUpdate($hash);
         return "";
     }
     elsif ( $opt eq "startsIn" ) {
-        my $begin = ReadingsVal( $name, "rainBegin", "unknown" );
+        my $begin = ::ReadingsVal( $name, "rainBegin", "unknown" );
         my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
           localtime(time);
         my $result = "";
 
         if ( $begin ne "unknown" ) {
 
-            $result = Buienradar_TimeCalc( $begin, "$hour:$min" );
+            $result = TimeCalc( $begin, "$hour:$min" );
 
             if ( $result < 0 ) {
                 $result = "raining";
@@ -155,16 +162,16 @@ sub Buienradar_Get($$@) {
     }
 }
 
-sub Buienradar_TimeNowDiff {
+sub TimeNowDiff {
    my $begin = $_[0];
    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime(time);
    my $result = 0;
-   $result = Buienradar_TimeCalc( $begin, "$hour:$min" );
+   $result = TimeCalc( $begin, "$hour:$min" );
    return $result;
 }
 
 #####################################
-sub Buienradar_Define($$) {
+sub Define($$) {
 
     my ( $hash, $def ) = @_;
 
@@ -172,10 +179,10 @@ sub Buienradar_Define($$) {
     my $latitude;
     my $longitude;
 
-    if ( ( int(@a) == 2 ) && ( AttrVal( "global", "latitude", -255 ) != -255 ) )
+    if ( ( int(@a) == 2 ) && ( ::AttrVal( "global", "latitude", -255 ) != -255 ) )
     {
-        $latitude  = AttrVal( "global", "latitude",  51.0 );
-        $longitude = AttrVal( "global", "longitude", 7.0 );
+        $latitude  = ::AttrVal( "global", "latitude",  51.0 );
+        $longitude = ::AttrVal( "global", "longitude", 7.0 );
     }
     elsif ( int(@a) == 4 ) {
         $latitude  = $a[2];
@@ -201,44 +208,44 @@ sub Buienradar_Define($$) {
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
     $hash->{".HTML"}    = "<DIV>";
-    $hash->{READINGS}{rainBegin}{TIME} = TimeNow();
+    $hash->{READINGS}{rainBegin}{TIME} = ::TimeNow();
     $hash->{READINGS}{rainBegin}{VAL}  = "unknown";
 
-    $hash->{READINGS}{rainDataStart}{TIME} = TimeNow();
+    $hash->{READINGS}{rainDataStart}{TIME} = ::TimeNow();
     $hash->{READINGS}{rainDataStart}{VAL}  = "unknown";
 
-    $hash->{READINGS}{rainNow}{TIME}    = TimeNow();
+    $hash->{READINGS}{rainNow}{TIME}    = ::TimeNow();
     $hash->{READINGS}{rainNow}{VAL}     = "unknown";
-    $hash->{READINGS}{rainEnd}{TIME}    = TimeNow();
+    $hash->{READINGS}{rainEnd}{TIME}    = ::TimeNow();
     $hash->{READINGS}{rainEnd}{VAL}     = "unknown";
-    $hash->{READINGS}{rainAmount}{TIME} = TimeNow();
+    $hash->{READINGS}{rainAmount}{TIME} = ::TimeNow();
     $hash->{READINGS}{rainAmount}{VAL}  = "init";
 
-    Buienradar_Timer($hash);
+    Timer($hash);
 
     return undef;
 }
 
-sub Buienradar_Timer($) {
+sub Timer($) {
     my ($hash) = @_;
     my $nextupdate = 0;
-    RemoveInternalTimer( $hash, "Buienradar_Timer" );
+    ::RemoveInternalTimer( $hash, "Buienradar_Timer" );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
-    $hash->{NEXTUPDATE} = FmtDateTime($nextupdate);
-    Buienradar_RequestUpdate($hash);
+    $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
+    RequestUpdate($hash);
 
-    InternalTimer( $nextupdate, "Buienradar_Timer", $hash );
+    ::InternalTimer( $nextupdate, "Buienradar_Timer", $hash );
 
     return 1;
 }
 
-sub Buienradar_RequestUpdate($) {
+sub RequestUpdate($) {
     my ($hash) = @_;
 
     #   @todo: https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=51.6&lon=7.3&region=de&unit=mm/u
     $hash->{URL} =
-      AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php" )
+      ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php" )
         . "?lat="       . $hash->{LATITUDE}
         . "&lon="       . $hash->{LONGITUDE}
         . '&region='    . 'nl'
@@ -255,16 +262,16 @@ sub Buienradar_RequestUpdate($) {
         timeout  => 10,
         hash     => $hash,
         method   => "GET",
-        callback => \&Buienradar_ParseHttpResponse
+        callback => \&ParseHttpResponse
     };
 
-    HttpUtils_NonblockingGet($param);
-    Log3( $hash->{NAME}, 4, $hash->{NAME} . ": Update requested" );
+    ::HttpUtils_NonblockingGet($param);
+    ::Log3( $hash->{NAME}, 4, $hash->{NAME} . ": Update requested" );
 }
 
-sub Buienradar_HTML($;$) {
+sub HTML($;$) {
     my ( $name, $width ) = @_;
-    my $hash = $defs{$name};
+    my $hash = $::defs{$name};
     my @values = split /:/, $hash->{".rainData"};
 
     my $as_html = <<'END_MESSAGE';
@@ -285,9 +292,9 @@ END_MESSAGE
 
     $as_html .= "<BR>Niederschlag (<a href=./fhem?detail=$name>$name</a>)<BR>";
 
-    $as_html .= ReadingsVal( $name, "rainDataStart", "unknown" ) . "<BR>";
+    $as_html .= ::ReadingsVal( $name, "rainDataStart", "unknown" ) . "<BR>";
     my $factor =
-      ( $width ? $width : 700 ) / ( 1 + ReadingsVal( $name, "rainMax", "0" ) );
+      ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, "rainMax", "0" ) );
     foreach my $val (@values) {
         $as_html .=
             '<div style="width: '
@@ -300,7 +307,7 @@ END_MESSAGE
     return ($as_html);
 }
 
-sub Buienradar_ParseHttpResponse($) {
+sub ParseHttpResponse($) {
     my ( $param, $err, $data ) = @_;
     my $hash = $param->{hash};
     my $name = $hash->{NAME};
@@ -310,11 +317,11 @@ sub Buienradar_ParseHttpResponse($) {
     my %precipitation_forecast;
 
     if ( $err ne "" ) {
-        Log3( $name, 3, "$name: error while requesting " . $param->{url} . " - $err" );
+        ::Log3( $name, 3, "$name: error while requesting " . $param->{url} . " - $err" );
         $hash->{STATE} = "Error: " . $err . " => " . $data;
     }
     elsif ( $data ne "" ) {
-        Log3( $name, 3, "$name: returned: $data" );
+        ::Log3( $name, 3, "$name: returned: $data" );
         
         my $forecast_data = JSON::from_json($data);
         my @precip = @{$forecast_data->{"precip"}};
@@ -360,24 +367,24 @@ sub Buienradar_ParseHttpResponse($) {
 
             $hash->{STATE} = sprintf( "%.3f", $rainNow );
 
-            readingsBeginUpdate($hash);
-                readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
-                readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainTotal) );
-                readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f mm/h", $rainNow ) );
-                readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
-                readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
-                readingsBulkUpdate( $hash, "rainDataEnd", strftime "%R", localtime $dataEnd );
-                readingsBulkUpdate( $hash, "rainMax", sprintf( "%.3f", $rainMax ) );
-                readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
-                readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
-            readingsEndUpdate( $hash, 1 );
+            ::readingsBeginUpdate($hash);
+                ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
+                ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainTotal) );
+                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f mm/h", $rainNow ) );
+                ::readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
+                ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
+                ::readingsBulkUpdate( $hash, "rainDataEnd", strftime "%R", localtime $dataEnd );
+                ::readingsBulkUpdate( $hash, "rainMax", sprintf( "%.3f", $rainMax ) );
+                ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
+                ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
+            ::readingsEndUpdate( $hash, 1 );
         }
     }
 }
 
 sub Debugging {
     local $OFS = ", ";
-    Debug("@_") if AttrVal("global", "verbose", undef) eq "5" or AttrVal($device, "debug", 0) eq "1";
+    ::Debug("@_") if ::AttrVal("global", "verbose", undef) eq "5" or ::AttrVal($device, "debug", 0) eq "1";
 }
 
 
