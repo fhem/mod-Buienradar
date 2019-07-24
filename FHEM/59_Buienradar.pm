@@ -44,7 +44,7 @@ use POSIX;
 use Data::Dumper;
 use English;
 use GPUtils qw(GP_Import GP_Export);
-use feature "switch";
+use experimental qw( switch );
 
 our $device;
 our $version = '2.1.0';
@@ -161,7 +161,7 @@ sub Undefine($$) {
 
     my ( $hash, $arg ) = @_;
 
-    ::RemoveInternalTimer( $hash, "Buienradar_Timer" );
+    ::RemoveInternalTimer( $hash, "Timer" );
     return undef;
 }
 
@@ -304,13 +304,13 @@ sub Define($$) {
 sub Timer($) {
     my ($hash) = @_;
     my $nextupdate = 0;
-    ::RemoveInternalTimer( $hash, "Buienradar_Timer" );
+    ::RemoveInternalTimer( $hash, "Timer" );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
     $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
     RequestUpdate($hash);
 
-    ::InternalTimer( $nextupdate, "Buienradar_Timer", $hash );
+    ::InternalTimer( $nextupdate, "Timer", $hash );
 
     return 1;
 }
