@@ -134,8 +134,13 @@ sub Initialize($) {
     $hash->{DefFn}       = "FHEM::Buienradar::Define";
     $hash->{UndefFn}     = "FHEM::Buienradar::Undefine";
     $hash->{GetFn}       = "FHEM::Buienradar::Get";
+    $hash->{AttrFn}      = "FHEM::Buienradar::Attr";
     $hash->{FW_detailFn} = "FHEM::Buienradar::Detail";
-    $hash->{AttrList}    = $::readingFnAttributes;
+    $hash->{AttrList}    = join(' ',
+        (
+            'disabled:on,off',
+        )
+    ) . " $::readingFnAttributes";
     $hash->{".PNG"} = "";
     $hash->{REGION} = 'de';
 }
@@ -240,6 +245,54 @@ sub Get($$@) {
     }
 }
 
+sub Attr {
+    my ($command, $device_name, $attribute_name, $attribute_value) = @_;
+    my $hash = $::defs{$device_name};
+
+    Debugging(
+        "Attr called", "\n",
+        Dumper (
+            $command, $device_name, $attribute_name, $attribute_value
+        )
+    );
+
+    given ($attribute_name) {
+        when ('disabled') {
+            Debugging(
+                Dumper (
+                    {
+                        'attribute_value' => $attribute_value,
+                        'attr' => 'disabled',
+                        "command" => $command,
+                    }
+                )
+            );
+
+            return "${attribute_value} is no valid value for disabled. Only 'on' or 'off' are allowed!"
+                if $attribute_value !~ /^(on|off)$/;
+
+            given ($command) {
+                when ('set') {
+                    if ($attribute_value eq "on") {
+                        ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
+                        $hash->{NEXTUPDATE} = undef;
+                        return undef;
+                    }
+
+                    if ($attribute_value eq "off") {
+                        Timer($hash);
+                        return undef;
+                    }
+                }
+
+                when ('del') {
+                    Timer($hash) if $attribute_value eq "off";
+                }
+            }
+        }
+    }
+}
+
 sub TimeNowDiff {
    my $begin = $_[0];
    my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime(time);
@@ -302,6 +355,7 @@ sub Define($$) {
 sub Timer($) {
     my ($hash) = @_;
     my $nextupdate = 0;
+
     ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
