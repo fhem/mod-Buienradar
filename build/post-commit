@@ -42,12 +42,6 @@ substitute() {
     git add meta.json
 }
 
-add_hooks() {
-    rm -rf build/hooks/*
-    cp -R .git/hooks/* build/hooks/
-    git add build/hooks/
-}
-
 create_controlfile() {
     rm ${controls_file}
     find -type f \( -path './FHEM/*' -o -path './www/*' \) -print0 | while IFS= read -r -d '' f;
@@ -70,6 +64,5 @@ update_changed() {
 }
 
 substitute
-add_hooks
 create_controlfile
 update_changed
