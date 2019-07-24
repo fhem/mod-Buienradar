@@ -46,7 +46,7 @@ function add_sudoers {
 }
 
 function perl_modules {
-    cpanm install DateTime App::cpanoutdated Perl::PrereqScanner::NotQuiteLite IO::Socket::INET6 Socket6 Cpanel::JSON::XS
+    cpanm install App::cpanoutdated Perl::PrereqScanner::NotQuiteLite IO::Socket::INET6 Socket6 Cpanel::JSON::XS
 }
 
 perl_modules
