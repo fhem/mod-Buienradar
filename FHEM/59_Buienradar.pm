@@ -36,7 +36,6 @@ package FHEM::Buienradar;
 use strict;
 use warnings;
 use HttpUtils;
-use DateTime;
 use JSON;
 use List::Util;
 use Time::Seconds;

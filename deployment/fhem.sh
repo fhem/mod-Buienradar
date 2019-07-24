@@ -53,6 +53,7 @@ perl_modules
 install_fhem
 install_cfg
 install_modules
+perl_modules
 add_sudoers
 update_commandref
 
