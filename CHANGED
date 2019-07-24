@@ -1,6 +1,6 @@
 Last Buienradar updates (24.07.2019)
+  a70199c 24.07.2019 16:55 [BUIENRADAR-9] Removed DateTime dependancy
+  da15ed2 24.07.2019 14:29 Merged in bugfix/BUIENRADAR-15 (pull request #10)
+  715f602 24.07.2019 16:26 [BUIENRADAR-15] ::Timer should be FHEM::Buienradar::Timer
+  a8ee16e 24.07.2019 16:23 [BUIENRADAR-14] added calculcations for the HTML graph output
   e25046a 24.07.2019 15:30 [BUIENRADAR-15] [BUIENRADAR-13] silenced warnings for given/when, removed last remainings of Buienradar_Timer
-  b519e33 24.07.2019 13:05 Release for: [BUIENRADAR-8]
-  689a853 24.07.2019 13:04 [BUIENRADAR-8] fixed edited json source url
-  2ab11f6 24.07.2019 12:50 [BUIENRADAR-8] added checks for the HTTP request and the JSON parsing, fixed minor typo
-  bc5c263 23.07.2019 21:25 [BUIENRADAR-5] moved form direct hash modification to using the proper API functions
