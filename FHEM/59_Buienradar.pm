@@ -48,6 +48,7 @@ use feature "switch";
 
 our $device;
 our $version = '2.1.0';
+our @errors;
 
 GP_Export(
     qw(
@@ -270,7 +271,7 @@ sub Define($$) {
     else {
         return
           int(@a)
-          . " <=syntax: define <name> Buienradar [<latitude> <longitude>]";
+          . " Syntax: define <name> Buienradar [<latitude> <longitude>]";
     }
 
     $hash->{STATE} = "Initialized";
@@ -319,17 +320,11 @@ sub RequestUpdate($) {
 
     #   @todo: https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=51.6&lon=7.3&region=de&unit=mm/u
     $hash->{URL} =
-      ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php" )
+      ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php3" )
         . "?lat="       . $hash->{LATITUDE}
         . "&lon="       . $hash->{LONGITUDE}
         . '&region='    . 'nl'
         . '&unit='      . 'mm/u';
-
-    # $hash->{URL} =
-    #     AttrVal( $hash->{NAME}, "BaseUrl", "http://gps.buienradar.nl/getrr.php" )
-    #         . "?lat="
-    #         . $hash->{LATITUDE} . "&lon="
-    #         . $hash->{LONGITUDE};
 
     my $param = {
         url      => $hash->{URL},
@@ -386,21 +381,40 @@ sub ParseHttpResponse($) {
     my $hash = $param->{hash};
     my $name = $hash->{NAME};
 
-    Debugging(Dumper $data);
+    #Debugging("*** RESULT ***");
+    #Debugging(Dumper {param => $param, data => $data, error => $err});
 
     my %precipitation_forecast;
 
     if ( $err ne "" ) {
-        ::Log3( $name, 3, "$name: error while requesting " . $param->{url} . " - $err" );
+        # Debugging("$name: error while requesting " . $param->{url} . " - $err" );
         $hash->{STATE} = "Error: " . $err . " => " . $data;
     }
     elsif ( $data ne "" ) {
-        ::Log3( $name, 3, "$name: returned: $data" );
-        
-        my $forecast_data = JSON::from_json($data);
-        my @precip = @{$forecast_data->{"precip"}};
+        # Debugging("$name returned: $data");
+        my $forecast_data;
+
+        if(defined $param->{'code'} && $param->{'code'} ne "200") {
+            push @errors, "HTTP response code is not 200: " . $param->{'code'};
+        }
+
+        $forecast_data = eval { $forecast_data = from_json($data) } unless @errors;
+
+        if ($@) {
+            push @errors, "Invalid JSON: " . Dumper($@);
+        }
+
+        if (@errors) {
+            ::Log3($name, 1, "$name had errors while working:\n" . join("\n", @errors));
+            $hash->{STATE} = "Error";
+            return undef;
+        }
+
+        # @todo this here is the problem
+        my @precip = @{$forecast_data->{"precip"}} unless @errors;
 
         Debugging(Dumper @precip);
+        Debugging(Dumper @errors);
 
         $hash->{DATA} = join(", ", @precip);
 
@@ -458,7 +472,7 @@ sub ParseHttpResponse($) {
 
 sub Debugging {
     local $OFS = ", ";
-    ::Debug("@_") if ::AttrVal("global", "verbose", undef) eq "5" or ::AttrVal($device, "debug", 0) eq "1";
+    ::Debug("@_") if ::AttrVal("global", "verbose", undef) eq "4" or ::AttrVal($device, "debug", 0) eq "1";
 }
 
 
@@ -473,11 +487,9 @@ sub Debugging {
 =begin html
 
 
-
 =end html
 
 =begin html_DE
-
 
 
 =end html_DE
