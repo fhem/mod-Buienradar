@@ -137,7 +137,6 @@ sub Initialize($) {
     $hash->{GetFn}       = "FHEM::Buienradar::Get";
     $hash->{FW_detailFn} = "FHEM::Buienradar::Detail";
     $hash->{AttrList}    = $::readingFnAttributes;
-    $hash->{".rainData"} = "";
     $hash->{".PNG"} = "";
     $hash->{REGION} = 'de';
 }
@@ -341,7 +340,7 @@ sub RequestUpdate($) {
 sub HTML($;$) {
     my ( $name, $width ) = @_;
     my $hash = $::defs{$name};
-    my @values = split /:/, $hash->{".rainData"};
+    my @values = split /:/, ::ReadingsVal($name, "rainData", '0:0');
 
     my $as_html = <<'END_MESSAGE';
 <style>
@@ -428,6 +427,7 @@ sub ParseHttpResponse($) {
             my $dataEnd         = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
             my $forecast_start  = $dataStart;
             my $rainNow         = undef;
+            my $rainData        = join(':', @precip);
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
                 my $start    = $forecast_start + $precip_index * 5 * ONE_MINUTE;
@@ -465,6 +465,7 @@ sub ParseHttpResponse($) {
                 ::readingsBulkUpdate( $hash, "rainMax", sprintf( "%.3f", $rainMax ) );
                 ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
                 ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
+                ::readingsBulkUpdate( $hash, "rainData", $rainData);
             ::readingsEndUpdate( $hash, 1 );
         }
     }
