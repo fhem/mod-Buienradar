@@ -320,7 +320,7 @@ sub RequestUpdate($) {
 
     #   @todo: https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=51.6&lon=7.3&region=de&unit=mm/u
     $hash->{URL} =
-      ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php3" )
+      ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php" )
         . "?lat="       . $hash->{LATITUDE}
         . "&lon="       . $hash->{LONGITUDE}
         . '&region='    . 'nl'
