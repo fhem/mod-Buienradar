@@ -540,9 +540,51 @@ sub Debugging {
 
 =begin html
 
+
+
 =end html
 
 =begin html_DE
+
+<p><span id="Buienradar"></span></p>
+<h2 id="buienradar">Buienradar</h2>
+<p>Das Buienradar-Modul bindet die Niederschlagsvorhersagedaten der freien <abbr title="Application Program Interface">API</abbr><br>
+von <a href="https://www.buienradar.nl">Buienradar.nl</a> an.</p>
+<p><span id="Buienradardefine"></span></p>
+<h3 id="define">Define</h3>
+<pre><code>define &lt;devicename&gt; Buienradar [latitude] [longitude]</code></pre>
+<p>Die Werte für latitude und longitude sind optional und werden, wenn nicht explizit angegeben, von <var>global</var> bezogen.<br>
+Die minimalste Definition lautet demnach:</p>
+<pre><code>define &lt;devicename&gt; Buienradar</code></pre>
+<p><span id="Buienradarget"></span></p>
+<h3 id="get">Get</h3>
+<p>Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:</p>
+<ul>
+  <li><code>rainDuration</code> - Die voraussichtliche Dauer des nächsten Niederschlags in Minuten.<br></li>
+  <li><code>startse</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong><br></li>
+  <li><code>refresh</code> - Neue Daten abfragen.<br></li>
+  <li><code>version</code> - Aktuelle Version abfragen.<br></li>
+  <li><code>testVal</code> - Rechnet einen Buienradar-Wert zu Testzwecken in mm/m² um. Dies war für die alte <abbr>API</abbr> von Buienradar.nl nötig. <strong>Obsolet!</strong></li>
+</ul>
+<p><span id="Buienradarreadings"></span></p>
+<h3 id="readings">Readings</h3>
+<p>Aktuell liefert Buienradar folgende Readings:</p>
+<ul>
+  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h.<br></li>
+  <li><code>rainBegin</code> - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
+  <li><code>raindEnd</code> - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
+  <li><code>rainDataStart</code> - Zeitlicher Beginn der gelieferten Niederschlagsdaten.<br></li>
+  <li><code>rainDataEnd</code> - Zeitliches Ende der gelieferten Niederschlagsdaten.<br></li>
+  <li><code>rainLaMetric</code> - Aufbereitete Daten für LaMetric-Devices.<br></li>
+  <li><code>rainMax</code> - Die maximale Niederschlagsmenge in mm/h für ein 5 Min. Intervall auf Basis der vorliegenden Daten.<br></li>
+  <li><code>rainNow</code> - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm/h.<br></li>
+  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm/h</li>
+</ul>
+<p><span id="Buienradarattr"></span></p>
+<h3 id="attribute">Attribute</h3>
+<ul>
+  <li><code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.</li>
+</ul>
 
 =end html_DE
 
