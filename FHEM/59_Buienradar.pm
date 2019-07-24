@@ -481,18 +481,14 @@ sub Debugging {
 =pod
 
 =item helper
-=item summary Rain prediction
-=item summary_DE Regenvorhersage auf Basis des Wetterdienstes buienradar.nl
+=item summary Precipitation forecasts based on buienradar.nl
+=item summary_DE Niederschlagsvorhersage auf Basis des Wetterdienstes buienradar.nl
 
 =begin html
-
-
 
 =end html
 
 =begin html_DE
-
-
 
 =end html_DE
 
