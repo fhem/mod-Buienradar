@@ -1,0 +1,43 @@
+<span id="Buienradar" />
+
+## Buienradar
+Buienradar provides access to precipiation forecasts by the dutch service [Buienradar.nl](https://www.buienradar.nl).
+
+<span id="Buienradardefine"></span>
+### Define
+    define <devicename> Buienradar [latitude] [longitude]
+
+<var>latitude</var> and <var>longitude</var> are facultative and will gathered from <var>global</var> if not set.
+So the smallest possible definition is:
+
+    define <devicename> Buienradar
+  
+<span id="Buienradarget" />  
+
+### Get
+<var>Get</var> will get you the following:
+
+* ``rainDuration``  - predicted duration of the next precipiation in minutes.
+* ``startse``       - next precipiation starts in <var>n</var> minutes. **Obsolete!**
+* ``refresh``       - get new data from Buienradar.nl.
+* ``version``       - get current version of the Buienradar module.
+* ``testVal``       - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². **Obsolete!**
+
+<span id="Buienradarreadings" />  
+
+### Readings
+Buienradar provides several readings:
+* ``rainAmount``    - amount of predicted precipiation in mm/h.
+* ``rainBegin``     - starting time of the next precipiation, <var>unknown</var> if no precipiation is predicted.
+* ``raindEnd``      - ending time of the next precipiation, <var>unknown</var> if no precipiation is predicted.
+* ``rainDataStart`` - starting time of gathered data.
+* ``rainDataEnd``   - ending time of gathered data.
+* ``rainLaMetric``  - data formatted for a LaMetric device.
+* ``rainMax``       - maximal amount of precipiation for **any** 5 minute interval of the gathered data in mm/h.
+* ``rainNow``       - amount of precipiation for the **current** 5 minute interval in mm/h.
+* ``rainTotal``     - total amount of precipition for the gathered data in mm/h.
+
+<span id="Buienradarattr" />
+
+### Attributes
+* ``disabled on|off``   - If ``disabled`` is set to `on`, no further requests to Buienradar.nl will be performed. ``off`` reactives the module, also if the attribute ist simply deleted.
