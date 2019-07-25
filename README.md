@@ -1,4 +1,4 @@
-# FHEM::Twilight
+# FHEM::Buienradar
 
 ## General description
 ``FHEM::Buienradar`` extends [FHEM](https://fhem.de/) with precipiation information, delivered by the dutch service <a href="https://buienradar.nl">Buienradar</a>.
