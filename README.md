@@ -10,8 +10,8 @@ This software is public domain by the [Unlicense](https://unlicense.org/).
 You are invited to send pull requests to the ``development`` branch whenever you think you can contribute with some useful improvements to the module. The module maintainer will review you code and decide whether it is going to be part of the module in a future release. Please read the guidelines for [contributions to unlicensed software](https://unlicense.org/#unlicensing-contributions). A [Waiver](Waiver.md) is available.
 
 ## Branching model
-* `stable` contains the current version as delivered by `fhem update` from the [official FHEM Repository](https://svn.fhem.de/trac/browser/trunk/fhem/FHEM/59_Twilight.pm).
-* ``oldstable`` contains the previous release version, just for stability issues. Issues for ``oldstable`` are not ``accepted``.
+* ``stable`` contains the current version. 
+* ``oldstable`` contains the previous release version, just for stability issues. Issues for ``oldstable`` are **not** accepted.
 * ``testing`` contains the next release version, it's considered stable also, but might contains bugs or issues. Fixed set of features.
 * ``development`` is not much surprising under development, can change at any time and is certainly **not** stable. Don't use it.
 
