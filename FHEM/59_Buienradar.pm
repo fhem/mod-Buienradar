@@ -46,7 +46,8 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.1.0';
+our $version = '2.2.0';
+our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
 GP_Export(
@@ -139,6 +140,8 @@ sub Initialize($) {
     $hash->{AttrList}    = join(' ',
         (
             'disabled:on,off',
+            'region:nl,de',
+            'interval:10,60,120,180,240,300'
         )
     ) . " $::readingFnAttributes";
     $hash->{".PNG"} = "";
@@ -152,11 +155,15 @@ sub Detail($$$$) {
 
     return if ( !defined( $hash->{URL} ) );
 
-    return
-        HTML( $hash->{NAME} )
-      . "<p><a href="
-      . $hash->{URL}
-      . " target=_blank>Raw JSON data (new window)</a></p>";
+    if (::ReadingsVal($hash->{NAME}, "rainData", "unknown") ne "unknown") {
+        return
+            HTML($hash->{NAME})
+                . "<p><a href="
+                . $hash->{URL}
+                . " target=_blank>Raw JSON data (new window)</a></p>"
+    } else {
+        return "<div><a href='$hash->{URL}'>Raw JSON data (new window)</a></div>";
+    }
 }
 
 #####################################
@@ -290,6 +297,43 @@ sub Attr {
                 }
             }
         }
+
+        when ('region') {
+            return "${attribute_value} is no valid value for region. Only 'de' or 'nl' are allowed!"
+                if $attribute_value !~ /^(de|nl)$/ and $command eq "set";
+
+            given ($command) {
+                when ("set") {
+                    $hash->{REGION} = $attribute_value;
+                }
+
+                when ("del") {
+                    $hash->{REGION} = "nl";
+                }
+            }
+
+            RequestUpdate($hash);
+            return undef;
+        }
+
+        when ("interval") {
+            return "${attribute_value} is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!"
+                if $attribute_value !~ /^(10|60|120|180|240|300)$/ and $command eq "set";
+
+            given ($command) {
+                when ("set") {
+                    $hash->{INTERVAL} = $attribute_value;
+                }
+
+                when ("del") {
+                    $hash->{INTERVAL} = $FHEM::Buienradar::default_interval;
+                }
+            }
+
+            Timer($hash);
+            return undef;
+        }
+
     }
 }
 
@@ -325,16 +369,14 @@ sub Define($$) {
           . " Syntax: define <name> Buienradar [<latitude> <longitude>]";
     }
 
-    $hash->{STATE} = "Initialized";
+    ::readingsSingleUpdate($hash, 'state', 'Initialized', 1);
 
     my $name = $a[0];
     $device = $name;
 
-        # alle 2,5 Minuten
-    my $interval = 60 * 2.5;
 
-    $hash->{VERSION}                    = $version;
-    $hash->{INTERVAL}   = $interval;
+    $hash->{VERSION}    = $version;
+    $hash->{INTERVAL}   = $FHEM::Buienradar::default_interval;
     $hash->{LATITUDE}   = $latitude;
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
@@ -346,6 +388,13 @@ sub Define($$) {
         ::readingsBulkUpdate( $hash, "rainBegin", "unknown");
         ::readingsBulkUpdate( $hash, "rainEnd", "unknown");
     ::readingsEndUpdate( $hash, 1 );
+
+    # set default region nl
+    ::CommandAttr(undef, $name . ' region nl')
+        unless (::AttrVal($name, 'region', undef));
+
+    ::CommandAttr(undef, $name . ' interval ' . $FHEM::Buienradar::default_interval)
+        unless (::AttrVal($name, 'interval', undef));
 
     Timer($hash);
 
@@ -369,13 +418,13 @@ sub Timer($) {
 
 sub RequestUpdate($) {
     my ($hash) = @_;
+    my $region = $hash->{REGION};
 
-    #   @todo: https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=51.6&lon=7.3&region=de&unit=mm/u
     $hash->{URL} =
       ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php" )
         . "?lat="       . $hash->{LATITUDE}
         . "&lon="       . $hash->{LONGITUDE}
-        . '&region='    . 'nl'
+        . '&region='    . $region
         . '&unit='      . 'mm/u';
 
     my $param = {
@@ -440,33 +489,57 @@ sub ParseHttpResponse($) {
 
     if ( $err ne "" ) {
         # Debugging("$name: error while requesting " . $param->{url} . " - $err" );
-        $hash->{STATE} = "Error: " . $err . " => " . $data;
+        ::readingsSingleUpdate($hash, 'state', "Error: " . $err . " => " . $data, 1);
+        ResetReadings($hash);
     }
     elsif ( $data ne "" ) {
         # Debugging("$name returned: $data");
         my $forecast_data;
+        my $error;
 
         if(defined $param->{'code'} && $param->{'code'} ne "200") {
-            push @errors, "HTTP response code is not 200: " . $param->{'code'};
+            $error = sprintf(
+                "Pulling %s returns HTTP status code %d instead of 200.",
+                $hash->{URL},
+                $param->{'code'}
+            );
+            ::Log3($name, 1, "[$name] $error");
+            ::Log3($name, 3, "[$name] " . Dumper($param)) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::readingsSingleUpdate($hash, 'state', $error, 1);
+            ResetReadings($hash);
+            return undef;
         }
 
         $forecast_data = eval { $forecast_data = from_json($data) } unless @errors;
 
         if ($@) {
-            push @errors, "Invalid JSON: " . Dumper($@);
-        }
-
-        if (@errors) {
-            ::Log3($name, 1, "$name had errors while working:\n" . join("\n", @errors));
-            $hash->{STATE} = "Error";
+            $error = sprintf(
+                "Can't evaluate JSON from %s: %s",
+                $hash->{URL},
+                $@
+            );
+            ::Log3($name, 1, "[$name] $error");
+            ::Log3($name, 3, "[$name] " . join("", map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::readingsSingleUpdate($hash, 'state', $error, 1);
+            ResetReadings($hash);
             return undef;
         }
 
-        # @todo this here is the problem
+        if ($forecast_data->{'success'} ne "true") {
+            $error = "Got JSON but buienradar.nl has some troubles delivering meaningful data!";
+            ::Log3($name, 1, "[$name] $error");
+            ::Log3($name, 3, "[$name] " . join("", map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::readingsSingleUpdate($hash, 'state', $error, 1);
+            ResetReadings($hash);
+            return undef;
+        }
+
         my @precip = @{$forecast_data->{"precip"}} unless @errors;
 
-        Debugging(Dumper @precip);
-        Debugging(Dumper @errors);
+        ::Log3($name, 3, sprintf(
+            "[%s] Parsed the following data from the buienradar JSON:\n%s",
+            $name, join("", map { "[$name] $_" } Dumper(@precip))
+        )) if ::AttrVal("global", "stacktrace", 0) eq "1";
 
         $hash->{DATA} = join(", ", @precip);
 
@@ -506,12 +579,11 @@ sub ParseHttpResponse($) {
                 };
             }
 
-            $hash->{STATE} = sprintf( "%.3f", $rainNow );
-
             ::readingsBeginUpdate($hash);
+                ::readingsBulkUpdate( $hash, "state", sprintf( "%.3f", $rainNow ) );
                 ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
                 ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainTotal) );
-                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f mm/h", $rainNow ) );
+                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f", $rainNow ) );
                 ::readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
                 ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
                 ::readingsBulkUpdate( $hash, "rainDataEnd", strftime "%R", localtime $dataEnd );
@@ -522,6 +594,23 @@ sub ParseHttpResponse($) {
             ::readingsEndUpdate( $hash, 1 );
         }
     }
+}
+
+sub ResetReadings {
+    my $hash = shift;
+
+    ::readingsBeginUpdate($hash);
+    ::readingsBulkUpdate( $hash, "rainTotal", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainAmount", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainNow", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainLaMetric", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainDataStart", "unknown");
+    ::readingsBulkUpdate( $hash, "rainDataEnd", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainMax", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainBegin", "unknown");
+    ::readingsBulkUpdate( $hash, "rainEnd", "unknown");
+    ::readingsBulkUpdate( $hash, "rainData", "unknown");
+    ::readingsEndUpdate( $hash, 1 );
 }
 
 sub Debugging {
@@ -576,7 +665,15 @@ So the smallest possible definition is:</p>
 <p><span id="Buienradarattr"></span></p>
 <h3 id="attributes">Attributes</h3>
 <ul>
-  <li><code>disabled on|off</code> - If <code>disabled</code> is set to <code>on</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactives the module, also if the attribute ist simply deleted.</li>
+  <li>
+    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - If <code>disabled</code> is set to <code>on</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactivates the device, also if the attribute ist simply deleted.<br>
+  </li>
+  <li>
+    <a name="region" id="region"></a> <code>region nl|de</code> - Allowed values are <code>nl</code> (default value) and <code>de</code>. In some cases, especially in the south and east of Germany, <code>de</code> returns values at all.<br>
+  </li>
+  <li>
+    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Data update every <var>n</var> seconds. <strong>Attention!</strong> 10 seconds is a very aggressive value and should be chosen carefully, <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.
+  </li>
 </ul>
 
 =end html
@@ -620,7 +717,15 @@ Die minimalste Definition lautet demnach:</p>
 <p><span id="Buienradarattr"></span></p>
 <h3 id="attribute">Attribute</h3>
 <ul>
-  <li><code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.</li>
+  <li>
+    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.<br>
+  </li>
+  <li>
+    <a name="region" id="region"></a> <code>region nl|de</code> - Erlaubte Werte sind <code>nl</code> (Standardwert) und <code>de</code>. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert <code>de</code> überhaupt Werte.<br>
+  </li>
+  <li>
+    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Aktualisierung der Daten alle <var>n</var> Sekunden. <strong>Achtung!</strong> 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden.
+  </li>
 </ul>
 
 =end html_DE
@@ -646,7 +751,7 @@ Die minimalste Definition lautet demnach:</p>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
