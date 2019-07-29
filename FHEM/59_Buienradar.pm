@@ -50,6 +50,27 @@ our $version = '2.2.0';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
+our %Translations = (
+    'GChart' => {
+        'hAxis' => {
+            'de'    =>  'Uhrzeit',
+            'en'    =>  'Time',
+        },
+        'vAxis' => {
+            'de'    => 'mm/h',
+            'en'    => 'mm/h',
+        },
+        'title' => {
+            'de'    => 'Niederschlagsvorhersage für %s, %s',
+            'en'    =>  'Precipiton forecast for %s, %s',
+        },
+        'legend' => {
+            'de'    => 'Niederschlag',
+            'en'    => 'Precipiation',
+        },
+    }
+);
+
 GP_Export(
     qw(
         Initialize
@@ -477,6 +498,63 @@ END_MESSAGE
     return ($as_html);
 }
 
+sub GChart {
+    my $name = shift;
+    my $hash = $::defs{$name};
+
+    my $language = lc ::AttrVal("global", "language", "DE");
+
+    my $hAxis   = $FHEM::Buienradar::Translations{'GChart'}{'hAxis'}{$language};
+    my $vAxis   = $FHEM::Buienradar::Translations{'GChart'}{'vAxis'}{$language};
+    my $title   = sprintf(
+        $FHEM::Buienradar::Translations{'GChart'}{'title'}{$language},
+        $hash->{LATITUDE},
+        $hash->{LONGITUDE}
+    );
+    my $legend  = $FHEM::Buienradar::Translations{'GChart'}{'legend'}{$language};
+    my $data    = ::ReadingsVal($name, "chartData", "['00:00', '0.000']");
+
+    return <<"CHART"
+<div id="chart_${name}"; style="width:100%; height:100%"></div>
+<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+
+    google.charts.load("current", {packages:["corechart"]});
+    google.charts.setOnLoadCallback(drawChart);
+    function drawChart() {
+        var data = google.visualization.arrayToDataTable([
+            ['string', '${legend}'],
+            ${data}
+        ]);
+
+        var options = {
+            title: "${title}",
+            hAxis: {
+                title: "${hAxis}",
+                slantedText:true,
+                slantedTextAngle: 45,
+                textStyle: {
+                    fontSize: 10}
+            },
+            vAxis: {
+                minValue: 0,
+                title: "${vAxis}"
+            }
+        };
+
+        var my_div = document.getElementById(
+            "chart_${name}");        var chart = new google.visualization.AreaChart(my_div);
+        google.visualization.events.addListener(chart, 'ready', function () {
+            my_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
+        });
+
+        chart.draw(data, options);}
+</script>
+
+CHART
+}
+
+
 sub ParseHttpResponse($) {
     my ( $param, $err, $data ) = @_;
     my $hash = $param->{hash};
@@ -554,11 +632,16 @@ sub ParseHttpResponse($) {
             my $forecast_start  = $dataStart;
             my $rainNow         = undef;
             my $rainData        = join(':', @precip);
+            my %chartData;
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
-                my $start    = $forecast_start + $precip_index * 5 * ONE_MINUTE;
-                my $end      = $start + 5 * ONE_MINUTE;
-                my $precip   = $precip[$precip_index];
+                my $start           = $forecast_start + $precip_index * 5 * ONE_MINUTE;
+                my $end             = $start + 5 * ONE_MINUTE;
+                my $precip          = $precip[$precip_index];
+
+                # create chart data for the PNG creation
+                # Google takes the data as JSON encoded time => value pairs
+                $chartData{strftime '%H:%M', localtime $start}  = sprintf('%.3f', $precip);
 
                 if (!$rainStart and $precip > 0) {
                     $rainStart  = $start;
@@ -591,6 +674,7 @@ sub ParseHttpResponse($) {
                 ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
                 ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
                 ::readingsBulkUpdate( $hash, "rainData", $rainData);
+                ::readingsBulkUpdate( $hash, "chartData", join ', ', map { my ($k, $v) = ($_, $chartData{$_}); "['$k', $v]" } sort keys %chartData);
             ::readingsEndUpdate( $hash, 1 );
         }
     }
@@ -675,6 +759,20 @@ So the smallest possible definition is:</p>
     <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Data update every <var>n</var> seconds. <strong>Attention!</strong> 10 seconds is a very aggressive value and should be chosen carefully, <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.
   </li>
 </ul>
+<h3 id="visualisation">Visualisation</h3>
+<p>Buienradar offers besides the usual view as device also the possibility to visualize the data as charts in different formats.</p>
+<ul>
+  <li>
+    <p>An HTML version that is displayed in the detail view by default and can be viewed with</p>
+    <pre><code>{ FHEM::Buienradar::HTML("buienradar device name")}</code></pre>
+    <p>can be retrieved.</p>
+  </li>
+  <li>
+    <p>A chart generated by Google Charts in <abbr>PNG</abbr> format, which can be viewed with</p>
+    <pre><code>{ FHEM::Buienradar::GChart("buienradar device name")}</code></pre>
+    <p>can be retrieved. <strong>Caution!</strong> Please note that data is transferred to Google for this purpose!</p>
+  </li>
+</ul>
 
 =end html
 
@@ -725,6 +823,19 @@ Die minimalste Definition lautet demnach:</p>
   </li>
   <li>
     <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Aktualisierung der Daten alle <var>n</var> Sekunden. <strong>Achtung!</strong> 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden.
+  </li>
+</ul>
+<h3 id="visualisierungen">Visualisierungen</h3>
+<p>Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, die Daten als Charts in verschiedenen Formaten zu visualisieren.</p>
+<ul>
+  <li>
+    <p>Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit</p>
+    <pre><code>{ FHEM::Buienradar::HTML("name des buienradar device")}</code></pre>abgerufen werden.<br>
+  </li>
+  <li>
+    <p>Ein von Google Charts generiertes Diagramm im <abbr>PNG</abbr>-Format, welcher mit</p>
+    <pre><code>{ FHEM::Buienradar::GChart("name des buienradar device")}</code></pre>
+    <p>abgerufen werden kann. <strong>Achtung!</strong> Dazu werden Daten an Google übertragen!</p>
   </li>
 </ul>
 
