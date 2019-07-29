@@ -47,6 +47,7 @@ use experimental qw( switch );
 
 our $device;
 our $version = '2.2.0';
+our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
 GP_Export(
@@ -140,6 +141,7 @@ sub Initialize($) {
         (
             'disabled:on,off',
             'region:nl,de',
+            'interval:10,60,120,180,240,300'
         )
     ) . " $::readingFnAttributes";
     $hash->{".PNG"} = "";
@@ -314,6 +316,24 @@ sub Attr {
             return undef;
         }
 
+        when ("interval") {
+            return "${attribute_value} is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!"
+                if $attribute_value !~ /^(10|60|120|180|240|300)$/ and $command eq "set";
+
+            given ($command) {
+                when ("set") {
+                    $hash->{INTERVAL} = $attribute_value;
+                }
+
+                when ("del") {
+                    $hash->{INTERVAL} = $FHEM::Buienradar::default_interval;
+                }
+            }
+
+            Timer($hash);
+            return undef;
+        }
+
     }
 }
 
@@ -354,11 +374,9 @@ sub Define($$) {
     my $name = $a[0];
     $device = $name;
 
-        # alle 2,5 Minuten
-    my $interval = 60 * 2.5;
 
-    $hash->{VERSION}                    = $version;
-    $hash->{INTERVAL}   = $interval;
+    $hash->{VERSION}    = $version;
+    $hash->{INTERVAL}   = $FHEM::Buienradar::default_interval;
     $hash->{LATITUDE}   = $latitude;
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
@@ -374,6 +392,9 @@ sub Define($$) {
     # set default region nl
     ::CommandAttr(undef, $name . ' region nl')
         unless (::AttrVal($name, 'region', undef));
+
+    ::CommandAttr(undef, $name . ' interval ' . $FHEM::Buienradar::default_interval)
+        unless (::AttrVal($name, 'interval', undef));
 
     Timer($hash);
 
