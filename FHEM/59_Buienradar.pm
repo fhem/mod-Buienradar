@@ -152,11 +152,15 @@ sub Detail($$$$) {
 
     return if ( !defined( $hash->{URL} ) );
 
-    return
-        HTML( $hash->{NAME} )
-      . "<p><a href="
-      . $hash->{URL}
-      . " target=_blank>Raw JSON data (new window)</a></p>";
+    if (::ReadingsVal($hash->{NAME}, "rainData", "unknown") ne "unknown") {
+        return
+            HTML($hash->{NAME})
+                . "<p><a href="
+                . $hash->{URL}
+                . " target=_blank>Raw JSON data (new window)</a></p>"
+    } else {
+        return "<div><a href='$hash->{URL}'>Raw JSON data (new window)</a></div>";
+    }
 }
 
 #####################################
@@ -325,7 +329,7 @@ sub Define($$) {
           . " Syntax: define <name> Buienradar [<latitude> <longitude>]";
     }
 
-    $hash->{STATE} = "Initialized";
+    ::readingsSingleUpdate($hash, 'state', 'Initialized', 1);
 
     my $name = $a[0];
     $device = $name;
@@ -440,33 +444,57 @@ sub ParseHttpResponse($) {
 
     if ( $err ne "" ) {
         # Debugging("$name: error while requesting " . $param->{url} . " - $err" );
-        $hash->{STATE} = "Error: " . $err . " => " . $data;
+        ::readingsSingleUpdate($hash, 'state', "Error: " . $err . " => " . $data, 1);
+        ResetReadings($hash);
     }
     elsif ( $data ne "" ) {
         # Debugging("$name returned: $data");
         my $forecast_data;
+        my $error;
 
         if(defined $param->{'code'} && $param->{'code'} ne "200") {
-            push @errors, "HTTP response code is not 200: " . $param->{'code'};
+            $error = sprintf(
+                "Pulling %s returns HTTP status code %d instead of 200.",
+                $hash->{URL},
+                $param->{'code'}
+            );
+            ::Log3($name, 1, "[$name] $error");
+            ::Log3($name, 3, "[$name] " . Dumper($param)) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::readingsSingleUpdate($hash, 'state', $error, 1);
+            ResetReadings($hash);
+            return undef;
         }
 
         $forecast_data = eval { $forecast_data = from_json($data) } unless @errors;
 
         if ($@) {
-            push @errors, "Invalid JSON: " . Dumper($@);
-        }
-
-        if (@errors) {
-            ::Log3($name, 1, "$name had errors while working:\n" . join("\n", @errors));
-            $hash->{STATE} = "Error";
+            $error = sprintf(
+                "Can't evaluate JSON from %s: %s",
+                $hash->{URL},
+                $@
+            );
+            ::Log3($name, 1, "[$name] $error");
+            ::Log3($name, 3, "[$name] " . join("", map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::readingsSingleUpdate($hash, 'state', $error, 1);
+            ResetReadings($hash);
             return undef;
         }
 
-        # @todo this here is the problem
+        if ($forecast_data->{'success'} ne "true") {
+            $error = "Got JSON but buienradar.nl has some troubles delivering meaningful data!";
+            ::Log3($name, 1, "[$name] $error");
+            ::Log3($name, 3, "[$name] " . join("", map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::readingsSingleUpdate($hash, 'state', $error, 1);
+            ResetReadings($hash);
+            return undef;
+        }
+
         my @precip = @{$forecast_data->{"precip"}} unless @errors;
 
-        Debugging(Dumper @precip);
-        Debugging(Dumper @errors);
+        ::Log3($name, 3, sprintf(
+            "[%s] Parsed the following data from the buienradar JSON:\n%s",
+            $name, join("", map { "[$name] $_" } Dumper(@precip))
+        )) if ::AttrVal("global", "stacktrace", 0) eq "1";
 
         $hash->{DATA} = join(", ", @precip);
 
@@ -506,9 +534,8 @@ sub ParseHttpResponse($) {
                 };
             }
 
-            $hash->{STATE} = sprintf( "%.3f", $rainNow );
-
             ::readingsBeginUpdate($hash);
+                ::readingsBulkUpdate( $hash, "state", sprintf( "%.3f", $rainNow ) );
                 ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
                 ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainTotal) );
                 ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f mm/h", $rainNow ) );
@@ -522,6 +549,23 @@ sub ParseHttpResponse($) {
             ::readingsEndUpdate( $hash, 1 );
         }
     }
+}
+
+sub ResetReadings {
+    my $hash = shift;
+
+    ::readingsBeginUpdate($hash);
+    ::readingsBulkUpdate( $hash, "rainTotal", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainAmount", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainNow", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainLaMetric", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainDataStart", "unknown");
+    ::readingsBulkUpdate( $hash, "rainDataEnd", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainMax", "unknown" );
+    ::readingsBulkUpdate( $hash, "rainBegin", "unknown");
+    ::readingsBulkUpdate( $hash, "rainEnd", "unknown");
+    ::readingsBulkUpdate( $hash, "rainData", "unknown");
+    ::readingsEndUpdate( $hash, 1 );
 }
 
 sub Debugging {
