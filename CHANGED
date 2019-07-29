@@ -1,6 +1,6 @@
 Last Buienradar updates (29.07.2019)
+  1d04624 29.07.2019 03:35 [BUIENRADAR-17] added an interval attribute for configuring how often the service is queried
+  4b99564 29.07.2019 03:14 [BUIENRADAR-19] Added the feature to 2.2.0, including the latest updates for the command refs
   ec02857 29.07.2019 01:13 Merged in feature/BUIENRADAR-19 (pull request #20)
   32a63b3 29.07.2019 03:08 Changed version to 2.2.0
   d8e7b04 29.07.2019 03:07 [BUIENRADAR-19] added a region attribute for configuring the region
-  3cbe894 29.07.2019 02:47 [BUIENRADAR-18] removed units from the readings
-  90946e1 29.07.2019 02:43 [BUIENRADAR-21] [BUIENRADAR-22] do not longer write directly to $hash->{STATE} but use the proper function instead [BUIENRADAR-20] do not longer persist errors [BUIENRADAR-23] handle JSON results with success = false
