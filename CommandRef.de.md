@@ -44,4 +44,17 @@ Aktuell liefert Buienradar folgende Readings:
 
 * <a name="disabled"></a> ``disabled on|off``   - Wenn ``disabled`` auf `on` gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. ``off`` reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.
 * <a name="region"></a> ``region nl|de`` - Erlaubte Werte sind ``nl`` (Standardwert) und ``de``. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert ``de`` überhaupt Werte.
-* <a name="interval"></a>  ``interval 10|60|120|180|240|300`` - Aktualisierung der Daten alle <var>n</var> Sekunden. **Achtung!** 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden.  
+* <a name="interval"></a>  ``interval 10|60|120|180|240|300`` - Aktualisierung der Daten alle <var>n</var> Sekunden. **Achtung!** 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden. 
+
+### Visualisierungen
+Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, die Daten als Charts in verschiedenen Formaten zu visualisieren.
+* Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit 
+        
+        { FHEM::Buienradar::HTML("name des buienradar device")}
+        
+    abgerufen werden.
+* Ein von Google Charts generiertes Diagramm im <abbr>PNG</abbr>-Format, welcher mit
+
+        { FHEM::Buienradar::GChart("name des buienradar device")}
+        
+    abgerufen werden kann. **Achtung!** Dazu werden Daten an Google übertragen!
