@@ -644,7 +644,8 @@ So the smallest possible definition is:</p>
 <p><span id="Buienradarattr"></span></p>
 <h3 id="attributes">Attributes</h3>
 <ul>
-  <li><code>disabled on|off</code> - If <code>disabled</code> is set to <code>on</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactives the module, also if the attribute ist simply deleted.</li>
+  <li><code>disabled on|off</code> - If <code>disabled</code> is set to <code>on</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactives the module, also if the attribute ist simply deleted.<br></li>
+  <li><code>region nl|de</code> - Allowed values are <code>nl</code> (default value) and <code>de</code>. In some cases, especially in the south and east of Germany, <code>de</code> returns values at all.</li>
 </ul>
 
 =end html
@@ -688,7 +689,8 @@ Die minimalste Definition lautet demnach:</p>
 <p><span id="Buienradarattr"></span></p>
 <h3 id="attribute">Attribute</h3>
 <ul>
-  <li><code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.</li>
+  <li><code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.<br></li>
+  <li><code>region nl|de</code> - Erlaubte Werte sind <code>nl</code> (Standardwert) und <code>de</code>. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert <code>de</code> überhaupt Werte.</li>
 </ul>
 
 =end html_DE
