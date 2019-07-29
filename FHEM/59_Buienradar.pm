@@ -538,7 +538,7 @@ sub ParseHttpResponse($) {
                 ::readingsBulkUpdate( $hash, "state", sprintf( "%.3f", $rainNow ) );
                 ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
                 ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainTotal) );
-                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f mm/h", $rainNow ) );
+                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f", $rainNow ) );
                 ::readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
                 ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
                 ::readingsBulkUpdate( $hash, "rainDataEnd", strftime "%R", localtime $dataEnd );
