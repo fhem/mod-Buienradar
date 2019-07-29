@@ -46,7 +46,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.1.0';
+our $version = '2.2.0';
 our @errors;
 
 GP_Export(
@@ -690,7 +690,7 @@ Die minimalste Definition lautet demnach:</p>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.1.0",
+    "version": "2.2.0",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
