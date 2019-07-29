@@ -1,6 +1,6 @@
 Last Buienradar updates (29.07.2019)
+  bee9c70 29.07.2019 03:38 [BUIENRADAR-19] Merge into 2.2.0
   1d04624 29.07.2019 03:35 [BUIENRADAR-17] added an interval attribute for configuring how often the service is queried
   4b99564 29.07.2019 03:14 [BUIENRADAR-19] Added the feature to 2.2.0, including the latest updates for the command refs
   ec02857 29.07.2019 01:13 Merged in feature/BUIENRADAR-19 (pull request #20)
   32a63b3 29.07.2019 03:08 Changed version to 2.2.0
-  d8e7b04 29.07.2019 03:07 [BUIENRADAR-19] added a region attribute for configuring the region
