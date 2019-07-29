@@ -62,11 +62,11 @@ our %Translations = (
         },
         'title' => {
             'de'    => 'Niederschlagsvorhersage für %s, %s',
-            'en'    =>  'Precipiton forecast for %s, %s',
+            'en'    =>  'Precipitation forecast for %s, %s',
         },
         'legend' => {
             'de'    => 'Niederschlag',
-            'en'    => 'Precipiation',
+            'en'    => 'Precipitation',
         },
     }
 );
@@ -715,7 +715,7 @@ sub Debugging {
 
 <p><span id="Buienradar"></span></p>
 <h2 id="buienradar">Buienradar</h2>
-<p>Buienradar provides access to precipiation forecasts by the dutch service <a href="https://www.buienradar.nl">Buienradar.nl</a>.</p>
+<p>Buienradar provides access to precipitation forecasts by the dutch service <a href="https://www.buienradar.nl">Buienradar.nl</a>.</p>
 <p><span id="Buienradardefine"></span></p>
 <h3 id="define">Define</h3>
 <pre><code>define &lt;devicename&gt; Buienradar [latitude] [longitude]</code></pre>
@@ -726,8 +726,8 @@ So the smallest possible definition is:</p>
 <h3 id="get">Get</h3>
 <p><var>Get</var> will get you the following:</p>
 <ul>
-  <li><code>rainDuration</code> - predicted duration of the next precipiation in minutes.<br></li>
-  <li><code>startse</code> - next precipiation starts in <var>n</var> minutes. <strong>Obsolete!</strong><br></li>
+  <li><code>rainDuration</code> - predicted duration of the next precipitation in minutes.<br></li>
+  <li><code>startse</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong><br></li>
   <li><code>refresh</code> - get new data from Buienradar.nl.<br></li>
   <li><code>version</code> - get current version of the Buienradar module.<br></li>
   <li><code>testVal</code> - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². <strong>Obsolete!</strong></li>
@@ -736,14 +736,14 @@ So the smallest possible definition is:</p>
 <h3 id="readings">Readings</h3>
 <p>Buienradar provides several readings:</p>
 <ul>
-  <li><code>rainAmount</code> - amount of predicted precipiation in mm/h.<br></li>
-  <li><code>rainBegin</code> - starting time of the next precipiation, <var>unknown</var> if no precipiation is predicted.<br></li>
-  <li><code>raindEnd</code> - ending time of the next precipiation, <var>unknown</var> if no precipiation is predicted.<br></li>
+  <li><code>rainAmount</code> - amount of predicted precipitation in mm/h.<br></li>
+  <li><code>rainBegin</code> - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.<br></li>
+  <li><code>raindEnd</code> - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.<br></li>
   <li><code>rainDataStart</code> - starting time of gathered data.<br></li>
   <li><code>rainDataEnd</code> - ending time of gathered data.<br></li>
   <li><code>rainLaMetric</code> - data formatted for a LaMetric device.<br></li>
-  <li><code>rainMax</code> - maximal amount of precipiation for <strong>any</strong> 5 minute interval of the gathered data in mm/h.<br></li>
-  <li><code>rainNow</code> - amount of precipiation for the <strong>current</strong> 5 minute interval in mm/h.<br></li>
+  <li><code>rainMax</code> - maximal amount of precipitation for <strong>any</strong> 5 minute interval of the gathered data in mm/h.<br></li>
+  <li><code>rainNow</code> - amount of precipitation for the <strong>current</strong> 5 minute interval in mm/h.<br></li>
   <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm/h.</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>

@@ -1,7 +1,7 @@
 <span id="Buienradar" />
 
 ## Buienradar
-Buienradar provides access to precipiation forecasts by the dutch service [Buienradar.nl](https://www.buienradar.nl).
+Buienradar provides access to precipitation forecasts by the dutch service [Buienradar.nl](https://www.buienradar.nl).
 
 <span id="Buienradardefine"></span>
 ### Define
@@ -17,8 +17,8 @@ So the smallest possible definition is:
 ### Get
 <var>Get</var> will get you the following:
 
-* ``rainDuration``  - predicted duration of the next precipiation in minutes.
-* ``startse``       - next precipiation starts in <var>n</var> minutes. **Obsolete!**
+* ``rainDuration``  - predicted duration of the next precipitation in minutes.
+* ``startse``       - next precipitation starts in <var>n</var> minutes. **Obsolete!**
 * ``refresh``       - get new data from Buienradar.nl.
 * ``version``       - get current version of the Buienradar module.
 * ``testVal``       - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². **Obsolete!**
@@ -27,14 +27,14 @@ So the smallest possible definition is:
 
 ### Readings
 Buienradar provides several readings:
-* ``rainAmount``    - amount of predicted precipiation in mm/h.
-* ``rainBegin``     - starting time of the next precipiation, <var>unknown</var> if no precipiation is predicted.
-* ``raindEnd``      - ending time of the next precipiation, <var>unknown</var> if no precipiation is predicted.
+* ``rainAmount``    - amount of predicted precipitation in mm/h.
+* ``rainBegin``     - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
+* ``raindEnd``      - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
 * ``rainDataStart`` - starting time of gathered data.
 * ``rainDataEnd``   - ending time of gathered data.
 * ``rainLaMetric``  - data formatted for a LaMetric device.
-* ``rainMax``       - maximal amount of precipiation for **any** 5 minute interval of the gathered data in mm/h.
-* ``rainNow``       - amount of precipiation for the **current** 5 minute interval in mm/h.
+* ``rainMax``       - maximal amount of precipitation for **any** 5 minute interval of the gathered data in mm/h.
+* ``rainNow``       - amount of precipitation for the **current** 5 minute interval in mm/h.
 * ``rainTotal``     - total amount of precipition for the gathered data in mm/h.
 
 <span id="Buienradarattr" />
