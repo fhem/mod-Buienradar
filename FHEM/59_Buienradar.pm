@@ -300,7 +300,7 @@ sub Attr {
 
         when ('region') {
             return "${attribute_value} is no valid value for region. Only 'de' or 'nl' are allowed!"
-                if $attribute_value !~ /^(de|nl)$/;
+                if $attribute_value !~ /^(de|nl)$/ and $command eq "set";
 
             given ($command) {
                 when ("set") {
