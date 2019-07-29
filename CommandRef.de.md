@@ -42,3 +42,4 @@ Aktuell liefert Buienradar folgende Readings:
 
 ### Attribute
 * ``disabled on|off``   - Wenn ``disabled`` auf `on` gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. ``off`` reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.
+* ``region nl|de`` - Erlaubte Werte sind ``nl`` (Standardwert) und ``de``. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert ``de`` überhaupt Werte. 
