@@ -139,6 +139,7 @@ sub Initialize($) {
     $hash->{AttrList}    = join(' ',
         (
             'disabled:on,off',
+            'region:nl,de',
         )
     ) . " $::readingFnAttributes";
     $hash->{".PNG"} = "";
@@ -294,6 +295,25 @@ sub Attr {
                 }
             }
         }
+
+        when ('region') {
+            return "${attribute_value} is no valid value for region. Only 'de' or 'nl' are allowed!"
+                if $attribute_value !~ /^(de|nl)$/;
+
+            given ($command) {
+                when ("set") {
+                    $hash->{REGION} = $attribute_value;
+                }
+
+                when ("del") {
+                    $hash->{REGION} = "nl";
+                }
+            }
+
+            RequestUpdate($hash);
+            return undef;
+        }
+
     }
 }
 
@@ -351,6 +371,10 @@ sub Define($$) {
         ::readingsBulkUpdate( $hash, "rainEnd", "unknown");
     ::readingsEndUpdate( $hash, 1 );
 
+    # set default region nl
+    ::CommandAttr(undef, $name . ' region nl')
+        unless (::AttrVal($name, 'region', undef));
+
     Timer($hash);
 
     return undef;
@@ -373,13 +397,13 @@ sub Timer($) {
 
 sub RequestUpdate($) {
     my ($hash) = @_;
+    my $region = $hash->{REGION};
 
-    #   @todo: https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=51.6&lon=7.3&region=de&unit=mm/u
     $hash->{URL} =
       ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php" )
         . "?lat="       . $hash->{LATITUDE}
         . "&lon="       . $hash->{LONGITUDE}
-        . '&region='    . 'nl'
+        . '&region='    . $region
         . '&unit='      . 'mm/u';
 
     my $param = {
