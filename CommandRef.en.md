@@ -41,3 +41,4 @@ Buienradar provides several readings:
 
 ### Attributes
 * ``disabled on|off``   - If ``disabled`` is set to `on`, no further requests to Buienradar.nl will be performed. ``off`` reactives the module, also if the attribute ist simply deleted.
+* ``region nl|de`` - Allowed values are ``nl`` (default value) and ``de``. In some cases, especially in the south and east of Germany, ``de`` returns values at all.
