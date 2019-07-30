@@ -509,6 +509,7 @@ sub ParseHttpResponse($) {
             my $forecast_start  = $dataStart;
             my $rainNow         = undef;
             my $rainData        = join(':', @precip);
+            my $rainAmount      =   $precip[0];
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
                 my $start    = $forecast_start + $precip_index * 5 * ONE_MINUTE;
@@ -537,7 +538,7 @@ sub ParseHttpResponse($) {
             ::readingsBeginUpdate($hash);
                 ::readingsBulkUpdate( $hash, "state", sprintf( "%.3f", $rainNow ) );
                 ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
-                ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainTotal) );
+                ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainAmount) );
                 ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f mm/h", $rainNow ) );
                 ::readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
                 ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
