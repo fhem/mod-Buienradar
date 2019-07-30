@@ -1,6 +1,6 @@
 Last Buienradar updates (30.07.2019)
+  f298875 30.07.2019 16:26 [BUIENRADAR-27] fixed missing rainAmount
   90946e1 29.07.2019 02:43 [BUIENRADAR-21] [BUIENRADAR-22] do not longer write directly to $hash->{STATE} but use the proper function instead [BUIENRADAR-20] do not longer persist errors [BUIENRADAR-23] handle JSON results with success = false
   9d3b143 25.07.2019 14:53 Merged in [BUIENRADER-7]: added english documentation
   f954f29 24.07.2019 23:24 Merged in [BUIENRADER-6]: added german documentation
   413ed9b 24.07.2019 21:23 Merged in feature/BUIENRADAR-16 (pull request #12)
-  cbffdd3 24.07.2019 23:04 [BUIENRADER-6] added german documentation

@@ -608,7 +608,7 @@ So the smallest possible definition is:</p>
 <h3 id="readings">Readings</h3>
 <p>Buienradar provides several readings:</p>
 <ul>
-  <li><code>rainAmount</code> - amount of predicted precipiation in mm/h.<br></li>
+  <li><code>rainAmount</code> - amount of predicted precipiation in mm/h for the next 5 minute interval.<br></li>
   <li><code>rainBegin</code> - starting time of the next precipiation, <var>unknown</var> if no precipiation is predicted.<br></li>
   <li><code>raindEnd</code> - ending time of the next precipiation, <var>unknown</var> if no precipiation is predicted.<br></li>
   <li><code>rainDataStart</code> - starting time of gathered data.<br></li>
@@ -652,7 +652,7 @@ Die minimalste Definition lautet demnach:</p>
 <h3 id="readings">Readings</h3>
 <p>Aktuell liefert Buienradar folgende Readings:</p>
 <ul>
-  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h.<br></li>
+  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h für den nächsten 5-Minuten-Intervall.<br></li>
   <li><code>rainBegin</code> - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
   <li><code>raindEnd</code> - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
   <li><code>rainDataStart</code> - Zeitlicher Beginn der gelieferten Niederschlagsdaten.<br></li>
