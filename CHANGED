@@ -1,6 +1,6 @@
 Last Buienradar updates (30.07.2019)
+  5441b82 30.07.2019 22:26 [FHEMBUIENRADER-29] fix for development
+  01747b8 30.07.2019 20:52 Removed shenanigans from one line
   583f598 30.07.2019 18:13 [BUIENRADER-28] merged into development
   51b7b40 30.07.2019 16:33 [BUIENRADAR-27] fixed missing rainAmount
   722d6cf 29.07.2019 06:04 [BUIENRADAR-11] fixed some typos
-  11db9fc 29.07.2019 05:58 [BUIENRADAR-11] added support for Google Charts
-  9fa3da1 29.07.2019 02:04 Merged in feature/BUIENRADAR-19 (pull request #21)
