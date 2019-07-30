@@ -737,7 +737,7 @@ So the smallest possible definition is:</p>
 <h3 id="readings">Readings</h3>
 <p>Buienradar provides several readings:</p>
 <ul>
-  <li><code>rainAmount</code> - amount of predicted precipiation in mm/h for the next 5 minute interval.<br></li>
+  <li><code>rainAmount</code> - amount of predicted precipitation in mm/h for the next 5 minute interval.<br></li>
   <li><code>rainBegin</code> - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.<br></li>
   <li><code>raindEnd</code> - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.<br></li>
   <li><code>rainDataStart</code> - starting time of gathered data.<br></li>
