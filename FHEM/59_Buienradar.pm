@@ -603,7 +603,7 @@ sub ParseHttpResponse($) {
             return undef;
         }
 
-        if ($forecast_data->{'success'} ne "true") {
+        unless ($forecast_data->{'success'}) {
             $error = "Got JSON but buienradar.nl has some troubles delivering meaningful data!";
             ::Log3($name, 1, "[$name] $error");
             ::Log3($name, 3, "[$name] " . join("", map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
