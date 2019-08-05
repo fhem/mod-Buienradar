@@ -936,7 +936,7 @@ Die minimalste Definition lautet demnach:</p>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.2.1",
+    "version": "2.2.2",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
