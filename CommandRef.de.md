@@ -58,3 +58,7 @@ Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, 
         { FHEM::Buienradar::GChart("name des buienradar device")}
         
     abgerufen werden kann. **Achtung!** Dazu werden Daten an Google übertragen!
+    
+* Für <abbr>FTUI</abbr> werden die Daten im LogProxy-Format bereitgestellt:
+
+        { FHEM::Buienradar::LogProxy("name des buienradar device")}
