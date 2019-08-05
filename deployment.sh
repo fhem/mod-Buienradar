@@ -79,8 +79,8 @@ function set_time {
     dpkg-reconfigure -f noninteractive tzdata
     
     # update time via ntp
-    aptitude install ntpdate
-    ntpdate europe.pool.ntp.org
+    # aptitude install ntpdate
+    # ntpdate europe.pool.ntp.org
 
     # activate ntp and set timezone in systemd-mode
     timedatectl set-ntp true
