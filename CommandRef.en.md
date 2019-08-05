@@ -57,3 +57,7 @@ Buienradar offers besides the usual view as device also the possibility to visua
         { FHEM::Buienradar::GChart("buienradar device name")}
         
     can be retrieved. **Caution!** Please note that data is transferred to Google for this purpose!
+    
+* <abbr>FTUI</abbr> is supported by the  LogProxy format:
+
+        { FHEM::Buienradar::LogProxy("buienradar device name")}
