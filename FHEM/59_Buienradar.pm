@@ -959,7 +959,7 @@ Die minimalste Definition lautet demnach:</p>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.2.2",
+    "version": "2.2.3",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
