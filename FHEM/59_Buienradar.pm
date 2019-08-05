@@ -47,7 +47,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.2.2';
+our $version = '2.2.3';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
@@ -499,12 +499,42 @@ END_MESSAGE
     return ($as_html);
 }
 
+=item C<FHEM::Buienradar::GChart>
+
+C<FHEM::Buienradar::GChart> returns the precipitation data from buienradar.nl as PNG, renderd by Google Charts as
+a PNG data.
+
+=cut
 sub GChart {
     my $name = shift;
     my $hash = $::defs{$name};
 
+    unless ($hash->{'.SERIALIZED'}) {
+        ::Log3($name, 3,
+            sprintf(
+                "[%s] Can't return serizalized data for FHEM::Buienradar::GChart.",
+                $name
+            )
+        );
+
+        # return dummy data
+        return undef;
+    }
+
+    # read & parse stored data
+    my %storedData = %{ Storable::thaw($hash->{".SERIALIZED"}) };
+    my $data = join ', ', map {
+        my ($k, $v) = (
+            strftime('%H:%M', localtime $storedData{$_}{'start'}),
+            sprintf('%.3f', $storedData{$_}{'precipiation'})
+        );
+        "['$k', $v]"
+    } sort keys %storedData;
+
+    # get language for language dependend legend
     my $language = lc ::AttrVal("global", "language", "DE");
 
+    # create data for the GChart
     my $hAxis   = $FHEM::Buienradar::Translations{'GChart'}{'hAxis'}{$language};
     my $vAxis   = $FHEM::Buienradar::Translations{'GChart'}{'vAxis'}{$language};
     my $title   = sprintf(
@@ -513,7 +543,6 @@ sub GChart {
         $hash->{LONGITUDE}
     );
     my $legend  = $FHEM::Buienradar::Translations{'GChart'}{'legend'}{$language};
-    my $data    = ::ReadingsVal($name, "chartData", "['00:00', '0.000']");
 
     return <<"CHART"
 <div id="chart_${name}"; style="width:100%; height:100%"></div>
@@ -694,17 +723,12 @@ sub ParseHttpResponse($) {
             my $rainNow         = undef;
             my $rainData        = join(':', @precip);
             my $rainAmount      = $precip[0];
-            my %chartData;
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
 
                 my $start           = $forecast_start + $precip_index * 5 * ONE_MINUTE;
                 my $end             = $start + 5 * ONE_MINUTE;
                 my $precip          = $precip[$precip_index];
-
-                # create chart data for the PNG creation
-                # Google takes the data as JSON encoded time => value pairs
-                $chartData{strftime '%H:%M', localtime $start}  = sprintf('%.3f', $precip);
 
                 if (!$rainStart and $precip > 0) {
                     $rainStart  = $start;
@@ -739,7 +763,6 @@ sub ParseHttpResponse($) {
                 ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
                 ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
                 ::readingsBulkUpdate( $hash, "rainData", $rainData);
-                ::readingsBulkUpdate( $hash, "chartData", join ', ', map { my ($k, $v) = ($_, $chartData{$_}); "['$k', $v]" } sort keys %chartData);
             ::readingsEndUpdate( $hash, 1 );
         }
     }
