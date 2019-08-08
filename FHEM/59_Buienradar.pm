@@ -47,7 +47,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.2.3';
+our $version = '2.2.4';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
@@ -717,12 +717,14 @@ sub ParseHttpResponse($) {
             my $rainMax         = List::Util::max @precip;
             my $rainStart       = undef;
             my $rainEnd         = undef;
+            my $rainDuration    = 0;
+            my $rainDurationMin = 0;
             my $dataStart       = $forecast_data->{start};
             my $dataEnd         = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
             my $forecast_start  = $dataStart;
             my $rainNow         = undef;
             my $rainData        = join(':', @precip);
-            my $rainAmount      = $precip[0];
+            my $rainAmount      = List::Util::sum @precip[0..11];#  $precip[0]; #$precip[0];
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
 
@@ -730,15 +732,21 @@ sub ParseHttpResponse($) {
                 my $end             = $start + 5 * ONE_MINUTE;
                 my $precip          = $precip[$precip_index];
 
+              if (::time_str2num(::TimeNow())-150 < $start) {
+
                 if (!$rainStart and $precip > 0) {
                     $rainStart  = $start;
                 }
 
                 if (!$rainEnd and $rainStart and $precip == 0) {
                     $rainEnd    = $start;
+                } elsif ($rainStart and $precip == 0 and $precip[$precip_index-1] !=0) {
+                    $rainEnd    = $start;
+                } elsif ($rainStart and $precip != 0 and $precip_index == ((scalar @precip)-1)) {
+                    $rainEnd    = $dataEnd;
                 }
 
-                if (!$rainNow and gmtime ~~ [$start..$end]) {
+                if (!$rainNow) {
                     $rainNow    = $precip;
                 }
 
@@ -747,25 +755,38 @@ sub ParseHttpResponse($) {
                     'end'          => $end,
                     'precipiation' => $precip,
                 };
+              }
             }
 
             $hash->{".SERIALIZED"} = Storable::freeze(\%precipitation_forecast);
+            $rainDurationMin = ($rainStart && $rainEnd) ? ($rainEnd-$rainStart)/60: 'unknown';
+            $rainDuration = ($rainStart && $rainEnd) ? MinToHours ($rainDurationMin): 'unknown';
+           #::Log3($name, 3, "[$name] $rainEnd $rainStart $rainDurationMin $rainDuration");
 
             ::readingsBeginUpdate($hash);
-                ::readingsBulkUpdate( $hash, "state", sprintf( "%.3f", $rainNow ) );
-                ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
-                ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainAmount) );
-                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f", $rainNow ) );
+                ::readingsBulkUpdate( $hash, "state", sprintf( "%.1f", $rainNow ) );
+                ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.1f", $rainTotal) );
+                ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.1f", $rainAmount) );
+                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.1f", $rainNow ) );
                 ::readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
-                ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
-                ::readingsBulkUpdate( $hash, "rainDataEnd", strftime "%R", localtime $dataEnd );
-                ::readingsBulkUpdate( $hash, "rainMax", sprintf( "%.3f", $rainMax ) );
-                ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
-                ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
+                ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%Y-%m-%d %H:%M:%S", localtime $dataStart);
+                ::readingsBulkUpdate( $hash, "rainDataEnd", strftime "%Y-%m-%d %H:%M:%S", localtime $dataEnd );
+                ::readingsBulkUpdate( $hash, "rainMax", sprintf( "%.1f", $rainMax ) );
+                ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%Y-%m-%d %H:%M:%S", localtime $rainStart : 'unknown'));
+                ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%Y-%m-%d %H:%M:%S", localtime $rainEnd : 'unknown'));
+                ::readingsBulkUpdate( $hash, "Start", (($rainStart) ? strftime "%H:%M", localtime $rainStart : 'unknown'));
+                ::readingsBulkUpdate( $hash, "Ende", (($rainEnd) ? strftime "%H:%M", localtime $rainEnd : 'unknown'));
+                ::readingsBulkUpdate( $hash, "rainDuration",  $rainDuration );
+                ::readingsBulkUpdate( $hash, "rainDurationMin",  $rainDurationMin );
                 ::readingsBulkUpdate( $hash, "rainData", $rainData);
             ::readingsEndUpdate( $hash, 1 );
         }
     }
+}
+
+sub MinToHours($) {
+  my($intime) = @_;
+  return sprintf("%02d:%02d",(($intime/60),$intime%60));
 }
 
 sub ResetResult {
