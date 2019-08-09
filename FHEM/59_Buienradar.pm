@@ -47,7 +47,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.2.4';
+our $version = '2.2.5';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
@@ -161,9 +161,9 @@ sub Initialize($) {
     $hash->{FW_detailFn} = "FHEM::Buienradar::Detail";
     $hash->{AttrList}    = join(' ',
         (
-            'disabled:on,off',
+            'disabled:1,0,on,off',
             'region:nl,de',
-            'interval:10,60,120,180,240,300'
+            'interval:10,60,120,180,240,300,600'
         )
     ) . " $::readingFnAttributes";
     $hash->{".PNG"} = "";
@@ -297,7 +297,7 @@ sub Attr {
                 )
             );
 
-            return "${attribute_value} is no valid value for disabled. Only 'on' or 'off' are allowed!"
+            return "${attribute_value} is no valid value for disabled. Only 'on', '1', '0' or 'off' are allowed!"
                 if $attribute_value !~ /^(on|off|0|1)$/;
 
             given ($command) {
@@ -339,8 +339,8 @@ sub Attr {
         }
 
         when ("interval") {
-            return "${attribute_value} is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!"
-                if $attribute_value !~ /^(10|60|120|180|240|300)$/ and $command eq "set";
+            return "${attribute_value} is no valid value for interval. Only 10, 60, 120, 180, 240, 300 or 600 are allowed!"
+                if $attribute_value !~ /^(10|60|120|180|240|300|600)$/ and $command eq "set";
 
             given ($command) {
                 when ("set") {
@@ -725,14 +725,39 @@ sub ParseHttpResponse($) {
             my $rainNow         = undef;
             my $rainData        = join(':', @precip);
             my $rainAmount      = List::Util::sum @precip[0..11];#  $precip[0]; #$precip[0];
+            my $as_htmlBarhead  = '<tr style="font-size:x-small;"}>';
+            my $as_htmlBar      = "";
+            my $count           = 0;
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
 
                 my $start           = $forecast_start + $precip_index * 5 * ONE_MINUTE;
                 my $end             = $start + 5 * ONE_MINUTE;
                 my $precip          = $precip[$precip_index];
+                my $timestamp       = $start;
+                my $a               = $precip;
 
-              if (::time_str2num(::TimeNow())-150 < $start) {
+              if (::time_str2num(::TimeNow()) <= $start+150) {
+                
+                if ( ( $count % 4 ) == 0 ) {
+                    $as_htmlBarhead .= '<td style="padding-left: 0; padding-right: 0">' . substr( ::FmtDateTime($timestamp), -8, 5 ) . '</td>';
+                    #$as_htmlBarhead .= '<td>' . substr( ::FmtDateTime($timestamp), -8, 5 ) . '</td>';
+                }
+                else {
+                    $as_htmlBarhead .= '<td style="padding-left: 0; padding-right: 0">&nbsp;&nbsp;&nbsp;&nbsp;</td>';
+                    #$as_htmlBarhead .= '<td>&nbsp;</td>';
+                }  
+
+                    #( $precip->{ColorAsRGB} eq "Transparent" ) ||
+                if ( ( myPrecip2RGB($a) eq "Transparent" ) || ( $a == 0 ) ) {
+                    $as_htmlBar .= '<td style="padding-left: 0; padding-right: 0" bgcolor="#ffffff">&nbsp;&nbsp;&nbsp;</td>';
+                    #$as_htmlBar .= '<td bgcolor="#ffffff">&nbsp;</td>';
+                }
+                else {
+                  $as_htmlBar .= '<td style="padding-left: 0; padding-right: 0" bgcolor="' . myPrecip2RGB($a) . '">&nbsp;&nbsp;&nbsp;</td>';
+                  #$as_htmlBar .= '<td bgcolor="' . myPrecip2RGB($a) . '">&nbsp;</td>';
+                }
+                $count++;
 
                 if (!$rainStart and $precip > 0) {
                     $rainStart  = $start;
@@ -758,6 +783,13 @@ sub ParseHttpResponse($) {
               }
             }
 
+            $as_htmlBar = "Niederschlagsvorhersage (<a href=./fhem?detail=$name>$name</a>)<BR><table>"
+                . $as_htmlBarhead
+                . "</TR><tr style='border:2pt solid black'>"
+                . $as_htmlBar
+                . "</tr></table>";
+                $hash->{".BAR"}     = $as_htmlBar;
+
             $hash->{".SERIALIZED"} = Storable::freeze(\%precipitation_forecast);
             $rainDurationMin = ($rainStart && $rainEnd) ? ($rainEnd-$rainStart)/60: 'unknown';
             $rainDuration = ($rainStart && $rainEnd) ? MinToHours ($rainDurationMin): 'unknown';
@@ -774,8 +806,9 @@ sub ParseHttpResponse($) {
                 ::readingsBulkUpdate( $hash, "rainMax", sprintf( "%.1f", $rainMax ) );
                 ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%Y-%m-%d %H:%M:%S", localtime $rainStart : 'unknown'));
                 ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%Y-%m-%d %H:%M:%S", localtime $rainEnd : 'unknown'));
-                ::readingsBulkUpdate( $hash, "Start", (($rainStart) ? strftime "%H:%M", localtime $rainStart : 'unknown'));
-                ::readingsBulkUpdate( $hash, "Ende", (($rainEnd) ? strftime "%H:%M", localtime $rainEnd : 'unknown'));
+                ::readingsBulkUpdate( $hash, "Begin", (($rainStart) ? strftime "%H:%M", localtime $rainStart : 'unknown'));
+                ::readingsBulkUpdate( $hash, "End", (($rainEnd) ? strftime "%H:%M", localtime $rainEnd : 'unknown'));
+                ::readingsBulkUpdate( $hash, "Duration",  strftime "%H:%M", localtime $rainDuration );
                 ::readingsBulkUpdate( $hash, "rainDuration",  $rainDuration );
                 ::readingsBulkUpdate( $hash, "rainDurationMin",  $rainDurationMin );
                 ::readingsBulkUpdate( $hash, "rainData", $rainData);
@@ -784,10 +817,56 @@ sub ParseHttpResponse($) {
     }
 }
 
+sub BAR($) {
+    my ($name) = @_;
+    my $hash = $::defs{$name};
+    return $hash->{".BAR"};
+    }
+
 sub MinToHours($) {
   my($intime) = @_;
   return sprintf("%02d:%02d",(($intime/60),$intime%60));
 }
+
+sub myPrecip2RGB($) {
+  my ($precip) = @_;
+  my $RGB = "Transparent";
+  if ($precip   == 0) {
+    $RGB = "#FFFFFF";
+  } elsif ($precip < 0.25) {
+    $RGB = "#F0F8FF";
+  } elsif ($precip < 0.75)   {
+    $RGB = "#E6E6FA";
+  } elsif ($precip < 1.25) {
+    $RGB = "#E4D9F1";
+  } elsif ($precip < 1.75)   {
+    $RGB = "#C8B3E4";
+  } elsif ($precip < 2.25){
+    $RGB = "#AB8FD6";
+  } elsif ($precip < 2.75)  {
+    $RGB = "#8E6CC7";
+  } elsif ($precip < 3.25){
+    $RGB = "#6E49B9";
+  } elsif ($precip < 3.75)  {
+    $RGB = "#4A25AA";
+  } elsif ($precip < 4.25){
+    $RGB = "#40218C";
+  } elsif ($precip < 4.75)  {
+    $RGB = "#351D6E";
+  } elsif ($precip < 5.25){
+    $RGB = "#2B1852";
+  } elsif ($precip < 5.75)  {
+    $RGB = "#201338";
+  } elsif ($precip < 6.25){
+    $RGB = "#160C1F";
+  } elsif ($precip < 6.75)  {
+    $RGB = "#060C1F";
+  } else {
+    $RGB = "#000000";
+  }
+  return $RGB;
+}
+
 
 sub ResetResult {
     my $hash = shift;
@@ -824,66 +903,72 @@ sub Debugging {
 =begin html
 
 <p><span id="Buienradar"></span></p>
-<h2>Buienradar</h2>
+<h2 id="buienradar">Buienradar</h2>
 <p>Buienradar provides access to precipitation forecasts by the dutch service <a href="https://www.buienradar.nl">Buienradar.nl</a>.</p>
 <p><span id="Buienradardefine"></span></p>
-<h3>Define</h3>
+<h3 id="define">Define</h3>
 <pre><code>define &lt;devicename&gt; Buienradar [latitude] [longitude]</code></pre>
-<p><var>latitude</var> and <var>longitude</var> are facultative and will gathered from <var>global</var> if not set. So the smallest possible definition is:</p>
+<p><var>latitude</var> and <var>longitude</var> are facultative and will gathered from <var>global</var> if not set.<br>
+So the smallest possible definition is:</p>
 <pre><code>define &lt;devicename&gt; Buienradar</code></pre>
 <p><span id="Buienradarget"></span></p>
-<h3>Get</h3>
+<h3 id="get">Get</h3>
 <p><var>Get</var> will get you the following:</p>
 <ul>
-  <li><code>rainDuration</code> - predicted duration of the next precipitation in minutes.</li>
-  <li><code>startse</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong></li>
-  <li><code>refresh</code> - get new data from Buienradar.nl.</li>
-  <li><code>version</code> - get current version of the Buienradar module.</li>
+  <li><code>rainDuration</code> - predicted duration of the next precipitation in minutes.<br></li>
+  <li><code>startse</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong><br></li>
+  <li><code>refresh</code> - get new data from Buienradar.nl.<br></li>
+  <li><code>version</code> - get current version of the Buienradar module.<br></li>
   <li><code>testVal</code> - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². <strong>Obsolete!</strong></li>
 </ul>
 <p><span id="Buienradarreadings"></span></p>
-<h3>Readings</h3>
+<h3 id="readings">Readings</h3>
 <p>Buienradar provides several readings:</p>
 <ul>
-  <li><code>rainAmount</code> - amount of predicted precipitation in mm/h for the next 5 minute interval.</li>
-  <li><code>rainBegin</code> - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.</li>
-  <li><code>raindEnd</code> - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.</li>
-  <li><code>rainDataStart</code> - starting time of gathered data.</li>
-  <li><code>rainDataEnd</code> - ending time of gathered data.</li>
-  <li><code>rainLaMetric</code> - data formatted for a LaMetric device.</li>
-  <li><code>rainMax</code> - maximal amount of precipitation for <strong>any</strong> 5 minute interval of the gathered data in mm/h.</li>
-  <li><code>rainNow</code> - amount of precipitation for the <strong>current</strong> 5 minute interval in mm/h.</li>
-  <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm/h.</li>
+  <li><code>Begin</code> - Start of predicted precipitation in HH:MM format. If no precipitation is predicted, <var>unknown</var>.<br></li>
+  <li><code>Duration</code> - Duration of predicted precipitation in HH:MM Format.<br></li>
+  <li><code>End</code> - End of predicted precipitation in HH:MM format. If no precipitation is predicted, <var>unknown</var>.<br></li>
+  <li><code>rainAmount</code> - amount of predicted precipitation in mm/h or l/qm for the next 1 hour interval.<br></li>
+  <li><code>rainBegin</code> - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.<br></li>
+  <li><code>raindEnd</code> - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.<br></li>
+  <li><code>rainDataStart</code> - starting time of gathered data.<br></li>
+  <li><code>rainDataEnd</code> - ending time of gathered data.<br></li>
+  <li><code>rainDuration</code> - Duration of predicted precipitation in full time format.<br></li>
+  <li><code>rainDurationMin</code> - Duration of predicted precipitation in minutes.<br></li>
+  <li><code>rainLaMetric</code> - data formatted for a LaMetric device.<br></li>
+  <li><code>rainMax</code> - maximal amount of precipitation for <strong>any</strong> 5 minute interval of the gathered data in mm.<br></li>
+  <li><code>rainNow</code> - amount of precipitation for the <strong>current</strong> 5 minute interval in mm.<br></li>
+  <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm.</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>
-<h3>Attributes</h3>
+<h3 id="attributes">Attributes</h3>
 <ul>
   <li>
-    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - If <code>disabled</code> is set to <code>on</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactivates the device, also if the attribute ist simply deleted.
+    <a name="disabled" id="disabled"></a> <code>disabled 1|0|on|off</code> - If <code>disabled</code> is set to <code>on or 1</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactivates the device, also if the attribute ist simply deleted.<br>
   </li>
   <li>
-    <a name="region" id="region"></a> <code>region nl|de</code> - Allowed values are <code>nl</code> (default value) and <code>de</code>. In some cases, especially in the south and east of Germany, <code>de</code> returns values at all.
+    <a name="region" id="region"></a> <code>region nl|de</code> - Allowed values are <code>nl</code> (default value) and <code>de</code>. In some cases, especially in the south and east of Germany, <code>de</code> returns values at all.<br>
   </li>
   <li>
-    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Data update every <var>n</var> seconds. <strong>Attention!</strong> 10 seconds is a very aggressive value and should be chosen carefully, <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.
+    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300|600</code> - Data update every <var>n</var> seconds. <strong>Attention!</strong> 10 seconds is a very aggressive value and should be chosen carefully, <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.
   </li>
 </ul>
-<h3>Visualisation</h3>
+<h3 id="visualisation">Visualisation</h3>
 <p>Buienradar offers besides the usual view as device also the possibility to visualize the data as charts in different formats.</p>
 <ul>
   <li>
     <p>An HTML version that is displayed in the detail view by default and can be viewed with</p>
-    <pre><code>  { FHEM::Buienradar::HTML("buienradar device name")}</code></pre>
+    <pre><code>{ FHEM::Buienradar::HTML("buienradar device name")}</code></pre>
     <p>can be retrieved.</p>
   </li>
   <li>
     <p>A chart generated by Google Charts in <abbr>PNG</abbr> format, which can be viewed with</p>
-    <pre><code>  { FHEM::Buienradar::GChart("buienradar device name")}</code></pre>
+    <pre><code>{ FHEM::Buienradar::GChart("buienradar device name")}</code></pre>
     <p>can be retrieved. <strong>Caution!</strong> Please note that data is transferred to Google for this purpose!</p>
   </li>
   <li>
     <p><abbr>FTUI</abbr> is supported by the LogProxy format:</p>
-    <pre><code>  { FHEM::Buienradar::LogProxy("buienradar device name")}</code></pre>
+    <pre><code>{ FHEM::Buienradar::LogProxy("buienradar device name")}</code></pre>
   </li>
 </ul>
 
@@ -892,65 +977,76 @@ sub Debugging {
 =begin html_DE
 
 <p><span id="Buienradar"></span></p>
-<h2>Buienradar</h2>
-<p>Das Buienradar-Modul bindet die Niederschlagsvorhersagedaten der freien <abbr title="Application Program Interface">API</abbr> von <a href="https://www.buienradar.nl">Buienradar.nl</a> an.</p>
+<h2 id="buienradar">Buienradar</h2>
+<p>Das Buienradar-Modul bindet die Niederschlagsvorhersagedaten der freien <abbr title="Application Program Interface">API</abbr><br>
+von <a href="https://www.buienradar.nl">Buienradar.nl</a> an.</p>
 <p><span id="Buienradardefine"></span></p>
-<h3>Define</h3>
+<h3 id="define">Define</h3>
 <pre><code>define &lt;devicename&gt; Buienradar [latitude] [longitude]</code></pre>
-<p>Die Werte für latitude und longitude sind optional und werden, wenn nicht explizit angegeben, von <var>global</var> bezogen. Die minimalste Definition lautet demnach:</p>
+<p>Die Werte für latitude und longitude sind optional und werden, wenn nicht explizit angegeben, von <var>global</var> bezogen.<br>
+Die minimalste Definition lautet demnach:</p>
 <pre><code>define &lt;devicename&gt; Buienradar</code></pre>
 <p><span id="Buienradarget"></span></p>
-<h3>Get</h3>
+<h3 id="get">Get</h3>
 <p>Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:</p>
 <ul>
-  <li><code>rainDuration</code> - Die voraussichtliche Dauer des nächsten Niederschlags in Minuten.</li>
-  <li><code>startse</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong></li>
-  <li><code>refresh</code> - Neue Daten abfragen.</li>
-  <li><code>version</code> - Aktuelle Version abfragen.</li>
+  <li><code>rainDuration</code> - Die voraussichtliche Dauer des nächsten Niederschlags in Minuten.<br></li>
+  <li><code>startse</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong><br></li>
+  <li><code>refresh</code> - Neue Daten abfragen.<br></li>
+  <li><code>version</code> - Aktuelle Version abfragen.<br></li>
   <li><code>testVal</code> - Rechnet einen Buienradar-Wert zu Testzwecken in mm/m² um. Dies war für die alte <abbr>API</abbr> von Buienradar.nl nötig. <strong>Obsolet!</strong></li>
 </ul>
 <p><span id="Buienradarreadings"></span></p>
-<h3>Readings</h3>
+<h3 id="readings">Readings</h3>
 <p>Aktuell liefert Buienradar folgende Readings:</p>
 <ul>
-  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h für den nächsten 5-Minuten-Intervall.</li>
-  <li><code>rainBegin</code> - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.</li>
-  <li><code>raindEnd</code> - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.</li>
-  <li><code>rainDataStart</code> - Zeitlicher Beginn der gelieferten Niederschlagsdaten.</li>
-  <li><code>rainDataEnd</code> - Zeitliches Ende der gelieferten Niederschlagsdaten.</li>
-  <li><code>rainLaMetric</code> - Aufbereitete Daten für LaMetric-Devices.</li>
-  <li><code>rainMax</code> - Die maximale Niederschlagsmenge in mm/h für ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
-  <li><code>rainNow</code> - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm/h.</li>
-  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm/h</li>
+  <li><code>Begin</code> - Beginn des nächsten Niederschlag in HH:MM format. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
+  <li><code>Duration</code> - Zeitliche Dauer der gelieferten Niederschlagsdaten in HH:MM Format.<br></li>
+  <li><code>End</code> - Ende des nächsten Niederschlag in HH:MM format. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
+  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h (= l/qm) für die nächste Stunde.<br></li>
+  <li><code>rainBegin</code> - Beginn des nächsten Niederschlag in YY-mm-dd HH:MM format. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
+  <li><code>raindEnd</code> - Ende des nächsten Niederschlag in YY-mm-dd HH:MM format. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
+  <li><code>rainDataStart</code> - Zeitlicher Beginn der gelieferten Niederschlagsdaten.<br></li>
+  <li><code>rainDataEnd</code> - Zeitliches Ende der gelieferten Niederschlagsdaten.<br></li>
+  <li><code>rainDuration</code> - Zeitliche Dauer der gelieferten Niederschlagsdaten in YY-mm-dd HH:MM format.<br></li>
+  <li><code>rainDurationMin</code> - Zeitliche Dauer der gelieferten Niederschlagsdaten in Minuten.<br></li>
+  <li><code>rainLaMetric</code> - Aufbereitete Daten für LaMetric-Devices.<br></li>
+  <li><code>rainMax</code> - Die maximale Niederschlagsmenge in mm für ein 5 Min. Intervall auf Basis der vorliegenden Daten.<br></li>
+  <li><code>rainNow</code> - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm.<br></li>
+  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>
-<h3>Attribute</h3>
+<h3 id="attribute">Attribute</h3>
 <ul>
   <li>
-    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.
+    <a name="disabled" id="disabled"></a> <code>disabled 1|0|on|off</code> - Wenn <code>disabled</code> auf <code>on oder 1</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.<br>
   </li>
   <li>
-    <a name="region" id="region"></a> <code>region nl|de</code> - Erlaubte Werte sind <code>nl</code> (Standardwert) und <code>de</code>. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert <code>de</code> überhaupt Werte.
+    <a name="region" id="region"></a> <code>region nl|de</code> - Erlaubte Werte sind <code>nl</code> (Standardwert) und <code>de</code>. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert <code>de</code> überhaupt Werte.<br>
   </li>
   <li>
-    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Aktualisierung der Daten alle <var>n</var> Sekunden. <strong>Achtung!</strong> 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden.
+    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300|600</code> - Aktualisierung der Daten alle <var>n</var> Sekunden. <strong>Achtung!</strong> 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden.
   </li>
 </ul>
-<h3>Visualisierungen</h3>
+<h3 id="visualisierungen">Visualisierungen</h3>
 <p>Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, die Daten als Charts in verschiedenen Formaten zu visualisieren.</p>
 <ul>
   <li>
     <p>Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit</p>
-    <pre><code>  { FHEM::Buienradar::HTML("name des buienradar device")}</code></pre>abgerufen werden.
+    <pre><code>{ FHEM::Buienradar::HTML("name des buienradar device")}</code></pre>abgerufen werden.<br>
+  </li>
+  <li>
+    <p>Eine HTML-"BAR"-Version, diese gibt einen HTML Balken mit einer farblichen Representation der Regenmenge aus und kann mit</p>
+    <pre><code>{ FHEM::Buienradar::BAR("name des buienradar device")}</code></pre>abgerufen werden.<br>
   </li>
   <li>
     <p>Ein von Google Charts generiertes Diagramm im <abbr>PNG</abbr>-Format, welcher mit</p>
-    <pre><code>  { FHEM::Buienradar::GChart("name des buienradar device")}</code></pre>
+    <pre><code>{ FHEM::Buienradar::GChart("name des buienradar device")}</code></pre>
     <p>abgerufen werden kann. <strong>Achtung!</strong> Dazu werden Daten an Google übertragen!</p>
   </li>
   <li>
     <p>Für <abbr>FTUI</abbr> werden die Daten im LogProxy-Format bereitgestellt:</p>
-    <pre><code>  { FHEM::Buienradar::LogProxy("name des buienradar device")}</code></pre>
+    <pre><code>{ FHEM::Buienradar::LogProxy("name des buienradar device")}</code></pre>
   </li>
 </ul>
 
@@ -977,7 +1073,7 @@ sub Debugging {
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.2.4",
+    "version": "2.2.5",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
