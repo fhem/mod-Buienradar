@@ -27,28 +27,37 @@ So the smallest possible definition is:
 
 ### Readings
 Buienradar provides several readings:
-* ``rainAmount``    - amount of predicted precipitation in mm/h for the next 5 minute interval.
+* ``Begin``         - Start of predicted precipitation in HH:MM format. If no precipitation is predicted, <var>unknown</var>.
+* ``Duration``      - Duration of predicted precipitation in HH:MM Format.
+* ``End``           - End of predicted precipitation in HH:MM format. If no precipitation is predicted, <var>unknown</var>.
+* ``rainAmount``    - amount of predicted precipitation in mm/h or l/qm for the next 1 hour interval.
 * ``rainBegin``     - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
 * ``raindEnd``      - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
 * ``rainDataStart`` - starting time of gathered data.
 * ``rainDataEnd``   - ending time of gathered data.
 * ``rainLaMetric``  - data formatted for a LaMetric device.
-* ``rainMax``       - maximal amount of precipitation for **any** 5 minute interval of the gathered data in mm/h.
-* ``rainNow``       - amount of precipitation for the **current** 5 minute interval in mm/h.
-* ``rainTotal``     - total amount of precipition for the gathered data in mm/h.
+* ``rainMax``       - maximal amount of precipitation for **any** 5 minute interval of the gathered data in mm.
+* ``rainNow``       - amount of precipitation for the **current** 5 minute interval in mm.
+* ``rainTotal``     - total amount of precipition for the gathered data in mm.
 
 <span id="Buienradarattr" />
 
 ### Attributes
-* <a name="disabled"></a> ``disabled on|off``   - If ``disabled`` is set to `on`, no further requests to Buienradar.nl will be performed. ``off`` reactivates the device, also if the attribute ist simply deleted.
+* <a name="disabled"></a> ``disabled 1|0|on|off``   - If ``disabled`` is set to ``on`` or ``1``, no further requests to Buienradar.nl will be performed. ``off`` or ``0`` reactivates the device, also if the attribute ist simply deleted.
 * <a name="region"></a> ``region nl|de`` - Allowed values are ``nl`` (default value) and ``de``. In some cases, especially in the south and east of Germany, ``de`` returns values at all.
-* <a name="interval"></a> ``interval 10|60|120|180|240|300`` - Data update every <var>n</var> seconds. **Attention!** 10 seconds is a very aggressive value and should be chosen carefully,  <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.  
+* <a name="interval"></a> ``interval 10|60|120|180|240|300|600`` - Data update every <var>n</var> seconds. **Attention!** 10 seconds is a very aggressive value and should be chosen carefully,  <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.  
 
 ### Visualisation
 Buienradar offers besides the usual view as device also the possibility to visualize the data as charts in different formats.
-* An HTML version that is displayed in the detail view by default and can be viewed with 
+* A HTML version that is displayed in the detail view by default and can be viewed with 
     
         { FHEM::Buienradar::HTML("buienradar device name")}
+
+    can be retrieved.
+    
+* A HTML-"BAR" version, which shows a HTML bar with coulored representation of rain amout and can be viewed with 
+    
+        { FHEM::Buienradar::BAR("buienradar device name")}
 
     can be retrieved.
     
