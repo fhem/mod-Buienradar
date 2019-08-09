@@ -992,35 +992,42 @@ sub Debugging {
 <h3>Readings</h3>
 <p>Aktuell liefert Buienradar folgende Readings:</p>
 <ul>
-  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h für den nächsten 5-Minuten-Intervall.</li>
+  <li><code>Begin</code> - Beginn des nächsten Niederschlag in HH:MM format. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.</li>
+  <li><code>Duration</code> - Zeitliche Dauer der gelieferten Niederschlagsdaten in HH:MM Format.</li>
+  <li><code>End</code> - Ende des nächsten Niederschlag in HH:MM format. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.</li>
+  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h (= l/qm) für die nächste Stunde.</li>
   <li><code>rainBegin</code> - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.</li>
   <li><code>raindEnd</code> - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.</li>
   <li><code>rainDataStart</code> - Zeitlicher Beginn der gelieferten Niederschlagsdaten.</li>
   <li><code>rainDataEnd</code> - Zeitliches Ende der gelieferten Niederschlagsdaten.</li>
   <li><code>rainLaMetric</code> - Aufbereitete Daten für LaMetric-Devices.</li>
-  <li><code>rainMax</code> - Die maximale Niederschlagsmenge in mm/h für ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
-  <li><code>rainNow</code> - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm/h.</li>
-  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm/h</li>
+  <li><code>rainMax</code> - Die maximale Niederschlagsmenge in mm für ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
+  <li><code>rainNow</code> - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm.</li>
+  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm.</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>
 <h3>Attribute</h3>
 <ul>
   <li>
-    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.
+    <a name="disabled" id="disabled"></a> <code>disabled 1|0|on|off</code> - Wenn <code>disabled</code> auf <code>on</code> oder <code>1</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> oder <code>0</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.
   </li>
   <li>
     <a name="region" id="region"></a> <code>region nl|de</code> - Erlaubte Werte sind <code>nl</code> (Standardwert) und <code>de</code>. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert <code>de</code> überhaupt Werte.
   </li>
   <li>
-    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Aktualisierung der Daten alle <var>n</var> Sekunden. <strong>Achtung!</strong> 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden.
+    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300|600</code> - Aktualisierung der Daten alle <var>n</var> Sekunden. <strong>Achtung!</strong> 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden.
   </li>
 </ul>
 <h3>Visualisierungen</h3>
 <p>Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, die Daten als Charts in verschiedenen Formaten zu visualisieren.</p>
 <ul>
   <li>
-    <p>Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit</p>
+    <p>Eine HTML-"BAR"-Version, diese gibt einen HTML Balken mit einer farblichen Representation der Regenmenge aus und kann mit</p>
     <pre><code>  { FHEM::Buienradar::HTML("name des buienradar device")}</code></pre>abgerufen werden.
+  </li>
+  <li>
+    <p>Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit</p>
+    <pre><code>  { FHEM::Buienradar::BAR("name des buienradar device")}</code></pre>abgerufen werden.
   </li>
   <li>
     <p>Ein von Google Charts generiertes Diagramm im <abbr>PNG</abbr>-Format, welcher mit</p>
@@ -1056,7 +1063,7 @@ sub Debugging {
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.2.4",
+    "version": "2.2.5",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
