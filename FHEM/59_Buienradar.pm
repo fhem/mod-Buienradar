@@ -808,7 +808,7 @@ sub ParseHttpResponse($) {
                 ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%Y-%m-%d %H:%M:%S", localtime $rainEnd : 'unknown'));
                 ::readingsBulkUpdate( $hash, "Begin", (($rainStart) ? strftime "%H:%M", localtime $rainStart : 'unknown'));
                 ::readingsBulkUpdate( $hash, "End", (($rainEnd) ? strftime "%H:%M", localtime $rainEnd : 'unknown'));
-                ::readingsBulkUpdate( $hash, "Duration", $rainDuration ));
+                ::readingsBulkUpdate( $hash, "Duration", $rainDuration );
                 ::readingsBulkUpdate( $hash, "rainDuration",  $rainDuration );
                 ::readingsBulkUpdate( $hash, "rainDurationMin",  $rainDurationMin );
                 ::readingsBulkUpdate( $hash, "rainData", $rainData);
