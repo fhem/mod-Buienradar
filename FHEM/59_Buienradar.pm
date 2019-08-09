@@ -924,35 +924,43 @@ sub Debugging {
 <h3>Readings</h3>
 <p>Buienradar provides several readings:</p>
 <ul>
-  <li><code>rainAmount</code> - amount of predicted precipitation in mm/h for the next 5 minute interval.</li>
+  <li><code>Begin</code> - Start of predicted precipitation in HH:MM format. If no precipitation is predicted, <var>unknown</var>.</li>
+  <li><code>Duration</code> - Duration of predicted precipitation in HH:MM Format.</li>
+  <li><code>End</code> - End of predicted precipitation in HH:MM format. If no precipitation is predicted, <var>unknown</var>.</li>
+  <li><code>rainAmount</code> - amount of predicted precipitation in mm/h or l/qm for the next 1 hour interval.</li>
   <li><code>rainBegin</code> - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.</li>
   <li><code>raindEnd</code> - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.</li>
   <li><code>rainDataStart</code> - starting time of gathered data.</li>
   <li><code>rainDataEnd</code> - ending time of gathered data.</li>
   <li><code>rainLaMetric</code> - data formatted for a LaMetric device.</li>
-  <li><code>rainMax</code> - maximal amount of precipitation for <strong>any</strong> 5 minute interval of the gathered data in mm/h.</li>
-  <li><code>rainNow</code> - amount of precipitation for the <strong>current</strong> 5 minute interval in mm/h.</li>
-  <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm/h.</li>
+  <li><code>rainMax</code> - maximal amount of precipitation for <strong>any</strong> 5 minute interval of the gathered data in mm.</li>
+  <li><code>rainNow</code> - amount of precipitation for the <strong>current</strong> 5 minute interval in mm.</li>
+  <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm.</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>
 <h3>Attributes</h3>
 <ul>
   <li>
-    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - If <code>disabled</code> is set to <code>on</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactivates the device, also if the attribute ist simply deleted.
+    <a name="disabled" id="disabled"></a> <code>disabled 1|0|on|off</code> - If <code>disabled</code> is set to <code>on</code> or <code>1</code>, no further requests to Buienradar.nl will be performed. <code>off</code> or <code>0</code> reactivates the device, also if the attribute ist simply deleted.
   </li>
   <li>
     <a name="region" id="region"></a> <code>region nl|de</code> - Allowed values are <code>nl</code> (default value) and <code>de</code>. In some cases, especially in the south and east of Germany, <code>de</code> returns values at all.
   </li>
   <li>
-    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Data update every <var>n</var> seconds. <strong>Attention!</strong> 10 seconds is a very aggressive value and should be chosen carefully, <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.
+    <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300|600</code> - Data update every <var>n</var> seconds. <strong>Attention!</strong> 10 seconds is a very aggressive value and should be chosen carefully, <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.
   </li>
 </ul>
 <h3>Visualisation</h3>
 <p>Buienradar offers besides the usual view as device also the possibility to visualize the data as charts in different formats.</p>
 <ul>
   <li>
-    <p>An HTML version that is displayed in the detail view by default and can be viewed with</p>
+    <p>A HTML version that is displayed in the detail view by default and can be viewed with</p>
     <pre><code>  { FHEM::Buienradar::HTML("buienradar device name")}</code></pre>
+    <p>can be retrieved.</p>
+  </li>
+  <li>
+    <p>A HTML-"BAR" version, which shows a HTML bar with coulored representation of rain amout and can be viewed with</p>
+    <pre><code>  { FHEM::Buienradar::BAR("buienradar device name")}</code></pre>
     <p>can be retrieved.</p>
   </li>
   <li>
