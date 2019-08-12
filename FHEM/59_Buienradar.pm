@@ -724,7 +724,7 @@ sub ParseHttpResponse($) {
             my $forecast_start  = $dataStart;
             my $rainNow         = undef;
             my $rainData        = join(':', @precip);
-            my $rainAmount      = List::Util::sum @precip[0..11];#  $precip[0]; #$precip[0];
+            my $rainAmount      = 0;
             my $as_htmlBarhead  = '<tr style="font-size:x-small;"}>';
             my $as_htmlBar      = "";
             my $count           = 0;
@@ -757,6 +757,7 @@ sub ParseHttpResponse($) {
                   $as_htmlBar .= '<td style="padding-left: 0; padding-right: 0" bgcolor="' . myPrecip2RGB($a) . '">&nbsp;&nbsp;&nbsp;</td>';
                   #$as_htmlBar .= '<td bgcolor="' . myPrecip2RGB($a) . '">&nbsp;</td>';
                 }
+                if ($count < 12) { $rainAmount = $rainAmount + $precip;}
                 $count++;
 
                 if (!$rainStart and $precip > 0) {
