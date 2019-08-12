@@ -1031,11 +1031,11 @@ sub Debugging {
 <p>Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, die Daten als Charts in verschiedenen Formaten zu visualisieren.</p>
 <ul>
   <li>
-    <p>Eine HTML-"BAR"-Version, diese gibt einen HTML Balken mit einer farblichen Representation der Regenmenge aus und kann mit</p>
-    <pre><code>  { FHEM::Buienradar::HTML("name des buienradar device")}</code></pre>abgerufen werden.
+    <p>Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit</p>
+    <pre><code>  { FHEM::Buienradar::HTML("name des buienradar device")}</code></pre>abgerufen werden kann.
   </li>
   <li>
-    <p>Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit</p>
+    <p>Eine HTML-"BAR"-Version, diese gibt einen HTML Balken mit einer farblichen Representation der Regenmenge aus und kann mit</p>
     <pre><code>  { FHEM::Buienradar::BAR("name des buienradar device")}</code></pre>abgerufen werden.
   </li>
   <li>
