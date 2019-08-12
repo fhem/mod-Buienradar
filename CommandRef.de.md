@@ -51,12 +51,12 @@ Aktuell liefert Buienradar folgende Readings:
 
 ### Visualisierungen
 Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, die Daten als Charts in verschiedenen Formaten zu visualisieren.
-* Eine HTML-"BAR"-Version, diese gibt einen HTML Balken mit einer farblichen Representation der Regenmenge aus und kann mit 
+* Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit
         
         { FHEM::Buienradar::HTML("name des buienradar device")}
         
-    abgerufen werden.
-* Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit 
+    abgerufen werden kann.
+* Eine HTML-"BAR"-Version, diese gibt einen HTML Balken mit einer farblichen Representation der Regenmenge aus und kann mit
         
         { FHEM::Buienradar::BAR("name des buienradar device")}
         
