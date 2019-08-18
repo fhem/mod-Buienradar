@@ -297,9 +297,6 @@ sub Attr {
                 )
             );
 
-            #return "${attribute_value} is no valid value for disabled. Only 'on', '1', '0' or 'off' are allowed!"
-            #    if $attribute_value !~ /^(on|off|0|1)$/;
-
             given ($command) {
                 when ('set') {
                 
