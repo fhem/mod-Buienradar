@@ -47,7 +47,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.2.3';
+our $version = '2.2.4';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
@@ -297,11 +297,11 @@ sub Attr {
                 )
             );
 
-            return "${attribute_value} is no valid value for disabled. Only 'on' or 'off' are allowed!"
-                if $attribute_value !~ /^(on|off|0|1)$/;
-
             given ($command) {
                 when ('set') {
+                    return "${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!"
+                        if $attribute_value !~ /^(on|off|0|1)$/;
+
                     if ($attribute_value =~ /(on|1)/) {
                         ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
                         $hash->{NEXTUPDATE} = undef;
