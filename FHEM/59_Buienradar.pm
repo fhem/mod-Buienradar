@@ -47,7 +47,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.2.5';
+our $version = '2.2.6';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
@@ -752,10 +752,10 @@ sub ParseHttpResponse($) {
             $hash->{".SERIALIZED"} = Storable::freeze(\%precipitation_forecast);
 
             ::readingsBeginUpdate($hash);
-                ::readingsBulkUpdate( $hash, "state", sprintf( "%.3f", $rainNow ) );
+                ::readingsBulkUpdate( $hash, "state", (($rainNow) ? sprintf( "%.3f", $rainNow) : "unknown"));
                 ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
                 ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainAmount) );
-                ::readingsBulkUpdate( $hash, "rainNow", sprintf( "%.3f", $rainNow ) );
+                ::readingsBulkUpdate( $hash, "rainNow", (($rainNow) ? sprintf( "%.3f", $rainNow) : "unknown"));
                 ::readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
                 ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
                 ::readingsBulkUpdate( $hash, "rainDataEnd", strftime "%R", localtime $dataEnd );
@@ -959,7 +959,7 @@ Die minimalste Definition lautet demnach:</p>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.2.5",
+    "version": "2.2.6",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
