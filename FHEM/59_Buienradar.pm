@@ -524,7 +524,7 @@ sub ParseHttpResponse($) {
                     $rainEnd    = $start;
                 }
 
-                if (!$rainNow and gmtime ~~ [$start..$end]) {
+                if (time() ~~ [$start..$end]) {
                     $rainNow    = $precip;
                 }
 
@@ -570,7 +570,7 @@ sub ResetReadings {
 }
 
 sub Debugging {
-    local $OFS = ", ";
+    local $OFS = "\n";
     ::Debug("@_") if ::AttrVal("global", "verbose", undef) eq "4" or ::AttrVal($device, "debug", 0) eq "1";
 }
 
