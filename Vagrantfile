@@ -9,8 +9,9 @@
 
 Vagrant.configure("2") do |config|
 
-    config.vm.define "fhem-buienradar" do |machine|
-      machine.vm.box = "debian/contrib-buster64"
+    config.vm.define "FHEM-Buienradar-Dev" do |machine|
+        machine.vm.box = "debian/contrib-buster64"
+        machine.vm.hostname = "FHEM-Buienradar-Dev"
 
         machine.vm.network "public_network", bridge: [
             "en0: WLAN (AirPort)",
