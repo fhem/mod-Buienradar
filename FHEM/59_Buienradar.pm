@@ -272,12 +272,12 @@ sub Attr {
                 )
             );
 
-            return "${attribute_value} is no valid value for disabled. Only 'on' or 'off' are allowed!"
-                if $attribute_value !~ /^(on|off)$/;
-
             given ($command) {
                 when ('set') {
                     if ($attribute_value eq "on") {
+                        return "${attribute_value} is no valid value for disabled. Only 'on' or 'off' are allowed!"
+                            if $attribute_value !~ /^(on|off)$/;
+
                         ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
                         $hash->{NEXTUPDATE} = undef;
                         return undef;
