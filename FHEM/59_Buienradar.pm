@@ -46,7 +46,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.1.2';
+our $version = '2.1.3';
 our @errors;
 
 GP_Export(
@@ -510,17 +510,31 @@ sub ParseHttpResponse($) {
             my $rainNow         = undef;
             my $rainData        = join(':', @precip);
             my $rainAmount      =   $precip[0];
+            my $isRaining       = undef;
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
                 my $start    = $forecast_start + $precip_index * 5 * ONE_MINUTE;
                 my $end      = $start + 5 * ONE_MINUTE;
                 my $precip   = $precip[$precip_index];
+                $isRaining          = undef;                            # reset
 
-                if (!$rainStart and $precip > 0) {
+                # set a flag if it's raining
+                if ($precip > 0) {
+                    $isRaining = 1;
+                }
+
+                # there is precipitation and start is not yet set
+                if (!$rainStart and $isRaining) {
                     $rainStart  = $start;
                 }
 
-                if (!$rainEnd and $rainStart and $precip == 0) {
+                # It's raining again, so we have to reset rainEnd for a new chance
+                if ($isRaining and $rainEnd) {
+                    $rainEnd    = undef;
+                }
+
+                # It's not longer raining, so set rainEnd (again)
+                if ($rainStart and !$isRaining and !$rainEnd) {
                     $rainEnd    = $start;
                 }
 
@@ -691,7 +705,7 @@ Die minimalste Definition lautet demnach:</p>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.1.2",
+    "version": "2.1.3",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
