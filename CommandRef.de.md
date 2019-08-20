@@ -62,3 +62,18 @@ Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, 
 * Für <abbr>FTUI</abbr> werden die Daten im LogProxy-Format bereitgestellt:
 
         { FHEM::Buienradar::LogProxy("name des buienradar device")}
+        
+* Für eine reine Text-Ausgabe der Daten als Graph, kann
+
+        { FHEM::Buienradar::TextChart("name des buienradar device")}
+        
+    verwendet werden. Ausgegeben wird ein für jeden Datensatz eine Zeile im Muster
+    
+        22:25 |   0.060 | =
+        22:30 |   0.370 | ====
+        22:35 |   0.650 | =======
+        
+    wobei für jede 0.1 mm/h Niederschlag ein ``=`` ausgegeben wird, maximal jedoch 50 Einheiten. Mehr werden mit einem
+    ``>`` abgekürzt.
+    
+        23:00 |  11.800 | ==================================================>

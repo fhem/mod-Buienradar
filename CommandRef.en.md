@@ -61,3 +61,18 @@ Buienradar offers besides the usual view as device also the possibility to visua
 * <abbr>FTUI</abbr> is supported by the  LogProxy format:
 
         { FHEM::Buienradar::LogProxy("buienradar device name")}
+        
+* A plain text representation can be display by
+
+        { FHEM::Buienradar::TextChart("buienradar device name")}
+        
+    Every line represents a record of the whole set in a format like
+    
+        22:25 |   0.060 | =
+        22:30 |   0.370 | ====
+        22:35 |   0.650 | =======
+        
+    For every 0.1 mm/h precipitation a ``=`` is displayed, but the output is capped to 50 units. If more than 50 units
+    would be display, the bar is appended with a ``>``.
+    
+        23:00 |  11.800 | ==================================================>

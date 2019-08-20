@@ -47,7 +47,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.2.7';
+our $version = '2.3.0';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
@@ -647,6 +647,36 @@ sub LogProxy {
     );
 }
 
+sub TextChart {
+    my $name = shift;
+    my $hash = $::defs{$name};
+
+    unless ($hash->{'.SERIALIZED'}) {
+        ::Log3($name, 3,
+            sprintf(
+                "[%s] Can't return serizalized data for FHEM::Buienradar::TextChart.",
+                $name
+            )
+        );
+
+        # return dummy data
+        return undef;
+    }
+
+    my %storedData = %{ Storable::thaw($hash->{".SERIALIZED"}) };
+
+    my $data = join "\n", map {
+        my ($time, $precip, $bar) = (
+            strftime('%H:%M', localtime $storedData{$_}{'start'}),
+            sprintf('% 7.3f', $storedData{$_}{'precipiation'}),
+            (($storedData{$_}{'precipiation'} < 5) ? "=" x  POSIX::lround(abs($storedData{$_}{'precipiation'} * 10)) : ("=" x  50) . '>'),
+        );
+        "$time | $precip | $bar"
+    } sort keys %storedData;
+
+    return $data;
+}
+
 sub ParseHttpResponse($) {
     my ( $param, $err, $data ) = @_;
     my $hash = $param->{hash};
@@ -879,6 +909,17 @@ So the smallest possible definition is:</p>
     <p><abbr>FTUI</abbr> is supported by the LogProxy format:</p>
     <pre><code>{ FHEM::Buienradar::LogProxy("buienradar device name")}</code></pre>
   </li>
+  <li>
+    <p>A plain text representation can be display by</p>
+    <pre><code>{ FHEM::Buienradar::TextChart("buienradar device name")}</code></pre>
+    <p>Every line represents a record of the whole set in a format like</p>
+    <pre><code>22:25 |   0.060 | =
+22:30 |   0.370 | ====
+22:35 |   0.650 | =======</code></pre>
+    <p>For every 0.1 mm/h precipitation a <code>=</code> is displayed, but the output is capped to 50 units. If more than 50 units<br>
+    would be display, the bar is appended with a <code>&gt;</code>.</p>
+    <pre><code>23:00 |  11.800 | ==================================================&gt;</code></pre>
+  </li>
 </ul>
 
 =end html
@@ -948,6 +989,17 @@ Die minimalste Definition lautet demnach:</p>
     <p>Für <abbr>FTUI</abbr> werden die Daten im LogProxy-Format bereitgestellt:</p>
     <pre><code>{ FHEM::Buienradar::LogProxy("name des buienradar device")}</code></pre>
   </li>
+  <li>
+    <p>Für eine reine Text-Ausgabe der Daten als Graph, kann</p>
+    <pre><code>{ FHEM::Buienradar::TextChart("name des buienradar device")}</code></pre>
+    <p>verwendet werden. Ausgegeben wird ein für jeden Datensatz eine Zeile im Muster</p>
+    <pre><code>22:25 |   0.060 | =
+22:30 |   0.370 | ====
+22:35 |   0.650 | =======</code></pre>
+    <p>wobei für jede 0.1 mm/h Niederschlag ein <code>=</code> ausgegeben wird, maximal jedoch 50 Einheiten. Mehr werden mit einem<br>
+    <code>&gt;</code> abgekürzt.</p>
+    <pre><code>23:00 |  11.800 | ==================================================&gt;</code></pre>
+  </li>
 </ul>
 
 =end html_DE
@@ -973,7 +1025,7 @@ Die minimalste Definition lautet demnach:</p>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.2.7",
+    "version": "2.3.0",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
