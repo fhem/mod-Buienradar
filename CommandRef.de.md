@@ -28,15 +28,19 @@ Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:
 
 ### Readings
 Aktuell liefert Buienradar folgende Readings:
-* ``rainAmount``    - Menge des gemeldeten Niederschlags in mm/h für den nächsten 5-Minuten-Intervall.
-* ``rainBegin``     - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.
-* ``raindEnd``      - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.
-* ``rainDataStart`` - Zeitlicher Beginn der gelieferten Niederschlagsdaten.
-* ``rainDataEnd``   - Zeitliches Ende der gelieferten Niederschlagsdaten.
-* ``rainLaMetric``  - Aufbereitete Daten für LaMetric-Devices.
-* ``rainMax``       - Die maximale Niederschlagsmenge in mm/h für ein 5 Min. Intervall auf Basis der vorliegenden Daten.
-* ``rainNow``       - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm/h.
-* ``rainTotal``     - Die gesamte vorhergesagte Niederschlagsmenge in mm/h
+* ``rainAmount``            - Menge des gemeldeten Niederschlags in mm/h für den nächsten 5-Minuten-Intervall.
+* ``rainBegin``             - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.
+* ``raindEnd``              - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.
+* ``rainDataStart``         - Zeitlicher Beginn der gelieferten Niederschlagsdaten.
+* ``rainDataEnd``           - Zeitliches Ende der gelieferten Niederschlagsdaten.
+* ``rainLaMetric``          - Aufbereitete Daten für LaMetric-Devices.
+* ``rainMax``               - Die maximale Niederschlagsmenge in mm/h für ein 5 Min. Intervall auf Basis der vorliegenden Daten.
+* ``rainNow``               - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm/h.
+* ``rainTotal``             - Die gesamte vorhergesagte Niederschlagsmenge in mm/h
+* ``rainDuration``          - Dauer der gemeldeten Niederschläge in Minuten
+* ``rainDurationTime``      - Dauer der gemeldeten Niederschläge in HH:MM
+* ``rainDurationIntervals`` - Anzahl der Intervalle mit gemeldeten Niederschlägen
+* ``rainDurationPercent``   - Prozentualer Anteil der Intervalle mit Niederschlägen
 
 <span id="Buienradarattr" />
 

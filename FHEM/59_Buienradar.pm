@@ -237,14 +237,7 @@ sub Get($$@) {
         return 10**( ( $args[0] - 109 ) / 32 );
     }
     elsif ( $opt eq "rainDuration" ) {
-        my $begin = ::ReadingsVal( $name, "rainBegin", "00:00" );
-        my $end   = ::ReadingsVal( $name, "rainEnd",   "00:00" );
-        if ( $begin ne $end ) {
-            return TimeCalc( $end, $begin );
-        }
-        else {
-            return "unknown";
-        }
+        ::ReadingsVal($name, "rainDuration", "unknown");
     }
 
     elsif ( $opt eq "refresh" ) {
@@ -395,7 +388,6 @@ sub Define($$) {
 
     my $name = $a[0];
     $device = $name;
-
 
     $hash->{VERSION}    = $version;
     $hash->{INTERVAL}   = $FHEM::Buienradar::default_interval;
@@ -742,18 +734,19 @@ sub ParseHttpResponse($) {
         )) if ::AttrVal("global", "stacktrace", 0) eq "1";
 
         if (scalar @precip > 0) {
-            my $rainLaMetric    = join(',', map {$_ * 1000} @precip[0..11]);
-            my $rainTotal       = List::Util::sum @precip;
-            my $rainMax         = List::Util::max @precip;
-            my $rainStart       = undef;
-            my $rainEnd         = undef;
-            my $dataStart       = $forecast_data->{start};
-            my $dataEnd         = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
-            my $forecast_start  = $dataStart;
-            my $rainNow         = undef;
-            my $rainData        = join(':', @precip);
-            my $rainAmount      = $precip[0];
-            my $isRaining       = undef;
+            my $rainLaMetric        = join(',', map {$_ * 1000} @precip[0..11]);
+            my $rainTotal           = List::Util::sum @precip;
+            my $rainMax             = List::Util::max @precip;
+            my $rainStart           = undef;
+            my $rainEnd             = undef;
+            my $dataStart           = $forecast_data->{start};
+            my $dataEnd             = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
+            my $forecast_start      = $dataStart;
+            my $rainNow             = undef;
+            my $rainData            = join(':', @precip);
+            my $rainAmount          = $precip[0];
+            my $isRaining           = undef;
+            my $intervalsWithRain   = scalar map { $_ > 0 ? $_ : () } @precip;
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
 
@@ -807,6 +800,10 @@ sub ParseHttpResponse($) {
                 ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
                 ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
                 ::readingsBulkUpdate( $hash, "rainData", $rainData);
+                ::readingsBulkUpdate( $hash, "rainDuration", $intervalsWithRain * 5);
+                ::readingsBulkUpdate( $hash, "rainDurationIntervals", $intervalsWithRain);
+                ::readingsBulkUpdate( $hash, "rainDurationPercent", ($intervalsWithRain / scalar @precip) * 100);
+                ::readingsBulkUpdate( $hash, "rainDurationTime", sprintf("%02d:%02d",(( $intervalsWithRain * 5 / 60), $intervalsWithRain * 5 % 60)));
             ::readingsEndUpdate( $hash, 1 );
         }
     }
@@ -877,7 +874,11 @@ So the smallest possible definition is:</p>
   <li><code>rainLaMetric</code> - data formatted for a LaMetric device.<br></li>
   <li><code>rainMax</code> - maximal amount of precipitation for <strong>any</strong> 5 minute interval of the gathered data in mm/h.<br></li>
   <li><code>rainNow</code> - amount of precipitation for the <strong>current</strong> 5 minute interval in mm/h.<br></li>
-  <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm/h.</li>
+  <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm/h.<br></li>
+  <li><code>rainDuration</code> - duration of the precipitation contained in the forecast<br></li>
+  <li><code>rainDurationTime</code> - duration of the precipitation contained in the forecast in HH:MM<br></li>
+  <li><code>rainDurationIntervals</code> - amount of intervals with precipitation<br></li>
+  <li><code>rainDurationPercent</code> - percentage of interavls with precipitation</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>
 <h3 id="attributes">Attributes</h3>
@@ -958,7 +959,11 @@ Die minimalste Definition lautet demnach:</p>
   <li><code>rainLaMetric</code> - Aufbereitete Daten für LaMetric-Devices.<br></li>
   <li><code>rainMax</code> - Die maximale Niederschlagsmenge in mm/h für ein 5 Min. Intervall auf Basis der vorliegenden Daten.<br></li>
   <li><code>rainNow</code> - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm/h.<br></li>
-  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm/h</li>
+  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm/h<br></li>
+  <li><code>rainDuration</code> - Dauer der gemeldeten Niederschläge in Minuten<br></li>
+  <li><code>rainDurationTime</code> - Dauer der gemeldeten Niederschläge in HH:MM<br></li>
+  <li><code>rainDurationIntervals</code> - Anzahl der Intervalle mit gemeldeten Niederschlägen<br></li>
+  <li><code>rainDurationPercent</code> - Prozentualer Anteil der Intervalle mit Niederschlägen</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>
 <h3 id="attribute">Attribute</h3>
