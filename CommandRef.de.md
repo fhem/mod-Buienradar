@@ -13,6 +13,13 @@ Die minimalste Definition lautet demnach:
 
     define <devicename> Buienradar
   
+<span id="Buienradarset" />  
+
+### Set 
+Folgende Set-Aufrufe werden unterstützt:
+
+* ``refresh``       - Neue Daten abfragen.
+
 <span id="Buienradarget" />  
 
 ### Get
@@ -20,7 +27,6 @@ Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:
 
 * ``rainDuration``  - Die voraussichtliche Dauer des n&auml;chsten Niederschlags in Minuten.
 * ``startsIn``      - Der n&auml;chste Niederschlag beginnt in <var>n</var> Minuten. **Obsolet!**
-* ``refresh``       - Neue Daten abfragen.
 * ``version``       - Aktuelle Version abfragen.
 
 <span id="Buienradarreadings" />  

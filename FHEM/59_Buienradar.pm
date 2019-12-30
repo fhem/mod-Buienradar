@@ -45,6 +45,7 @@ use English;
 use Storable;
 use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
+use v5.10;
 
 our $device;
 our $version = '2.3.0';
@@ -253,6 +254,22 @@ sub timediff2str($)
 }
 
 ###################################
+sub Set($$@) {
+    my ( $hash, $name, $opt, @args ) = @_;
+    return "\"set $name\" needs at least one argument" unless ( defined($opt) );
+
+    given ($opt) {
+        when ("refresh") {
+            RequestUpdate($hash);
+            return "";
+        }
+
+        default {
+            return "Unknown argument $opt, choose one of refresh:noArg";
+        }
+    }
+}
+
 sub Get($$@) {
 
     my ( $hash, $name, $opt, @args ) = @_;
@@ -277,10 +294,6 @@ sub Get($$@) {
 
     if ( $opt eq "rainDuration" ) {
         ::ReadingsVal($name, "rainDuration", "unknown");
-    }
-    elsif ( $opt eq "refresh" ) {
-        RequestUpdate($hash);
-        return "";
     }
     else {
         return "Unknown argument $opt, choose one of version:noArg refresh:noArg startsIn:noArg rainDuration:noArg";

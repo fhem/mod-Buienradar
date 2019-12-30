@@ -12,6 +12,13 @@ So the smallest possible definition is:
 
     define <devicename> Buienradar
   
+<span id="Buienradarset" />  
+
+### Set
+<var>Set</var> will get you the following:
+
+* ``refresh``       - get new data from Buienradar.nl.
+
 <span id="Buienradarget" />  
 
 ### Get
@@ -19,7 +26,6 @@ So the smallest possible definition is:
 
 * ``rainDuration``  - predicted duration of the next precipitation in minutes.
 * ``startsIn``      - next precipitation starts in <var>n</var> minutes. **Obsolete!**
-* ``refresh``       - get new data from Buienradar.nl.
 * ``version``       - get current version of the Buienradar module.
 
 <span id="Buienradarreadings" />  
