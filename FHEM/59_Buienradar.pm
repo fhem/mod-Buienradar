@@ -275,21 +275,15 @@ sub Get($$@) {
         }
     }
 
-    if ( $opt eq "testVal" ) {
-
-        #return  @args;
-        return 10**( ( $args[0] - 109 ) / 32 );
-    }
-    elsif ( $opt eq "rainDuration" ) {
+    if ( $opt eq "rainDuration" ) {
         ::ReadingsVal($name, "rainDuration", "unknown");
     }
-
     elsif ( $opt eq "refresh" ) {
         RequestUpdate($hash);
         return "";
     }
     else {
-        return "Unknown argument $opt, choose one of version:noArg testVal refresh:noArg startsIn:noArg rainDuration:noArg";
+        return "Unknown argument $opt, choose one of version:noArg refresh:noArg startsIn:noArg rainDuration:noArg";
     }
 }
 
