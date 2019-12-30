@@ -19,7 +19,7 @@ Die minimalste Definition lautet demnach:
 Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:
 
 * ``rainDuration``  - Die voraussichtliche Dauer des n&auml;chsten Niederschlags in Minuten.
-* ``startse``       - Der n&auml;chste Niederschlag beginnt in <var>n</var> Minuten. **Obsolet!**
+* ``startsIn``      - Der n&auml;chste Niederschlag beginnt in <var>n</var> Minuten. **Obsolet!**
 * ``refresh``       - Neue Daten abfragen.
 * ``version``       - Aktuelle Version abfragen.
 * ``testVal``       - Rechnet einen Buienradar-Wert zu Testzwecken in mm/m² um. Dies war für die alte <abbr>API</abbr> von Buienradar.nl nötig. **Obsolet!**

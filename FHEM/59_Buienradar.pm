@@ -872,7 +872,7 @@ sub Debugging {
 <p><var>Get</var> will get you the following:</p>
 <ul>
   <li><code>rainDuration</code> - predicted duration of the next precipitation in minutes.</li>
-  <li><code>startse</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong></li>
+  <li><code>startsIn</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong></li>
   <li><code>refresh</code> - get new data from Buienradar.nl.</li>
   <li><code>version</code> - get current version of the Buienradar module.</li>
   <li><code>testVal</code> - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². <strong>Obsolete!</strong></li>
@@ -954,7 +954,7 @@ sub Debugging {
 <p>Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:</p>
 <ul>
   <li><code>rainDuration</code> - Die voraussichtliche Dauer des nächsten Niederschlags in Minuten.</li>
-  <li><code>startse</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong></li>
+  <li><code>startsIn</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong></li>
   <li><code>refresh</code> - Neue Daten abfragen.</li>
   <li><code>version</code> - Aktuelle Version abfragen.</li>
   <li><code>testVal</code> - Rechnet einen Buienradar-Wert zu Testzwecken in mm/m² um. Dies war für die alte <abbr>API</abbr> von Buienradar.nl nötig. <strong>Obsolet!</strong></li>

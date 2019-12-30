@@ -18,7 +18,7 @@ So the smallest possible definition is:
 <var>Get</var> will get you the following:
 
 * ``rainDuration``  - predicted duration of the next precipitation in minutes.
-* ``startse``       - next precipitation starts in <var>n</var> minutes. **Obsolete!**
+* ``startsIn``      - next precipitation starts in <var>n</var> minutes. **Obsolete!**
 * ``refresh``       - get new data from Buienradar.nl.
 * ``version``       - get current version of the Buienradar module.
 * ``testVal``       - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². **Obsolete!**
