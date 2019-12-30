@@ -875,7 +875,6 @@ sub Debugging {
   <li><code>startsIn</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong></li>
   <li><code>refresh</code> - get new data from Buienradar.nl.</li>
   <li><code>version</code> - get current version of the Buienradar module.</li>
-  <li><code>testVal</code> - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². <strong>Obsolete!</strong></li>
 </ul>
 <p><span id="Buienradarreadings"></span></p>
 <h3 id="readings">Readings</h3>
@@ -957,7 +956,6 @@ sub Debugging {
   <li><code>startsIn</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong></li>
   <li><code>refresh</code> - Neue Daten abfragen.</li>
   <li><code>version</code> - Aktuelle Version abfragen.</li>
-  <li><code>testVal</code> - Rechnet einen Buienradar-Wert zu Testzwecken in mm/m² um. Dies war für die alte <abbr>API</abbr> von Buienradar.nl nötig. <strong>Obsolet!</strong></li>
 </ul>
 <p><span id="Buienradarreadings"></span></p>
 <h3 id="readings">Readings</h3>
