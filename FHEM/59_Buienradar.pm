@@ -197,25 +197,59 @@ sub Undefine($$) {
     return undef;
 }
 
-sub TimeCalc($$) {
+=pod
 
-    # TimeA - TimeB
-    my ( $timeA, $timeB ) = @_;
+    Create a human readable representation for a given time t, like x minutes, y seconds, but only
+    with the necessary pieces.
 
-    my @AtimeA = split /:/, $timeA;
-    my @AtimeB = split /:/, $timeB;
+    Respects your wishes regarding scalar / list context, e.g.
 
-    if ( $AtimeA[0] < $AtimeB[0] ) {
-        $AtimeA[0] += 24;
-    }
+    # list context
+    say Dumper(timediff2str(10000))
+        $VAR1 = '1';
+        $VAR2 = '3';
+        $VAR3 = '46';
+        $VAR4 = '40';
 
-    if ( ( $AtimeA[1] < $AtimeB[1] ) && ( $AtimeA[0] != $AtimeB[0] ) ) {
-        $AtimeA[1] += 60;
-    }
+    # scalar context
+    say Dumper(scalar timediff2str(100000));
+        $VAR1 = '1 Tage, 03 Stunden, 46 Minuten, 40 Sekunden';
 
-    my $result = ( $AtimeA[0] - $AtimeB[0] ) * 60 + $AtimeA[1] - $AtimeB[1];
+=cut
+sub timediff2str($)
+{
+    my $s = shift;
 
-    return int($result);
+    return unless defined wantarray;
+
+    return undef unless defined $s;
+
+    return (
+        wantarray
+            ?   (0,0,0,$s)
+            : sprintf "%02d Sekunden", $s
+    ) if $s < 60;
+
+    my $m = $s / 60; $s = $s % 60;
+    return (
+        wantarray
+            ?   (0, 0, POSIX::floor($m), POSIX::floor($s))
+            :   sprintf "%02d Minuten, %02d Sekunden", $m, $s
+    ) if $m < 60;
+
+    my $h = $m /  60; $m %= 60;
+    return (
+        wantarray
+            ?   (0, POSIX::floor($h), POSIX::floor($m), POSIX::floor($s))
+            :   sprintf "%02d Stunden, %02d Minuten, %02d Sekunden", $h, $m, $s
+    ) if $h < 24;
+
+    my $d = $h / 24; $h %= 24;
+    return (
+        wantarray
+            ?   ( POSIX::floor($d), POSIX::floor($h), POSIX::floor($m), POSIX::floor($s))
+            :   sprintf "%d Tage, %02d Stunden, %02d Minuten, %02d Sekunden", $d, $h, $m, $s
+    );
 }
 
 ###################################
@@ -225,9 +259,19 @@ sub Get($$@) {
 
     return "\"get $name\" needs at least one argument" unless ( defined($opt) );
 
-    given($opt) {
+    given($opt)
+    {
         when ("version") {
             return $version;
+        }
+
+        when ("startsIn") {
+            my $begin = $hash->{".RainStart"};
+            return "No data available" unless $begin;
+            return "It is raining" if $begin = 0;
+
+            my $timeDiffSec = $begin - time;
+            return scalar timediff2str($timeDiffSec);
         }
     }
 
@@ -244,26 +288,8 @@ sub Get($$@) {
         RequestUpdate($hash);
         return "";
     }
-    elsif ( $opt eq "startsIn" ) {
-        my $begin = ::ReadingsVal( $name, "rainBegin", "unknown" );
-        my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
-          localtime(time);
-        my $result = "";
-
-        if ( $begin ne "unknown" ) {
-
-            $result = TimeCalc( $begin, "$hour:$min" );
-
-            if ( $result < 0 ) {
-                $result = "raining";
-            }
-            return $result;
-        }
-        return "no rain";
-    }
     else {
-        return
-"Unknown argument $opt, choose one of version:noArg testVal refresh:noArg startsIn:noArg rainDuration:noArg";
+        return "Unknown argument $opt, choose one of version:noArg testVal refresh:noArg startsIn:noArg rainDuration:noArg";
     }
 }
 
@@ -350,14 +376,6 @@ sub Attr {
         }
 
     }
-}
-
-sub TimeNowDiff {
-   my $begin = $_[0];
-   my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) = localtime(time);
-   my $result = 0;
-   $result = TimeCalc( $begin, "$hour:$min" );
-   return $result;
 }
 
 #####################################
@@ -673,6 +691,7 @@ sub ParseHttpResponse($) {
     my ( $param, $err, $data ) = @_;
     my $hash = $param->{hash};
     my $name = $hash->{NAME};
+    $hash->{".RainStart"} = undef;
 
     #Debugging("*** RESULT ***");
     #Debugging(Dumper {param => $param, data => $data, error => $err});
@@ -747,6 +766,7 @@ sub ParseHttpResponse($) {
             my $rainAmount          = $precip[0];
             my $isRaining           = undef;
             my $intervalsWithRain   = scalar map { $_ > 0 ? $_ : () } @precip;
+            $hash->{".RainStart"}   = "unknown";
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
 
@@ -763,6 +783,7 @@ sub ParseHttpResponse($) {
                 # there is precipitation and start is not yet set
                 if (!$rainStart and $isRaining) {
                     $rainStart  = $start;
+                    $hash->{".RainStart"} = $rainStart;
                 }
 
                 # It's raining again, so we have to reset rainEnd for a new chance
@@ -777,6 +798,7 @@ sub ParseHttpResponse($) {
 
                 if (time() ~~ [$start..$end]) {
                     $rainNow    = $precip;
+                    $hash->{".RainStart"} = 0;
                 }
 
                 $precipitation_forecast{$start} = {
@@ -849,45 +871,44 @@ sub Debugging {
 <p><span id="Buienradardefine"></span></p>
 <h3 id="define">Define</h3>
 <pre><code>define &lt;devicename&gt; Buienradar [latitude] [longitude]</code></pre>
-<p><var>latitude</var> and <var>longitude</var> are facultative and will gathered from <var>global</var> if not set.<br>
-So the smallest possible definition is:</p>
+<p><var>latitude</var> and <var>longitude</var> are facultative and will gathered from <var>global</var> if not set. So the smallest possible definition is:</p>
 <pre><code>define &lt;devicename&gt; Buienradar</code></pre>
 <p><span id="Buienradarget"></span></p>
 <h3 id="get">Get</h3>
 <p><var>Get</var> will get you the following:</p>
 <ul>
-  <li><code>rainDuration</code> - predicted duration of the next precipitation in minutes.<br></li>
-  <li><code>startse</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong><br></li>
-  <li><code>refresh</code> - get new data from Buienradar.nl.<br></li>
-  <li><code>version</code> - get current version of the Buienradar module.<br></li>
+  <li><code>rainDuration</code> - predicted duration of the next precipitation in minutes.</li>
+  <li><code>startse</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong></li>
+  <li><code>refresh</code> - get new data from Buienradar.nl.</li>
+  <li><code>version</code> - get current version of the Buienradar module.</li>
   <li><code>testVal</code> - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². <strong>Obsolete!</strong></li>
 </ul>
 <p><span id="Buienradarreadings"></span></p>
 <h3 id="readings">Readings</h3>
 <p>Buienradar provides several readings:</p>
 <ul>
-  <li><code>rainAmount</code> - amount of predicted precipitation in mm/h for the next 5 minute interval.<br></li>
-  <li><code>rainBegin</code> - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.<br></li>
-  <li><code>raindEnd</code> - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.<br></li>
-  <li><code>rainDataStart</code> - starting time of gathered data.<br></li>
-  <li><code>rainDataEnd</code> - ending time of gathered data.<br></li>
-  <li><code>rainLaMetric</code> - data formatted for a LaMetric device.<br></li>
-  <li><code>rainMax</code> - maximal amount of precipitation for <strong>any</strong> 5 minute interval of the gathered data in mm/h.<br></li>
-  <li><code>rainNow</code> - amount of precipitation for the <strong>current</strong> 5 minute interval in mm/h.<br></li>
-  <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm/h.<br></li>
-  <li><code>rainDuration</code> - duration of the precipitation contained in the forecast<br></li>
-  <li><code>rainDurationTime</code> - duration of the precipitation contained in the forecast in HH:MM<br></li>
-  <li><code>rainDurationIntervals</code> - amount of intervals with precipitation<br></li>
+  <li><code>rainAmount</code> - amount of predicted precipitation in mm/h for the next 5 minute interval.</li>
+  <li><code>rainBegin</code> - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.</li>
+  <li><code>raindEnd</code> - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.</li>
+  <li><code>rainDataStart</code> - starting time of gathered data.</li>
+  <li><code>rainDataEnd</code> - ending time of gathered data.</li>
+  <li><code>rainLaMetric</code> - data formatted for a LaMetric device.</li>
+  <li><code>rainMax</code> - maximal amount of precipitation for <strong>any</strong> 5 minute interval of the gathered data in mm/h.</li>
+  <li><code>rainNow</code> - amount of precipitation for the <strong>current</strong> 5 minute interval in mm/h.</li>
+  <li><code>rainTotal</code> - total amount of precipition for the gathered data in mm/h.</li>
+  <li><code>rainDuration</code> - duration of the precipitation contained in the forecast</li>
+  <li><code>rainDurationTime</code> - duration of the precipitation contained in the forecast in HH:MM</li>
+  <li><code>rainDurationIntervals</code> - amount of intervals with precipitation</li>
   <li><code>rainDurationPercent</code> - percentage of interavls with precipitation</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>
 <h3 id="attributes">Attributes</h3>
 <ul>
   <li>
-    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - If <code>disabled</code> is set to <code>on</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactivates the device, also if the attribute ist simply deleted.<br>
+    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - If <code>disabled</code> is set to <code>on</code>, no further requests to Buienradar.nl will be performed. <code>off</code> reactivates the device, also if the attribute ist simply deleted.
   </li>
   <li>
-    <a name="region" id="region"></a> <code>region nl|de</code> - Allowed values are <code>nl</code> (default value) and <code>de</code>. In some cases, especially in the south and east of Germany, <code>de</code> returns values at all.<br>
+    <a name="region" id="region"></a> <code>region nl|de</code> - Allowed values are <code>nl</code> (default value) and <code>de</code>. In some cases, especially in the south and east of Germany, <code>de</code> returns values at all.
   </li>
   <li>
     <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Data update every <var>n</var> seconds. <strong>Attention!</strong> 10 seconds is a very aggressive value and should be chosen carefully, <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.
@@ -898,28 +919,27 @@ So the smallest possible definition is:</p>
 <ul>
   <li>
     <p>An HTML version that is displayed in the detail view by default and can be viewed with</p>
-    <pre><code>{ FHEM::Buienradar::HTML("buienradar device name")}</code></pre>
+    <pre><code>  { FHEM::Buienradar::HTML("buienradar device name")}</code></pre>
     <p>can be retrieved.</p>
   </li>
   <li>
     <p>A chart generated by Google Charts in <abbr>PNG</abbr> format, which can be viewed with</p>
-    <pre><code>{ FHEM::Buienradar::GChart("buienradar device name")}</code></pre>
+    <pre><code>  { FHEM::Buienradar::GChart("buienradar device name")}</code></pre>
     <p>can be retrieved. <strong>Caution!</strong> Please note that data is transferred to Google for this purpose!</p>
   </li>
   <li>
     <p><abbr>FTUI</abbr> is supported by the LogProxy format:</p>
-    <pre><code>{ FHEM::Buienradar::LogProxy("buienradar device name")}</code></pre>
+    <pre><code>  { FHEM::Buienradar::LogProxy("buienradar device name")}</code></pre>
   </li>
   <li>
     <p>A plain text representation can be display by</p>
-    <pre><code>{ FHEM::Buienradar::TextChart("buienradar device name")}</code></pre>
+    <pre><code>  { FHEM::Buienradar::TextChart("buienradar device name")}</code></pre>
     <p>Every line represents a record of the whole set in a format like</p>
-    <pre><code>22:25 |   0.060 | =
-22:30 |   0.370 | ====
-22:35 |   0.650 | =======</code></pre>
-    <p>For every 0.1 mm/h precipitation a <code>=</code> is displayed, but the output is capped to 50 units. If more than 50 units<br>
-    would be display, the bar is appended with a <code>&gt;</code>.</p>
-    <pre><code>23:00 |  11.800 | ==================================================&gt;</code></pre>
+    <pre><code>  22:25 |   0.060 | =
+  22:30 |   0.370 | ====
+  22:35 |   0.650 | =======</code></pre>
+    <p>For every 0.1 mm/h precipitation a <code>=</code> is displayed, but the output is capped to 50 units. If more than 50 units would be display, the bar is appended with a <code>&gt;</code>.</p>
+    <pre><code>  23:00 |  11.800 | ==================================================&gt;</code></pre>
   </li>
 </ul>
 
@@ -929,50 +949,48 @@ So the smallest possible definition is:</p>
 
 <p><span id="Buienradar"></span></p>
 <h2 id="buienradar">Buienradar</h2>
-<p>Das Buienradar-Modul bindet die Niederschlagsvorhersagedaten der freien <abbr title="Application Program Interface">API</abbr><br>
-von <a href="https://www.buienradar.nl">Buienradar.nl</a> an.</p>
+<p>Das Buienradar-Modul bindet die Niederschlagsvorhersagedaten der freien <abbr title="Application Program Interface">API</abbr> von <a href="https://www.buienradar.nl">Buienradar.nl</a> an.</p>
 <p><span id="Buienradardefine"></span></p>
 <h3 id="define">Define</h3>
 <pre><code>define &lt;devicename&gt; Buienradar [latitude] [longitude]</code></pre>
-<p>Die Werte für latitude und longitude sind optional und werden, wenn nicht explizit angegeben, von <var>global</var> bezogen.<br>
-Die minimalste Definition lautet demnach:</p>
+<p>Die Werte für latitude und longitude sind optional und werden, wenn nicht explizit angegeben, von <var>global</var> bezogen. Die minimalste Definition lautet demnach:</p>
 <pre><code>define &lt;devicename&gt; Buienradar</code></pre>
 <p><span id="Buienradarget"></span></p>
 <h3 id="get">Get</h3>
 <p>Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:</p>
 <ul>
-  <li><code>rainDuration</code> - Die voraussichtliche Dauer des nächsten Niederschlags in Minuten.<br></li>
-  <li><code>startse</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong><br></li>
-  <li><code>refresh</code> - Neue Daten abfragen.<br></li>
-  <li><code>version</code> - Aktuelle Version abfragen.<br></li>
+  <li><code>rainDuration</code> - Die voraussichtliche Dauer des nächsten Niederschlags in Minuten.</li>
+  <li><code>startse</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong></li>
+  <li><code>refresh</code> - Neue Daten abfragen.</li>
+  <li><code>version</code> - Aktuelle Version abfragen.</li>
   <li><code>testVal</code> - Rechnet einen Buienradar-Wert zu Testzwecken in mm/m² um. Dies war für die alte <abbr>API</abbr> von Buienradar.nl nötig. <strong>Obsolet!</strong></li>
 </ul>
 <p><span id="Buienradarreadings"></span></p>
 <h3 id="readings">Readings</h3>
 <p>Aktuell liefert Buienradar folgende Readings:</p>
 <ul>
-  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h für den nächsten 5-Minuten-Intervall.<br></li>
-  <li><code>rainBegin</code> - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
-  <li><code>raindEnd</code> - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.<br></li>
-  <li><code>rainDataStart</code> - Zeitlicher Beginn der gelieferten Niederschlagsdaten.<br></li>
-  <li><code>rainDataEnd</code> - Zeitliches Ende der gelieferten Niederschlagsdaten.<br></li>
-  <li><code>rainLaMetric</code> - Aufbereitete Daten für LaMetric-Devices.<br></li>
-  <li><code>rainMax</code> - Die maximale Niederschlagsmenge in mm/h für ein 5 Min. Intervall auf Basis der vorliegenden Daten.<br></li>
-  <li><code>rainNow</code> - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm/h.<br></li>
-  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm/h<br></li>
-  <li><code>rainDuration</code> - Dauer der gemeldeten Niederschläge in Minuten<br></li>
-  <li><code>rainDurationTime</code> - Dauer der gemeldeten Niederschläge in HH:MM<br></li>
-  <li><code>rainDurationIntervals</code> - Anzahl der Intervalle mit gemeldeten Niederschlägen<br></li>
+  <li><code>rainAmount</code> - Menge des gemeldeten Niederschlags in mm/h für den nächsten 5-Minuten-Intervall.</li>
+  <li><code>rainBegin</code> - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.</li>
+  <li><code>raindEnd</code> - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.</li>
+  <li><code>rainDataStart</code> - Zeitlicher Beginn der gelieferten Niederschlagsdaten.</li>
+  <li><code>rainDataEnd</code> - Zeitliches Ende der gelieferten Niederschlagsdaten.</li>
+  <li><code>rainLaMetric</code> - Aufbereitete Daten für LaMetric-Devices.</li>
+  <li><code>rainMax</code> - Die maximale Niederschlagsmenge in mm/h für ein 5 Min. Intervall auf Basis der vorliegenden Daten.</li>
+  <li><code>rainNow</code> - Die vorhergesagte Niederschlagsmenge für das aktuelle 5 Min. Intervall in mm/h.</li>
+  <li><code>rainTotal</code> - Die gesamte vorhergesagte Niederschlagsmenge in mm/h</li>
+  <li><code>rainDuration</code> - Dauer der gemeldeten Niederschläge in Minuten</li>
+  <li><code>rainDurationTime</code> - Dauer der gemeldeten Niederschläge in HH:MM</li>
+  <li><code>rainDurationIntervals</code> - Anzahl der Intervalle mit gemeldeten Niederschlägen</li>
   <li><code>rainDurationPercent</code> - Prozentualer Anteil der Intervalle mit Niederschlägen</li>
 </ul>
 <p><span id="Buienradarattr"></span></p>
 <h3 id="attribute">Attribute</h3>
 <ul>
   <li>
-    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.<br>
+    <a name="disabled" id="disabled"></a> <code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.
   </li>
   <li>
-    <a name="region" id="region"></a> <code>region nl|de</code> - Erlaubte Werte sind <code>nl</code> (Standardwert) und <code>de</code>. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert <code>de</code> überhaupt Werte.<br>
+    <a name="region" id="region"></a> <code>region nl|de</code> - Erlaubte Werte sind <code>nl</code> (Standardwert) und <code>de</code>. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert <code>de</code> überhaupt Werte.
   </li>
   <li>
     <a name="interval" id="interval"></a> <code>interval 10|60|120|180|240|300</code> - Aktualisierung der Daten alle <var>n</var> Sekunden. <strong>Achtung!</strong> 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden.
@@ -983,27 +1001,27 @@ Die minimalste Definition lautet demnach:</p>
 <ul>
   <li>
     <p>Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit</p>
-    <pre><code>{ FHEM::Buienradar::HTML("name des buienradar device")}</code></pre>abgerufen werden.<br>
+    <pre><code>  { FHEM::Buienradar::HTML("name des buienradar device")}</code></pre>
+    <p>abgerufen werden.</p>
   </li>
   <li>
     <p>Ein von Google Charts generiertes Diagramm im <abbr>PNG</abbr>-Format, welcher mit</p>
-    <pre><code>{ FHEM::Buienradar::GChart("name des buienradar device")}</code></pre>
+    <pre><code>  { FHEM::Buienradar::GChart("name des buienradar device")}</code></pre>
     <p>abgerufen werden kann. <strong>Achtung!</strong> Dazu werden Daten an Google übertragen!</p>
   </li>
   <li>
     <p>Für <abbr>FTUI</abbr> werden die Daten im LogProxy-Format bereitgestellt:</p>
-    <pre><code>{ FHEM::Buienradar::LogProxy("name des buienradar device")}</code></pre>
+    <pre><code>  { FHEM::Buienradar::LogProxy("name des buienradar device")}</code></pre>
   </li>
   <li>
     <p>Für eine reine Text-Ausgabe der Daten als Graph, kann</p>
-    <pre><code>{ FHEM::Buienradar::TextChart("name des buienradar device")}</code></pre>
+    <pre><code>  { FHEM::Buienradar::TextChart("name des buienradar device")}</code></pre>
     <p>verwendet werden. Ausgegeben wird ein für jeden Datensatz eine Zeile im Muster</p>
-    <pre><code>22:25 |   0.060 | =
-22:30 |   0.370 | ====
-22:35 |   0.650 | =======</code></pre>
-    <p>wobei für jede 0.1 mm/h Niederschlag ein <code>=</code> ausgegeben wird, maximal jedoch 50 Einheiten. Mehr werden mit einem<br>
-    <code>&gt;</code> abgekürzt.</p>
-    <pre><code>23:00 |  11.800 | ==================================================&gt;</code></pre>
+    <pre><code>  22:25 |   0.060 | =
+  22:30 |   0.370 | ====
+  22:35 |   0.650 | =======</code></pre>
+    <p>wobei für jede 0.1 mm/h Niederschlag ein <code>=</code> ausgegeben wird, maximal jedoch 50 Einheiten. Mehr werden mit einem <code>&gt;</code> abgekürzt.</p>
+    <pre><code>  23:00 |  11.800 | ==================================================&gt;</code></pre>
   </li>
 </ul>
 
@@ -1030,7 +1048,7 @@ Die minimalste Definition lautet demnach:</p>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.3.0",
+    "version": "3.0.0",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
