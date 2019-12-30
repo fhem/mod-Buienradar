@@ -1042,7 +1042,7 @@ sub Debugging {
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
