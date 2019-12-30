@@ -880,13 +880,18 @@ sub Debugging {
 <pre><code>define &lt;devicename&gt; Buienradar [latitude] [longitude]</code></pre>
 <p><var>latitude</var> and <var>longitude</var> are facultative and will gathered from <var>global</var> if not set. So the smallest possible definition is:</p>
 <pre><code>define &lt;devicename&gt; Buienradar</code></pre>
+<p><span id="Buienradarset"></span></p>
+<h3 id="set">Set</h3>
+<p><var>Set</var> will get you the following:</p>
+<ul>
+  <li><code>refresh</code> - get new data from Buienradar.nl.</li>
+</ul>
 <p><span id="Buienradarget"></span></p>
 <h3 id="get">Get</h3>
 <p><var>Get</var> will get you the following:</p>
 <ul>
   <li><code>rainDuration</code> - predicted duration of the next precipitation in minutes.</li>
   <li><code>startsIn</code> - next precipitation starts in <var>n</var> minutes. <strong>Obsolete!</strong></li>
-  <li><code>refresh</code> - get new data from Buienradar.nl.</li>
   <li><code>version</code> - get current version of the Buienradar module.</li>
 </ul>
 <p><span id="Buienradarreadings"></span></p>
@@ -961,13 +966,18 @@ sub Debugging {
 <pre><code>define &lt;devicename&gt; Buienradar [latitude] [longitude]</code></pre>
 <p>Die Werte für latitude und longitude sind optional und werden, wenn nicht explizit angegeben, von <var>global</var> bezogen. Die minimalste Definition lautet demnach:</p>
 <pre><code>define &lt;devicename&gt; Buienradar</code></pre>
+<p><span id="Buienradarset"></span></p>
+<h3 id="set">Set</h3>
+<p>Folgende Set-Aufrufe werden unterstützt:</p>
+<ul>
+  <li><code>refresh</code> - Neue Daten abfragen.</li>
+</ul>
 <p><span id="Buienradarget"></span></p>
 <h3 id="get">Get</h3>
 <p>Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:</p>
 <ul>
   <li><code>rainDuration</code> - Die voraussichtliche Dauer des nächsten Niederschlags in Minuten.</li>
   <li><code>startsIn</code> - Der nächste Niederschlag beginnt in <var>n</var> Minuten. <strong>Obsolet!</strong></li>
-  <li><code>refresh</code> - Neue Daten abfragen.</li>
   <li><code>version</code> - Aktuelle Version abfragen.</li>
 </ul>
 <p><span id="Buienradarreadings"></span></p>
@@ -1053,7 +1063,7 @@ sub Debugging {
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "3.0.1",
+    "version": "3.0.2",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
