@@ -1,10 +1,10 @@
-#!/usr/bin/env bash
+3#!/usr/bin/env bash
 #
 #   Add a http server to mock json data
 #
 
 function install_webserver {
-    apt install apache2
+    apt install -y apache2
 }
 
 function redirect_dns {
