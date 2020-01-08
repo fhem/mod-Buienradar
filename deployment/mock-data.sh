@@ -1,17 +1,18 @@
-3#!/usr/bin/env bash
+#!/usr/bin/env bash
 #
 #   Add a http server to mock json data
 #
 
 function install_webserver {
-    apt install -y apache2
+    $APT_BIN install -y apache2
 }
 
 function redirect_dns {
     echo "127.0.0.1 cdn-secure.buienalarm.nl" |tee -a /etc/hosts
 }
 
-function create_mockdata {
+function create_mockdata
+{
     mkdir -p /var/www/html/api/3.4
     test -e /var/www/html/api/3.4/forecast.php && rm /var/www/html/api/3.4/forecast.php
     ln -s /vagrant/deployment/mock-data/forecast.json /var/www/html/api/3.4/forecast.php

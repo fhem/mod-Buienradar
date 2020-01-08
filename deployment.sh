@@ -45,10 +45,12 @@ function setup_apt {
     apt-get --allow-releaseinfo-change update
 
     command -v aptitude || {
-        apt-get install -y aptitude
+        export APT_BIN="aptitude"
     }
 
-    export APT_BIN="aptitude"
+    command -v apt || {
+        export APT_BIN="apt"
+    }
 }
 
 function upgrade_system {
@@ -65,7 +67,7 @@ function install_tools {
     echo '##########################'
     echo Installing base tools
 
-    aptitude install -y htop tree vim git dnsutils telnet cpanminus build-essential curl wget
+    $APT_BIN install -y htop tree vim git dnsutils telnet cpanminus build-essential curl wget
 }
 
 function set_time {
