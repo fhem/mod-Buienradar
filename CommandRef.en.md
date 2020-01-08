@@ -27,7 +27,7 @@ So the smallest possible definition is:
 
 ### Readings
 Buienradar provides several readings:
-* ``rainAmount``            - amount of predicted precipitation in mm/h for the next 5 minute interval.
+* ``rainAmount``            - amount of predicted precipitation in mm/h for the next hour.
 * ``rainBegin``             - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
 * ``raindEnd``              - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
 * ``rainDataStart``         - starting time of gathered data.
