@@ -16,6 +16,7 @@ trap "" INT TERM EXIT
 
 LIBRARY_DIR="/vagrant/deployment/"
 LOCALE="de_DE.utf8"
+APT_BIN="apt"
 
 function install_puppet {
     puppet_source="https://apt.puppetlabs.com/puppetlabs-release-pc1-jessie.deb"
@@ -40,17 +41,19 @@ function install_puppet {
 function setup_apt {
     echo '##########################'
     echo '##########################'
-    echo Installing aptitude
+    echo Determing package management tool
 
     apt-get --allow-releaseinfo-change update
 
     command -v aptitude || {
-        export APT_BIN="aptitude"
+        APT_BIN="aptitude"
     }
 
     command -v apt || {
-        export APT_BIN="apt"
+        APT_BIN="apt"
     }
+
+    echo "Using $APT_BIN for package-management";
 }
 
 function upgrade_system {
@@ -58,7 +61,7 @@ function upgrade_system {
     echo '##########################'
     echo Upgrading system
 
-    $APT_BIN -q update
+    $APT_BIN update
     $APT_BIN -y upgrade
 }
 
@@ -137,6 +140,8 @@ function show_ip {
 
 export DEBIAN_FRONTEND=noninteractive
 
+
+
 sudo -n su
 setup_apt
 upgrade_system
@@ -153,7 +158,7 @@ test -d "${LIBRARY_DIR}" && {
     for lib_file in $(find ${LIBRARY_DIR} -iname '*.sh');
     do
         echo "Executing file ${lib_file}"
-        bash ${lib_file};
+        bash "${lib_file}" "$APT_BIN";
     done
 }
 

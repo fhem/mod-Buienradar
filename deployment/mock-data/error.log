@@ -138,3 +138,20 @@
 [Mon Aug 19 21:22:10.014113 2019] [core:error] [pid 1645:tid 140673382602496] [client 127.0.0.1:55534] AH00037: Symbolic link not allowed or link target not accessible: /var/www/html/api/3.4/forecast.php
 [Mon Aug 19 21:22:20.006330 2019] [core:error] [pid 1645:tid 140673214748416] [client 127.0.0.1:55536] AH00037: Symbolic link not allowed or link target not accessible: /var/www/html/api/3.4/forecast.php
 [Mon Aug 19 21:22:30.013889 2019] [core:error] [pid 1645:tid 140673290282752] [client 127.0.0.1:55538] AH00037: Symbolic link not allowed or link target not accessible: /var/www/html/api/3.4/forecast.php
+[Wed Aug 21 00:00:50.811596 2019] [ssl:warn] [pid 1642:tid 140673489753216] AH01906: localhost:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Wed Aug 21 00:00:50.811772 2019] [ssl:warn] [pid 1642:tid 140673489753216] AH01909: localhost:443:0 server certificate does NOT include an ID which matches the server name
+[Fri Aug 23 13:33:28.209045 2019] [ssl:warn] [pid 1642:tid 140673489753216] AH01906: localhost:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Fri Aug 23 13:33:28.209153 2019] [ssl:warn] [pid 1642:tid 140673489753216] AH01909: localhost:443:0 server certificate does NOT include an ID which matches the server name
+[Sat Aug 24 00:01:16.527821 2019] [ssl:warn] [pid 1642:tid 140673489753216] AH01906: localhost:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Sat Aug 24 00:01:16.528304 2019] [ssl:warn] [pid 1642:tid 140673489753216] AH01909: localhost:443:0 server certificate does NOT include an ID which matches the server name
+[Wed Aug 28 18:25:56.989313 2019] [ssl:warn] [pid 1832:tid 140063496246400] AH01906: localhost:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Wed Aug 28 18:25:56.989778 2019] [ssl:warn] [pid 1832:tid 140063496246400] AH01909: localhost:443:0 server certificate does NOT include an ID which matches the server name
+[Wed Aug 28 18:25:56.998518 2019] [ssl:warn] [pid 1833:tid 140063496246400] AH01906: localhost:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Wed Aug 28 18:25:56.998649 2019] [ssl:warn] [pid 1833:tid 140063496246400] AH01909: localhost:443:0 server certificate does NOT include an ID which matches the server name
+[Wed Aug 28 18:27:03.657197 2019] [ssl:warn] [pid 3898:tid 139627708646528] AH01906: localhost:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Wed Aug 28 18:27:03.657900 2019] [ssl:warn] [pid 3898:tid 139627708646528] AH01909: localhost:443:0 server certificate does NOT include an ID which matches the server name
+[Wed Aug 28 18:27:03.673053 2019] [ssl:warn] [pid 3899:tid 139627708646528] AH01906: localhost:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Wed Aug 28 18:27:03.673184 2019] [ssl:warn] [pid 3899:tid 139627708646528] AH01909: localhost:443:0 server certificate does NOT include an ID which matches the server name
+[Wed Jan 08 12:46:19.669910 2020] [ssl:warn] [pid 3098:tid 140034096223360] AH01906: cdn-secure.buienalarm.nl:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Wed Jan 08 12:46:19.680336 2020] [ssl:warn] [pid 3100:tid 140034096223360] AH01906: cdn-secure.buienalarm.nl:443:0 server certificate is a CA certificate (BasicConstraints: CA == TRUE !?)
+[Wed Jan 08 13:17:46.016572 2020] [core:error] [pid 3102:tid 140033969346304] [client 127.0.0.1:37302] AH00037: Symbolic link not allowed or link target not accessible: /var/www/html/api/3.4/forecast.php

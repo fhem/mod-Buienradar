@@ -20,13 +20,13 @@ changed_file="CHANGED"
 #   +------------------------------------------------------------
 substitute() {
     echo "" >> .${commandref_de_source}.html
-    pandoc -fmarkdown_github -t html ${commandref_de_source} | \
+    pandoc -fmarkdown -t html ${commandref_de_source} | \
         tidy -qi -w --show-body-only yes - >> .${commandref_de_source}.html
     echo "" >> .${commandref_de_source}.html
     sed -i -ne "/^=begin html_DE$/ {p; r .${commandref_de_source}.html" -e ":a; n; /^=end html_DE$/ {p; b}; ba}; p" ${module_file}
 
     echo "" >> .${commandref_en_source}.html
-    pandoc -fmarkdown_github -t html ${commandref_en_source} | \
+    pandoc -fgfm -t html ${commandref_en_source} | \
         tidy -qi -w --show-body-only yes - >> .${commandref_en_source}.html
     echo "" >> .${commandref_en_source}.html
     sed -i -ne "/^=begin html$/ {p; r .${commandref_en_source}.html" -e ":a; n; /^=end html$/ {p; b}; ba}; p" ${module_file}
