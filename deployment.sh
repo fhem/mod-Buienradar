@@ -56,8 +56,8 @@ function upgrade_system {
     echo '##########################'
     echo Upgrading system
 
-    aptitude -q update
-    aptitude -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" safe-upgrade
+    $APT_BIN -q update
+    $APT_BIN -y upgrade
 }
 
 function install_tools {
@@ -65,7 +65,7 @@ function install_tools {
     echo '##########################'
     echo Installing base tools
 
-    aptitude install -y htop tree vim git dnsutils telnet cpanminus build-essential
+    aptitude install -y htop tree vim git dnsutils telnet cpanminus build-essential curl wget
 }
 
 function set_time {
@@ -141,6 +141,7 @@ upgrade_system
 install_tools
 set_time
 set_locale
+show_ip
 
 
 # install application specific library files
