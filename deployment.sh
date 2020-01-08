@@ -45,11 +45,11 @@ function setup_apt {
 
     apt-get --allow-releaseinfo-change update
 
-    command -v aptitude || {
+    command -v aptitude && {
         APT_BIN="aptitude"
     }
 
-    command -v apt || {
+    command -v apt && {
         APT_BIN="apt"
     }
 
