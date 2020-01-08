@@ -81,3 +81,11 @@ Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, 
     ``>`` abgekürzt.
     
         23:00 |  11.800 | ==================================================>
+
+* Eine kompakte graphische Darstellung wird mit 
+
+        { FHEM::Buienradar::ColourBarChart("Name des Buienradar-Devices") }
+        
+    dargestellt. Erzeugt wird eine zweizeilige, mit CSS formatierte HTML-Tabelle, die für jeden Wert
+    eine eigene Zelle mit unterschiedlicher Blauintensität als Hintergrundfarbe und eine Legende
+    abbildet.

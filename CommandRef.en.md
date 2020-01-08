@@ -80,3 +80,10 @@ Buienradar offers besides the usual view as device also the possibility to visua
     would be display, the bar is appended with a ``>``.
     
         23:00 |  11.800 | ==================================================>
+        
+* A compact graphical representation is displayed with 
+
+        { FHEM::Buienradar::ColourBarChart("buienradar device name") }
+        
+    is shown. A two-line HTML table formatted with CSS is generated; for each value
+    a single cell with different blue intensity as background colour and a legend is depicted.
