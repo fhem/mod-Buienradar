@@ -47,7 +47,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
 our $device;
-our $version = '2.3.1';
+our $version = '2.3.2';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
@@ -303,11 +303,18 @@ sub Attr {
                     if ($attribute_value =~ /(on|1)/) {
                         ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
                         $hash->{NEXTUPDATE} = undef;
+                        $hash->{STATE} = "inactive";
+                        # this is a workaround: ::IsDisabled checks only for "disable", but not for "disabled"
+                        #   so manually set $::attr{$device_name}{"disable"} without calling Buienradar::Attr
+                        $::attr{$device_name}{"disable"} = 1;
                         return undef;
                     }
 
                     if ($attribute_value =~ /(off|0)/) {
                         Timer($hash);
+                        # this is a workaround: ::IsDisabled checks only for "disable", but not for "disabled"
+                        #   so manually set $::attr{$device_name}{"disable"} without calling Buienradar::Attr
+                        delete $::attr{$device_name}{"disable"};
                         return undef;
                     }
                 }
@@ -1170,7 +1177,7 @@ sub Debugging {
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.3.1",
+    "version": "2.3.2",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],

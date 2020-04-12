@@ -1,6 +1,6 @@
-Last Buienradar updates (12.04.2020)
+Last Buienradar updates (13.04.2020)
+  8b7b54d 12.04.2020 23:43 [FHEMBUIENRADAR-45] removed testVal()
   3278350 12.04.2020 21:56 [FHEMBUIENRADAR-44] followed perlcritics guidelines in severity 5
   183e202 08.01.2020 22:06 [FHEMBUIENRADAR-43] recalculate RainAmount as mm/h (Issue #9)
   0019217 08.01.2020 21:45 [FHEMBUIENRADAR-39] update meta.json (Issue #11)
   9883361 08.01.2020 21:43 [FHEMBUIENRADAR-39] added ColourBarChart
-  13b073b 08.01.2020 20:29 [FHEMBUIENRADAR-39] added bar chart
