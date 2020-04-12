@@ -22,7 +22,6 @@ Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:
 * ``startse``       - Der n&auml;chste Niederschlag beginnt in <var>n</var> Minuten. **Obsolet!**
 * ``refresh``       - Neue Daten abfragen.
 * ``version``       - Aktuelle Version abfragen.
-* ``testVal``       - Rechnet einen Buienradar-Wert zu Testzwecken in mm/m² um. Dies war für die alte <abbr>API</abbr> von Buienradar.nl nötig. **Obsolet!**
 
 <span id="Buienradarreadings" />  
 
