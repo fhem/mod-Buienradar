@@ -135,13 +135,12 @@ function show_ip {
 
 export DEBIAN_FRONTEND=noninteractive
 
-sudo -n su
+#sudo -n su
 setup_pm
 upgrade_system
 install_tools
 set_time
 set_locale
-
 
 # install application specific library files
 echo "Try to install files in library at ${LIBRARY_DIR}"
