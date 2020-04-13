@@ -915,7 +915,7 @@ sub ResetResult {
 
 sub Debugging {
     local $OFS = '\n';
-    ::Debug('@_') if ::AttrVal('global', 'verbose', undef) == 4 or ::AttrVal($device, 'debug', 0) == 1;
+    ::Debug("@_") if ::AttrVal('global', 'verbose', undef) == 3 or ::AttrVal($device, 'debug', 0) eq '1';
     return;
 }
 
