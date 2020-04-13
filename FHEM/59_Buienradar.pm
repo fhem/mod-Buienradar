@@ -164,7 +164,7 @@ if ($@) {
 }
 
 #####################################
-sub Initialize($) {
+sub Initialize {
 
     my ($hash) = @_;
 
@@ -184,7 +184,7 @@ sub Initialize($) {
     $hash->{REGION} = 'de';
 }
 
-sub Detail($$$$) {
+sub Detail {
     my ( $FW_wname, $d, $room, $pageHash ) =
       @_;    # pageHash is set for summaryFn.
     my $hash = $::defs{$d};
@@ -203,7 +203,7 @@ sub Detail($$$$) {
 }
 
 #####################################
-sub Undefine($$) {
+sub Undefine {
 
     my ( $hash, $arg ) = @_;
 
@@ -230,7 +230,7 @@ sub Undefine($$) {
         $VAR1 = '1 Tage, 03 Stunden, 46 Minuten, 40 Sekunden';
 
 =cut
-sub timediff2str($)
+sub timediff2str
 {
     my $s = shift;
 
@@ -267,7 +267,7 @@ sub timediff2str($)
 }
 
 ###################################
-sub Set($$@) {
+sub Set {
     my ( $hash, $name, $opt, @args ) = @_;
     return "\"set $name\" needs at least one argument" unless ( defined($opt) );
 
@@ -283,7 +283,7 @@ sub Set($$@) {
     }
 }
 
-sub Get($$@) {
+sub Get {
 
     my ( $hash, $name, $opt, @args ) = @_;
 
@@ -407,7 +407,7 @@ sub Attr {
 }
 
 #####################################
-sub Define($$) {
+sub Define {
 
     my ( $hash, $def ) = @_;
 
@@ -461,7 +461,7 @@ sub Define($$) {
     return undef;
 }
 
-sub Timer($) {
+sub Timer {
     my ($hash) = @_;
     my $nextupdate = 0;
 
@@ -476,7 +476,7 @@ sub Timer($) {
     return 1;
 }
 
-sub RequestUpdate($) {
+sub RequestUpdate {
     my ($hash) = @_;
     my $region = $hash->{REGION};
 
@@ -499,7 +499,7 @@ sub RequestUpdate($) {
     ::Log3( $hash->{NAME}, 4, $hash->{NAME} . ": Update requested" );
 }
 
-sub HTML($;$) {
+sub HTML {
     my ( $name, $width ) = @_;
     my $hash = $::defs{$name};
     my @values = split /:/, ::ReadingsVal($name, "rainData", '0:0');
@@ -722,7 +722,7 @@ sub TextChart {
     return $data;
 }
 
-sub ParseHttpResponse($) {
+sub ParseHttpResponse {
     my ( $param, $err, $data ) = @_;
     my $hash = $param->{hash};
     my $name = $hash->{NAME};
