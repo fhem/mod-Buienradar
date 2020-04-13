@@ -20,6 +20,7 @@ function create_mockdata {
 function install_config {
     test -e /etc/apache2/sites-available/mock-data.conf &&  rm /etc/apache2/sites-available/mock-data.conf
     ln -s /vagrant/deployment/mock-data/mock-data.conf /etc/apache2/sites-available/
+    a2enmod ssl
     a2ensite mock-data
 }
 
