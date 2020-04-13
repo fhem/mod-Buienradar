@@ -173,7 +173,7 @@ sub Initialize {
     $hash->{GetFn}       = "FHEM::Buienradar::Get";
     $hash->{AttrFn}      = "FHEM::Buienradar::Attr";
     $hash->{FW_detailFn} = "FHEM::Buienradar::Detail";
-    $hash->{AttrList}    = join(' ',
+    $hash->{AttrList}    = join(q{ },
         (
             'disabled:on,off',
             'region:nl,de',
@@ -524,7 +524,7 @@ END_MESSAGE
 
     $as_html .= ::ReadingsVal( $name, "rainDataStart", "unknown" ) . "<BR>";
     my $factor =
-      ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, "rainMax", "0" ) );
+      ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, "rainMax", q{0} ) );
     foreach my $val (@values) {
         $as_html .=
             '<div style="width: '
@@ -681,7 +681,7 @@ sub LogProxy {
     return (
         join("\n", map {
             join(
-                ' ', (
+                q{ }, (
                     strftime('%F_%T', localtime $data{$_}{'start'}),
                     sprintf('%.3f', $data{$_}{'precipiation'})
                 )
@@ -714,7 +714,7 @@ sub TextChart {
         my ($time, $precip, $bar) = (
             strftime('%H:%M', localtime $storedData{$_}{'start'}),
             sprintf('% 7.3f', $storedData{$_}{'precipiation'}),
-            (($storedData{$_}{'precipiation'} < 5) ? "=" x  POSIX::lround(abs($storedData{$_}{'precipiation'} * 10)) : ("=" x  50) . '>'),
+            (($storedData{$_}{'precipiation'} < 5) ? q{=} x  POSIX::lround(abs($storedData{$_}{'precipiation'} * 10)) : (q{=} x  50) . q{>}),
         );
         "$time | $precip | $bar"
     } sort keys %storedData;
@@ -750,7 +750,7 @@ sub ParseHttpResponse {
                 $param->{'code'}
             );
             ::Log3($name, 1, "[$name] $error");
-            ::Log3($name, 3, "[$name] " . Dumper($param)) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::Log3($name, 3, "[$name] " . Dumper($param)) if ::AttrVal("global", "stacktrace", 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return undef;
@@ -765,7 +765,7 @@ sub ParseHttpResponse {
                 $@
             );
             ::Log3($name, 1, "[$name] $error");
-            ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return undef;
@@ -774,7 +774,7 @@ sub ParseHttpResponse {
         unless ($forecast_data->{'success'}) {
             $error = "Got JSON but buienradar.nl has some troubles delivering meaningful data!";
             ::Log3($name, 1, "[$name] $error");
-            ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return undef;
@@ -786,10 +786,10 @@ sub ParseHttpResponse {
         ::Log3($name, 3, sprintf(
             "[%s] Parsed the following data from the buienradar JSON:\n%s",
             $name, join(q{}, map { "[$name] $_" } Dumper(@precip))
-        )) if ::AttrVal("global", "stacktrace", 0) eq "1";
+        )) if ::AttrVal("global", "stacktrace", 0) == 1;
 
         if (scalar @precip > 0) {
-            my $rainLaMetric        = join(',', map {$_ * 1000} @precip[0..11]);
+            my $rainLaMetric        = join(q{,}, map {$_ * 1000} @precip[0..11]);
             my $rainTotal           = List::Util::sum @precip;
             my $rainMax             = List::Util::max @precip;
             my $rainStart           = undef;
@@ -798,7 +798,7 @@ sub ParseHttpResponse {
             my $dataEnd             = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
             my $forecast_start      = $dataStart;
             my $rainNow             = undef;
-            my $rainData            = join(':', @precip);
+            my $rainData            = join(q{:}, @precip);
             my $rainAmount          = $precip[0];
             my $isRaining           = undef;
             my $intervalsWithRain   = scalar map { $_ > 0 ? $_ : () } @precip;
@@ -888,7 +888,7 @@ sub ResetResult {
 
 sub Debugging {
     local $OFS = "\n";
-    ::Debug("@_") if ::AttrVal("global", "verbose", undef) eq "4" or ::AttrVal($device, "debug", 0) eq "1";
+    ::Debug("@_") if ::AttrVal("global", "verbose", undef) == 4 or ::AttrVal($device, "debug", 0) == 1;
 }
 
 1;
