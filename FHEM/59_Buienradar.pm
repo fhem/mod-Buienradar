@@ -53,7 +53,7 @@ use Readonly;
 =pod
     Settings
 =cut
-Readonly our $version => '3.0.3';
+Readonly our $version => '3.0.4';
 Readonly our $default_interval => ONE_MINUTE * 2;
 
 =pod
@@ -70,7 +70,7 @@ Readonly our %Translations => (
             'en'    => 'mm/h',
         },
         'title' => {
-            'de'    => 'Niederschlagsvorhersage für %s, %s',
+            'de'    =>  'Niederschlagsvorhersage für %s, %s',
             'en'    =>  'Precipitation forecast for %s, %s',
         },
         'legend' => {
@@ -576,7 +576,7 @@ sub GChart {
     my $data = join ', ', map {
         my ($k, $v) = (
             POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
-            sprintf('%.3f', $storedData{$_}{'precipiation'})
+            sprintf('%.3f', $storedData{$_}{'precipitation'})
         );
         qq{['$k', $v]}
     } sort keys %storedData;
@@ -691,7 +691,7 @@ sub LogProxy {
             join(
                 q{ }, (
                     POSIX::strftime('%F_%T', localtime $data{$_}{'start'}),
-                    sprintf('%.3f', $data{$_}{'precipiation'})
+                    sprintf('%.3f', $data{$_}{'precipitation'})
                 )
             )
         } keys %data),
@@ -721,9 +721,9 @@ sub TextChart {
     my $data = join '\n', map {
         my ($time, $precip, $bar) = (
             POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
-            sprintf('% 7.3f', $storedData{$_}{'precipiation'}),
+            sprintf('% 7.3f', $storedData{$_}{'precipitation'}),
             # @todo
-            (($storedData{$_}{'precipiation'} < 5) ? q{=} x  POSIX::lround(abs($storedData{$_}{'precipiation'} * 10)) : (q{=} x  50) . q{>}),
+            (($storedData{$_}{'precipitation'} < 5) ? q{=} x  POSIX::lround(abs($storedData{$_}{'precipitation'} * 10)) : (q{=} x  50) . q{>}),
         );
         qq[$time | $precip | $bar]
     } sort keys %storedData;
@@ -845,9 +845,9 @@ sub ParseHttpResponse {
                 }
 
                 $precipitation_forecast{$start} = {
-                    'start'        => $start,
-                    'end'          => $end,
-                    'precipiation' => $precip,
+                    'start'         => $start,
+                    'end'           => $end,
+                    'precipitation' => $precip,
                 };
             }
 
