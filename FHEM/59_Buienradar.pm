@@ -50,7 +50,7 @@ use experimental qw( switch );
 use v5.10;
 
 our $device;
-our $version = '2.3.0';
+our $version = '3.0.3';
 our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
