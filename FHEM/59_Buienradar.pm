@@ -182,6 +182,8 @@ sub Initialize {
     ) . " $::readingFnAttributes";
     $hash->{".PNG"} = q{};
     $hash->{REGION} = 'de';
+
+    return;
 }
 
 sub Detail {
@@ -204,11 +206,9 @@ sub Detail {
 
 #####################################
 sub Undefine {
-
     my ( $hash, $arg ) = @_;
-
     ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
-    return undef;
+    return;
 }
 
 =pod
@@ -235,8 +235,7 @@ sub timediff2str
     my $s = shift;
 
     return unless defined wantarray;
-
-    return undef unless defined $s;
+    return unless defined $s;
 
     return (
         wantarray
@@ -339,7 +338,6 @@ sub Attr {
                 )
             );
 
-
             given ($command) {
                 when ('set') {
                     return "${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!"
@@ -350,13 +348,13 @@ sub Attr {
                         $::attr{$device_name}{'disable'} = 1;
                         $hash->{NEXTUPDATE} = undef;
                         $hash->{STATE} = 'inactive';
-                        return undef;
+                        return;
                     }
 
                     if ($attribute_value =~ /(off|0)/) {
                         $::attr{$device_name}{'disable'} = 0;
                         Timer($hash);
-                        return undef;
+                        return;
                     }
                 }
 
@@ -382,7 +380,7 @@ sub Attr {
             }
 
             RequestUpdate($hash);
-            return undef;
+            return;
         }
 
         when ("interval") {
@@ -400,7 +398,7 @@ sub Attr {
             }
 
             Timer($hash);
-            return undef;
+            return;
         }
 
     }
@@ -458,7 +456,7 @@ sub Define {
 
     Timer($hash);
 
-    return undef;
+    return;
 }
 
 sub Timer {
@@ -560,7 +558,7 @@ sub GChart {
         );
 
         # return dummy data
-        return undef;
+        return;
     }
 
     # read & parse stored data
@@ -705,7 +703,7 @@ sub TextChart {
         );
 
         # return dummy data
-        return undef;
+        return;
     }
 
     my %storedData = %{ Storable::thaw($hash->{".SERIALIZED"}) };
@@ -753,7 +751,7 @@ sub ParseHttpResponse {
             ::Log3($name, 3, "[$name] " . Dumper($param)) if ::AttrVal("global", "stacktrace", 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
-            return undef;
+            return;
         }
 
         $forecast_data = eval { $forecast_data = from_json($data) } unless @errors;
@@ -768,7 +766,7 @@ sub ParseHttpResponse {
             ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
-            return undef;
+            return;
         }
 
         unless ($forecast_data->{'success'}) {
@@ -777,7 +775,7 @@ sub ParseHttpResponse {
             ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
-            return undef;
+            return;
         }
 
         my @precip;
