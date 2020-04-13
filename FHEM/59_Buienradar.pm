@@ -308,7 +308,7 @@ sub Get {
     }
 
     if ( $opt eq 'rainDuration' ) {
-        ::ReadingsVal($name, 'rainDuration', 'unknown');
+        return ::ReadingsVal($name, 'rainDuration', 'unknown');
     }
     else {
         return q[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
