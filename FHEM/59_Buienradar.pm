@@ -314,6 +314,9 @@ sub Attr {
     );
 
     given ($attribute_name) {
+        # JFTR: disabled will also set disable to be compatible to FHEM::IsDisabled()
+        #       This is a ugly hack, with some side-effects like you can set disabled, disable will be automatically
+        #       set, you can delete disable but disabled will still be set.
         when ('disabled') {
             Debugging(
                 Dumper (
@@ -325,6 +328,7 @@ sub Attr {
                 )
             );
 
+
             given ($command) {
                 when ('set') {
                     return "${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!"
@@ -332,17 +336,21 @@ sub Attr {
 
                     if ($attribute_value =~ /(on|1)/) {
                         ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
+                        $::attr{$device_name}{'disable'} = 1;
                         $hash->{NEXTUPDATE} = undef;
+                        $hash->{STATE} = 'inactive';
                         return undef;
                     }
 
                     if ($attribute_value =~ /(off|0)/) {
+                        $::attr{$device_name}{'disable'} = 0;
                         Timer($hash);
                         return undef;
                     }
                 }
 
                 when ('del') {
+                    delete $::attr{$device_name}{'disable'};
                     Timer($hash) if $attribute_value eq "off";
                 }
             }
