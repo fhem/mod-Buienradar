@@ -171,6 +171,7 @@ sub Initialize {
     $hash->{DefFn}       = 'FHEM::Buienradar::Define';
     $hash->{UndefFn}     = 'FHEM::Buienradar::Undefine';
     $hash->{GetFn}       = 'FHEM::Buienradar::Get';
+    $hash->{SetFn}       = 'FHEM::Buienradar::Set';
     $hash->{AttrFn}      = 'FHEM::Buienradar::Attr';
     $hash->{FW_detailFn} = 'FHEM::Buienradar::Detail';
     $hash->{AttrList}    = join(q{ },
@@ -279,6 +280,8 @@ sub Set {
             return 'Unknown argument $opt, choose one of refresh:noArg';
         }
     }
+
+    return qq{Unknown argument $opt, choose one of refresh:noArg};
 }
 
 sub Get {
@@ -308,7 +311,7 @@ sub Get {
         ::ReadingsVal($name, 'rainDuration', 'unknown');
     }
     else {
-        return q[Unknown argument $opt, choose one of version:noArg refresh:noArg startsIn:noArg rainDuration:noArg];
+        return q[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
     }
 
     return;
