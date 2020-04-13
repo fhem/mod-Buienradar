@@ -365,7 +365,7 @@ sub Attr {
 
                 when ('del') {
                     delete $::attr{$device_name}{'disable'};
-                    Timer($hash) if $attribute_value eq 'off';
+                    Timer($hash);
                 }
             }
         }
