@@ -35,6 +35,7 @@ package FHEM::Buienradar;
 
 use strict;
 use warnings;
+use Readonly;
 use HttpUtils;
 use JSON;
 use List::Util;
@@ -46,12 +47,27 @@ use Storable;
 use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 
+# global variables
 our $device;
-our $version = '2.3.2';
-our $default_interval = ONE_MINUTE * 2;
 our @errors;
 
-our %Translations = (
+# settings
+Readonly our $version => '2.3.2';
+Readonly our $default_interval => ONE_MINUTE * 2;
+Readonly our %severity_conditions => (
+    15.00   =>  'tropical',
+    10.00   =>  'rainstorm',
+    5.00    =>  'heavy',
+    2.00    =>  'mediumheavy',
+    1.50    =>  'medium',
+    1.00    =>  'lightmedium',
+    0.50    =>  'light',
+    0.25    =>  'drizzle',
+    0       =>  'none',
+);
+
+# translations
+Readonly our %Translations => (
     'GChart' => {
         'hAxis' => {
             'de'    =>  'Uhrzeit',
@@ -70,18 +86,6 @@ our %Translations = (
             'en'    => 'Precipitation',
         },
     }
-);
-
-our %severity_conditions = (
-    15.00   =>  'tropical',
-    10.00   =>  'rainstorm',
-    5.00    =>  'heavy',
-    2.00    =>  'mediumheavy',
-    1.50    =>  'medium',
-    1.00    =>  'lightmedium',
-    0.50    =>  'light',
-    0.25    =>  'drizzle',
-    0       =>  'none',
 );
 
 GP_Export(
