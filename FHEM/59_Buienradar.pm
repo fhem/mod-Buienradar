@@ -310,6 +310,8 @@ sub Get {
     else {
         return "Unknown argument $opt, choose one of version:noArg refresh:noArg startsIn:noArg rainDuration:noArg";
     }
+
+    return;
 }
 
 sub Attr {
@@ -402,6 +404,8 @@ sub Attr {
         }
 
     }
+
+    return;
 }
 
 #####################################
@@ -495,6 +499,8 @@ sub RequestUpdate {
 
     ::HttpUtils_NonblockingGet($param);
     ::Log3( $hash->{NAME}, 4, $hash->{NAME} . ": Update requested" );
+
+    return;
 }
 
 sub HTML {
@@ -863,6 +869,8 @@ sub ParseHttpResponse {
             ::readingsEndUpdate( $hash, 1 );
         }
     }
+
+    return;
 }
 
 sub ResetResult {
@@ -882,11 +890,14 @@ sub ResetResult {
         ::readingsBulkUpdate( $hash, "rainEnd", "unknown");
         ::readingsBulkUpdate( $hash, "rainData", "unknown");
     ::readingsEndUpdate( $hash, 1 );
+
+    return;
 }
 
 sub Debugging {
     local $OFS = "\n";
     ::Debug("@_") if ::AttrVal("global", "verbose", undef) == 4 or ::AttrVal($device, "debug", 0) == 1;
+    return;
 }
 
 1;
