@@ -575,7 +575,7 @@ sub GChart {
     my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
     my $data = join ', ', map {
         my ($k, $v) = (
-            strftime('%H:%M', localtime $storedData{$_}{'start'}),
+            POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
             sprintf('%.3f', $storedData{$_}{'precipiation'})
         );
         qq{['$k', $v]}
@@ -690,7 +690,7 @@ sub LogProxy {
         join('\n', map {
             join(
                 q{ }, (
-                    strftime('%F_%T', localtime $data{$_}{'start'}),
+                    POSIX::strftime('%F_%T', localtime $data{$_}{'start'}),
                     sprintf('%.3f', $data{$_}{'precipiation'})
                 )
             )
@@ -720,7 +720,7 @@ sub TextChart {
 
     my $data = join '\n', map {
         my ($time, $precip, $bar) = (
-            strftime('%H:%M', localtime $storedData{$_}{'start'}),
+            POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
             sprintf('% 7.3f', $storedData{$_}{'precipiation'}),
             # @todo
             (($storedData{$_}{'precipiation'} < 5) ? q{=} x  POSIX::lround(abs($storedData{$_}{'precipiation'} * 10)) : (q{=} x  50) . q{>}),
@@ -859,11 +859,11 @@ sub ParseHttpResponse {
                 ::readingsBulkUpdate( $hash, 'rainAmount', sprintf( '%.3f', $rainAmount) );
                 ::readingsBulkUpdate( $hash, 'rainNow', (($rainNow) ? sprintf( '%.3f', $rainNow) : 'unknown'));
                 ::readingsBulkUpdate( $hash, 'rainLaMetric', $rainLaMetric );
-                ::readingsBulkUpdate( $hash, 'rainDataStart', strftime '%R', localtime $dataStart);
-                ::readingsBulkUpdate( $hash, 'rainDataEnd', strftime '%R', localtime $dataEnd );
+                ::readingsBulkUpdate( $hash, 'rainDataStart', POSIX::strftime '%R', localtime $dataStart);
+                ::readingsBulkUpdate( $hash, 'rainDataEnd', POSIX::strftime '%R', localtime $dataEnd );
                 ::readingsBulkUpdate( $hash, 'rainMax', sprintf( '%.3f', $rainMax ) );
-                ::readingsBulkUpdate( $hash, 'rainBegin', (($rainStart) ? strftime '%R', localtime $rainStart : 'unknown'));
-                ::readingsBulkUpdate( $hash, 'rainEnd', (($rainEnd) ? strftime '%R', localtime $rainEnd : 'unknown'));
+                ::readingsBulkUpdate( $hash, 'rainBegin', (($rainStart) ? POSIX::strftime '%R', localtime $rainStart : 'unknown'));
+                ::readingsBulkUpdate( $hash, 'rainEnd', (($rainEnd) ? POSIX::strftime '%R', localtime $rainEnd : 'unknown'));
                 ::readingsBulkUpdate( $hash, 'rainData', $rainData);
                 ::readingsBulkUpdate( $hash, 'rainDuration', $intervalsWithRain * 5);
                 ::readingsBulkUpdate( $hash, 'rainDurationIntervals', $intervalsWithRain);
