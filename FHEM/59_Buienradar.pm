@@ -824,7 +824,7 @@ sub ParseHttpResponse {
                 }
 
                 # there is precipitation and start is not yet set
-                if (!$rainStart and $isRaining) {
+                if (not $rainStart and $isRaining) {
                     $rainStart  = $start;
                     $hash->{'.RainStart'} = $rainStart;
                 }
@@ -835,7 +835,7 @@ sub ParseHttpResponse {
                 }
 
                 # It's not longer raining, so set rainEnd (again)
-                if ($rainStart and !$isRaining and !$rainEnd) {
+                if ($rainStart and not $isRaining and not $rainEnd) {
                     $rainEnd    = $start;
                 }
 
