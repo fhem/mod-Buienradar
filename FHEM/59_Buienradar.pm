@@ -780,7 +780,8 @@ sub ParseHttpResponse {
             return undef;
         }
 
-        my @precip = @{$forecast_data->{"precip"}} unless @errors;
+        my @precip;
+        @precip = @{$forecast_data->{"precip"}} unless @errors;
 
         ::Log3($name, 3, sprintf(
             "[%s] Parsed the following data from the buienradar JSON:\n%s",
