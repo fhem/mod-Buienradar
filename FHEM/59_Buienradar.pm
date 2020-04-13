@@ -526,7 +526,7 @@ sub HTML {
 END_MESSAGE
 
     # @todo the html looks terribly ugly
-    $as_html .= q[<BR>Niederschlag (<a href=./fhem?detail=$name>$name</a>)<BR>];
+    $as_html .= qq[<BR>Niederschlag (<a href=./fhem?detail=$name>$name</a>)<BR>];
 
     $as_html .= ::ReadingsVal( $name, 'rainDataStart', 'unknown' ) . '<BR>';
     my $factor =
