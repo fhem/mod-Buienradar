@@ -101,7 +101,7 @@ eval {
 };
 
 if ($@) {
-    $@ = undef;
+    local $@ = undef;
 
     # try to use JSON wrapper
     #   for chance of better performance
@@ -118,7 +118,7 @@ if ($@) {
     };
 
     if ($@) {
-        $@ = undef;
+        local $@ = undef;
 
         # In rare cases, Cpanel::JSON::XS may
         #   be installed but JSON|JSON::MaybeXS not ...
@@ -129,7 +129,7 @@ if ($@) {
         };
 
         if ($@) {
-            $@ = undef;
+            local $@ = undef;
 
             # In rare cases, JSON::XS may
             #   be installed but JSON not ...
@@ -140,7 +140,7 @@ if ($@) {
             };
 
             if ($@) {
-                $@ = undef;
+                local $@ = undef;
 
                 # Fallback to built-in JSON which SHOULD
                 #   be available since 5.014 ...
@@ -151,7 +151,7 @@ if ($@) {
                 };
 
                 if ($@) {
-                    $@ = undef;
+                    local $@ = undef;
 
                     # Fallback to JSON::backportPP in really rare cases
                     require JSON::backportPP;
