@@ -48,13 +48,18 @@ use Storable;
 use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 use v5.10;
+use Readonly;
 
-our $device;
-our $version = '3.0.3';
-our $default_interval = ONE_MINUTE * 2;
-our @errors;
+=pod
+    Settings
+=cut
+Readonly our $version => '3.0.3';
+Readonly our $default_interval => ONE_MINUTE * 2;
 
-our %Translations = (
+=pod
+    Translations
+=cut
+Readonly our %Translations => (
     'GChart' => {
         'hAxis' => {
             'de'    =>  'Uhrzeit',
@@ -74,6 +79,12 @@ our %Translations = (
         },
     }
 );
+
+=pod
+    Global variables
+=cut
+our $device;
+our @errors;
 
 GP_Export(
     qw(
