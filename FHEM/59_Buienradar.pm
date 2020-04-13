@@ -19,7 +19,7 @@
  relinquishment in perpetuity of all present and future rights to this
  software under copyright law.
 
- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+ THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
  IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
@@ -109,7 +109,7 @@ if ($@) {
 
         # JSON preference order
         local $ENV{PERL_JSON_BACKEND} =
-            'Cpanel::JSON::XS,JSON::XS,JSON::PP,JSON::backportPP'
+            q{Cpanel::JSON::XS,JSON::XS,JSON::PP,JSON::backportPP}
             unless ( defined( $ENV{PERL_JSON_BACKEND} ) );
 
         require JSON;
@@ -168,19 +168,19 @@ sub Initialize {
 
     my ($hash) = @_;
 
-    $hash->{DefFn}       = "FHEM::Buienradar::Define";
-    $hash->{UndefFn}     = "FHEM::Buienradar::Undefine";
-    $hash->{GetFn}       = "FHEM::Buienradar::Get";
-    $hash->{AttrFn}      = "FHEM::Buienradar::Attr";
-    $hash->{FW_detailFn} = "FHEM::Buienradar::Detail";
+    $hash->{DefFn}       = 'FHEM::Buienradar::Define';
+    $hash->{UndefFn}     = 'FHEM::Buienradar::Undefine';
+    $hash->{GetFn}       = 'FHEM::Buienradar::Get';
+    $hash->{AttrFn}      = 'FHEM::Buienradar::Attr';
+    $hash->{FW_detailFn} = 'FHEM::Buienradar::Detail';
     $hash->{AttrList}    = join(q{ },
         (
             'disabled:on,off',
             'region:nl,de',
             'interval:10,60,120,180,240,300'
         )
-    ) . " $::readingFnAttributes";
-    $hash->{".PNG"} = q{};
+    ) . qq[ $::readingFnAttributes ];
+    $hash->{'.PNG'} = q{};
     $hash->{REGION} = 'de';
 
     return;
@@ -193,21 +193,20 @@ sub Detail {
 
     return if ( !defined( $hash->{URL} ) );
 
-    if (::ReadingsVal($hash->{NAME}, "rainData", "unknown") ne "unknown") {
+    # @todo error in the second return: missing target attribute
+    # @todo I18N
+    if (::ReadingsVal($hash->{NAME}, 'rainData', 'unknown') ne 'unknown') {
         return
-            HTML($hash->{NAME})
-                . "<p><a href="
-                . $hash->{URL}
-                . " target=_blank>Raw JSON data (new window)</a></p>"
+            HTML($hash->{NAME}) . qq[<p><a href="$hash->{URL}" target="_blank">Raw JSON data (new window)</a></p> ]
     } else {
-        return "<div><a href='$hash->{URL}'>Raw JSON data (new window)</a></div>";
+        return qq[<div><a href="$hash->{URL}">Raw JSON data (new window)</a></div>];
     }
 }
 
 #####################################
 sub Undefine {
     my ( $hash, $arg ) = @_;
-    ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
+    ::RemoveInternalTimer( $hash, 'FHEM::Buienradar::Timer' );
     return;
 }
 
@@ -240,44 +239,44 @@ sub timediff2str
     return (
         wantarray
             ?   (0,0,0,$s)
-            : sprintf "%02d Sekunden", $s
+            : sprintf '%02d Sekunden', $s
     ) if $s < 60;
 
     my $m = $s / 60; $s = $s % 60;
     return (
         wantarray
             ?   (0, 0, POSIX::floor($m), POSIX::floor($s))
-            :   sprintf "%02d Minuten, %02d Sekunden", $m, $s
+            :   sprintf '%02d Minuten, %02d Sekunden', $m, $s
     ) if $m < 60;
 
     my $h = $m /  60; $m %= 60;
     return (
         wantarray
             ?   (0, POSIX::floor($h), POSIX::floor($m), POSIX::floor($s))
-            :   sprintf "%02d Stunden, %02d Minuten, %02d Sekunden", $h, $m, $s
+            :   sprintf '%02d Stunden, %02d Minuten, %02d Sekunden', $h, $m, $s
     ) if $h < 24;
 
     my $d = $h / 24; $h %= 24;
     return (
         wantarray
             ?   ( POSIX::floor($d), POSIX::floor($h), POSIX::floor($m), POSIX::floor($s))
-            :   sprintf "%d Tage, %02d Stunden, %02d Minuten, %02d Sekunden", $d, $h, $m, $s
+            :   sprintf '%d Tage, %02d Stunden, %02d Minuten, %02d Sekunden', $d, $h, $m, $s
     );
 }
 
 ###################################
 sub Set {
     my ( $hash, $name, $opt, @args ) = @_;
-    return "\"set $name\" needs at least one argument" unless ( defined($opt) );
+    return qq['set $name' needs at least one argument] unless ( defined($opt) );
 
     given ($opt) {
-        when ("refresh") {
+        when ('refresh') {
             RequestUpdate($hash);
             return q{};
         }
 
         default {
-            return "Unknown argument $opt, choose one of refresh:noArg";
+            return 'Unknown argument $opt, choose one of refresh:noArg';
         }
     }
 }
@@ -286,29 +285,30 @@ sub Get {
 
     my ( $hash, $name, $opt, @args ) = @_;
 
-    return "\"get $name\" needs at least one argument" unless ( defined($opt) );
+    return qq['get $name' needs at least one argument] unless ( defined($opt) );
 
     given($opt)
     {
-        when ("version") {
+        when ('version') {
             return $version;
         }
 
-        when ("startsIn") {
-            my $begin = $hash->{".RainStart"};
-            return "No data available" unless $begin;
-            return "It is raining" if $begin = 0;
+        # @todo I18N
+        when ('startsIn') {
+            my $begin = $hash->{'.RainStart'};
+            return q[No data available] unless $begin;
+            return q[It is raining] if $begin = 0;
 
             my $timeDiffSec = $begin - time;
             return scalar timediff2str($timeDiffSec);
         }
     }
 
-    if ( $opt eq "rainDuration" ) {
-        ::ReadingsVal($name, "rainDuration", "unknown");
+    if ( $opt eq 'rainDuration' ) {
+        ::ReadingsVal($name, 'rainDuration', 'unknown');
     }
     else {
-        return "Unknown argument $opt, choose one of version:noArg refresh:noArg startsIn:noArg rainDuration:noArg";
+        return q[Unknown argument $opt, choose one of version:noArg refresh:noArg startsIn:noArg rainDuration:noArg];
     }
 
     return;
@@ -319,7 +319,7 @@ sub Attr {
     my $hash = $::defs{$device_name};
 
     Debugging(
-        "Attr called", "\n",
+        'Attr called', '\n',
         Dumper (
             $command, $device_name, $attribute_name, $attribute_value
         )
@@ -335,18 +335,18 @@ sub Attr {
                     {
                         'attribute_value' => $attribute_value,
                         'attr' => 'disabled',
-                        "command" => $command,
+                        'command' => $command,
                     }
                 )
             );
 
             given ($command) {
                 when ('set') {
-                    return "${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!"
+                    return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
                         if $attribute_value !~ /^(on|off|0|1)$/;
 
                     if ($attribute_value =~ /(on|1)/) {
-                        ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
+                        ::RemoveInternalTimer( $hash, 'FHEM::Buienradar::Timer' );
                         $::attr{$device_name}{'disable'} = 1;
                         $hash->{NEXTUPDATE} = undef;
                         $hash->{STATE} = 'inactive';
@@ -362,22 +362,22 @@ sub Attr {
 
                 when ('del') {
                     delete $::attr{$device_name}{'disable'};
-                    Timer($hash) if $attribute_value eq "off";
+                    Timer($hash) if $attribute_value eq 'off';
                 }
             }
         }
 
         when ('region') {
-            return "${attribute_value} is no valid value for region. Only 'de' or 'nl' are allowed!"
-                if $attribute_value !~ /^(de|nl)$/ and $command eq "set";
+            return qq[${attribute_value} is no valid value for region. Only 'de' or 'nl' are allowed!]
+                if $attribute_value !~ /^(de|nl)$/ and $command eq 'set';
 
             given ($command) {
-                when ("set") {
+                when ('set') {
                     $hash->{REGION} = $attribute_value;
                 }
 
-                when ("del") {
-                    $hash->{REGION} = "nl";
+                when ('del') {
+                    $hash->{REGION} = 'nl';
                 }
             }
 
@@ -385,16 +385,16 @@ sub Attr {
             return;
         }
 
-        when ("interval") {
-            return "${attribute_value} is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!"
-                if $attribute_value !~ /^(10|60|120|180|240|300)$/ and $command eq "set";
+        when ('interval') {
+            return q[${attribute_value} is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!]
+                if $attribute_value !~ /^(10|60|120|180|240|300)$/ and $command eq 'set';
 
             given ($command) {
-                when ("set") {
+                when ('set') {
                     $hash->{INTERVAL} = $attribute_value;
                 }
 
-                when ("del") {
+                when ('del') {
                     $hash->{INTERVAL} = $FHEM::Buienradar::default_interval;
                 }
             }
@@ -413,23 +413,22 @@ sub Define {
 
     my ( $hash, $def ) = @_;
 
-    my @a = split( "[ \t][ \t]*", $def );
+    my @a = split( '[ \t][ \t]*', $def );
     my $latitude;
     my $longitude;
 
-    if ( ( int(@a) == 2 ) && ( ::AttrVal( "global", "latitude", -255 ) != -255 ) )
+    if ( ( int(@a) == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
     {
-        $latitude  = ::AttrVal( "global", "latitude",  51.0 );
-        $longitude = ::AttrVal( "global", "longitude", 7.0 );
+        $latitude  = ::AttrVal( 'global', 'latitude',  51.0 );
+        $longitude = ::AttrVal( 'global', 'longitude', 7.0 );
     }
     elsif ( int(@a) == 4 ) {
         $latitude  = $a[2];
         $longitude = $a[3];
     }
     else {
-        return
-          int(@a)
-          . " Syntax: define <name> Buienradar [<latitude> <longitude>]";
+        # @todo this looks bogus and unnecessary
+        return int(@a) . q{Syntax: define <name> Buienradar [<latitude> <longitude>]};
     }
 
     ::readingsSingleUpdate($hash, 'state', 'Initialized', 1);
@@ -442,20 +441,21 @@ sub Define {
     $hash->{LATITUDE}   = $latitude;
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
-    $hash->{".HTML"}    = "<DIV>";
+    # @todo this looks like a good candidate for a refactoring
+    $hash->{'.HTML'}    = '<DIV>';
 
     ::readingsBeginUpdate($hash);
-        ::readingsBulkUpdate( $hash, "rainNow", "unknown" );
-        ::readingsBulkUpdate( $hash, "rainDataStart", "unknown");
-        ::readingsBulkUpdate( $hash, "rainBegin", "unknown");
-        ::readingsBulkUpdate( $hash, "rainEnd", "unknown");
+        ::readingsBulkUpdate( $hash, 'rainNow', 'unknown' );
+        ::readingsBulkUpdate( $hash, 'rainDataStart', 'unknown');
+        ::readingsBulkUpdate( $hash, 'rainBegin', 'unknown');
+        ::readingsBulkUpdate( $hash, 'rainEnd', 'unknown');
     ::readingsEndUpdate( $hash, 1 );
 
     # set default region nl
-    ::CommandAttr(undef, $name . ' region nl')
+    ::CommandAttr(undef, qq[$name region nl])
         unless (::AttrVal($name, 'region', undef));
 
-    ::CommandAttr(undef, $name . ' interval ' . $FHEM::Buienradar::default_interval)
+    ::CommandAttr(undef, qq[$name interval $FHEM::Buienradar::default_interval])
         unless (::AttrVal($name, 'interval', undef));
 
     Timer($hash);
@@ -467,13 +467,13 @@ sub Timer {
     my ($hash) = @_;
     my $nextupdate = 0;
 
-    ::RemoveInternalTimer( $hash, "FHEM::Buienradar::Timer" );
+    ::RemoveInternalTimer( $hash, 'FHEM::Buienradar::Timer' );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
     $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
     RequestUpdate($hash);
 
-    ::InternalTimer( $nextupdate, "FHEM::Buienradar::Timer", $hash );
+    ::InternalTimer( $nextupdate, 'FHEM::Buienradar::Timer', $hash );
 
     return 1;
 }
@@ -482,10 +482,11 @@ sub RequestUpdate {
     my ($hash) = @_;
     my $region = $hash->{REGION};
 
+    # @todo candidate for refactoring to sprintf
     $hash->{URL} =
-      ::AttrVal( $hash->{NAME}, "BaseUrl", "https://cdn-secure.buienalarm.nl/api/3.4/forecast.php" )
-        . "?lat="       . $hash->{LATITUDE}
-        . "&lon="       . $hash->{LONGITUDE}
+      ::AttrVal( $hash->{NAME}, 'BaseUrl', 'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php' )
+        . '?lat='       . $hash->{LATITUDE}
+        . '&lon='       . $hash->{LONGITUDE}
         . '&region='    . $region
         . '&unit='      . 'mm/u';
 
@@ -493,12 +494,12 @@ sub RequestUpdate {
         url      => $hash->{URL},
         timeout  => 10,
         hash     => $hash,
-        method   => "GET",
+        method   => 'GET',
         callback => \&ParseHttpResponse
     };
 
     ::HttpUtils_NonblockingGet($param);
-    ::Log3( $hash->{NAME}, 4, $hash->{NAME} . ": Update requested" );
+    ::Log3( $hash->{NAME}, 4, qq[$hash->{NAME}: Update requested] );
 
     return;
 }
@@ -506,7 +507,7 @@ sub RequestUpdate {
 sub HTML {
     my ( $name, $width ) = @_;
     my $hash = $::defs{$name};
-    my @values = split /:/, ::ReadingsVal($name, "rainData", '0:0');
+    my @values = split /:/, ::ReadingsVal($name, 'rainData', '0:0');
 
     my $as_html = <<'END_MESSAGE';
 <style>
@@ -521,23 +522,26 @@ sub HTML {
 }
  
 </style>
-<div class="BRchart">
+<div class='BRchart'>
 END_MESSAGE
 
-    $as_html .= "<BR>Niederschlag (<a href=./fhem?detail=$name>$name</a>)<BR>";
+    # @todo the html looks terribly ugly
+    $as_html .= q[<BR>Niederschlag (<a href=./fhem?detail=$name>$name</a>)<BR>];
 
-    $as_html .= ::ReadingsVal( $name, "rainDataStart", "unknown" ) . "<BR>";
+    $as_html .= ::ReadingsVal( $name, 'rainDataStart', 'unknown' ) . '<BR>';
     my $factor =
-      ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, "rainMax", q{0} ) );
+      ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
     foreach my $val (@values) {
+        # @todo candidate for refactoring to sprintf
         $as_html .=
-            '<div style="width: '
-          . ( int( $val * $factor ) + 30 ) . 'px;">'
-          . sprintf( "%.3f", $val )
-          . '</div>';
+            q{<div style='width: }
+          . ( int( $val * $factor ) + 30 )
+          . q{px;'>}
+          . sprintf( '%.3f', $val )
+          . q{</div>};
     }
 
-    $as_html .= "</DIV><BR>";
+    $as_html .= q[</DIV><BR>];
     return ($as_html);
 }
 
@@ -558,7 +562,7 @@ sub GChart {
     unless ($hash->{'.SERIALIZED'}) {
         ::Log3($name, 3,
             sprintf(
-                "[%s] Can't return serizalized data for FHEM::Buienradar::GChart.",
+                q{[%s] Can't return serizalized data for FHEM::Buienradar::GChart.},
                 $name
             )
         );
@@ -568,17 +572,17 @@ sub GChart {
     }
 
     # read & parse stored data
-    my %storedData = %{ Storable::thaw($hash->{".SERIALIZED"}) };
+    my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
     my $data = join ', ', map {
         my ($k, $v) = (
             strftime('%H:%M', localtime $storedData{$_}{'start'}),
             sprintf('%.3f', $storedData{$_}{'precipiation'})
         );
-        "['$k', $v]"
+        qq{['$k', $v]}
     } sort keys %storedData;
 
     # get language for language dependend legend
-    my $language = lc ::AttrVal("global", "language", "DE");
+    my $language = lc ::AttrVal('global', 'language', 'DE');
 
     # create data for the GChart
     my $hAxis   = $FHEM::Buienradar::Translations{'GChart'}{'hAxis'}{$language};
@@ -590,12 +594,12 @@ sub GChart {
     );
     my $legend  = $FHEM::Buienradar::Translations{'GChart'}{'legend'}{$language};
 
-    return <<"CHART"
-<div id="chart_${name}"; style="width:100%; height:100%"></div>
-<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
-<script type="text/javascript">
+    return <<'CHART'
+<div id='chart_${name}'; style='width:100%; height:100%'></div>
+<script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script>
+<script type='text/javascript'>
 
-    google.charts.load("current", {packages:["corechart"]});
+    google.charts.load('current', {packages:['corechart']});
     google.charts.setOnLoadCallback(drawChart);
     function drawChart() {
         var data = google.visualization.arrayToDataTable([
@@ -604,9 +608,9 @@ sub GChart {
         ]);
 
         var options = {
-            title: "${title}",
+            title: '${title}',
             hAxis: {
-                title: "${hAxis}",
+                title: '${hAxis}',
                 slantedText:true,
                 slantedTextAngle: 45,
                 textStyle: {
@@ -614,14 +618,14 @@ sub GChart {
             },
             vAxis: {
                 minValue: 0,
-                title: "${vAxis}"
+                title: '${vAxis}'
             }
         };
 
         var my_div = document.getElementById(
-            "chart_${name}");        var chart = new google.visualization.AreaChart(my_div);
+            'chart_${name}');        var chart = new google.visualization.AreaChart(my_div);
         google.visualization.events.addListener(chart, 'ready', function () {
-            my_div.innerHTML = '<img src="' + chart.getImageURI() + '">';
+            my_div.innerHTML = '<img src='' + chart.getImageURI() + ''>';
         });
 
         chart.draw(data, options);}
@@ -671,7 +675,7 @@ sub LogProxy {
     unless ($hash->{'.SERIALIZED'}) {
         ::Log3($name, 3,
             sprintf(
-                "[%s] Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data",
+                q{[%s] Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data},
                 $name
             )
         );
@@ -680,10 +684,10 @@ sub LogProxy {
         return (0, 0, 0);
     }
 
-    my %data = %{ Storable::thaw($hash->{".SERIALIZED"}) };
+    my %data = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
     return (
-        join("\n", map {
+        join('\n', map {
             join(
                 q{ }, (
                     strftime('%F_%T', localtime $data{$_}{'start'}),
@@ -692,7 +696,7 @@ sub LogProxy {
             )
         } keys %data),
         0,
-        ::ReadingsVal($name, "rainMax", 0)
+        ::ReadingsVal($name, 'rainMax', 0)
     );
 }
 
@@ -703,7 +707,7 @@ sub TextChart {
     unless ($hash->{'.SERIALIZED'}) {
         ::Log3($name, 3,
             sprintf(
-                "[%s] Can't return serizalized data for FHEM::Buienradar::TextChart.",
+                q{[%s] Can't return serizalized data for FHEM::Buienradar::TextChart.},
                 $name
             )
         );
@@ -712,15 +716,16 @@ sub TextChart {
         return;
     }
 
-    my %storedData = %{ Storable::thaw($hash->{".SERIALIZED"}) };
+    my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
-    my $data = join "\n", map {
+    my $data = join '\n', map {
         my ($time, $precip, $bar) = (
             strftime('%H:%M', localtime $storedData{$_}{'start'}),
             sprintf('% 7.3f', $storedData{$_}{'precipiation'}),
+            # @todo
             (($storedData{$_}{'precipiation'} < 5) ? q{=} x  POSIX::lround(abs($storedData{$_}{'precipiation'} * 10)) : (q{=} x  50) . q{>}),
         );
-        "$time | $precip | $bar"
+        qq[$time | $precip | $bar]
     } sort keys %storedData;
 
     return $data;
@@ -730,31 +735,29 @@ sub ParseHttpResponse {
     my ( $param, $err, $data ) = @_;
     my $hash = $param->{hash};
     my $name = $hash->{NAME};
-    $hash->{".RainStart"} = undef;
+    $hash->{'.RainStart'} = undef;
 
-    #Debugging("*** RESULT ***");
+    #Debugging('*** RESULT ***');
     #Debugging(Dumper {param => $param, data => $data, error => $err});
 
     my %precipitation_forecast;
 
     if ( $err ne q{} ) {
-        # Debugging("$name: error while requesting " . $param->{url} . " - $err" );
-        ::readingsSingleUpdate($hash, 'state', "Error: " . $err . " => " . $data, 1);
+        ::readingsSingleUpdate($hash, 'state', qq[Error: $err =>$data], 1);
         ResetResult($hash);
     }
     elsif ( $data ne q{} ) {
-        # Debugging("$name returned: $data");
         my $forecast_data;
         my $error;
 
-        if(defined $param->{'code'} && $param->{'code'} ne "200") {
+        if(defined $param->{'code'} && $param->{'code'} ne '200') {
             $error = sprintf(
-                "Pulling %s returns HTTP status code %d instead of 200.",
+                'Pulling %s returns HTTP status code %d instead of 200.',
                 $hash->{URL},
                 $param->{'code'}
             );
-            ::Log3($name, 1, "[$name] $error");
-            ::Log3($name, 3, "[$name] " . Dumper($param)) if ::AttrVal("global", "stacktrace", 0) == 1;
+            ::Log3($name, 1, '[$name] $error');
+            ::Log3($name, 3, '[$name] ' . Dumper($param)) if ::AttrVal('global', 'stacktrace', 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return;
@@ -764,33 +767,33 @@ sub ParseHttpResponse {
 
         if ($@) {
             $error = sprintf(
-                "Can't evaluate JSON from %s: %s",
+                q[Can't evaluate JSON from %s: %s],
                 $hash->{URL},
                 $@
             );
-            ::Log3($name, 1, "[$name] $error");
-            ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) == 1;
+            ::Log3($name, 1, '[$name] $error');
+            ::Log3($name, 3, '[$name] ' . join(q{}, map { qq{[$name] $_} } Dumper($data))) if ::AttrVal('global', 'stacktrace', 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return;
         }
 
         unless ($forecast_data->{'success'}) {
-            $error = "Got JSON but buienradar.nl has some troubles delivering meaningful data!";
-            ::Log3($name, 1, "[$name] $error");
-            ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) == 1;
+            $error = 'Got JSON but buienradar.nl has some troubles delivering meaningful data!';
+            ::Log3($name, 1, '[$name] $error');
+            ::Log3($name, 3, '[$name] ' . join(q{}, map { qq{[$name] $_} } Dumper($data))) if ::AttrVal('global', 'stacktrace', 0) == 1;
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return;
         }
 
         my @precip;
-        @precip = @{$forecast_data->{"precip"}} unless @errors;
+        @precip = @{$forecast_data->{'precip'}} unless @errors;
 
         ::Log3($name, 3, sprintf(
-            "[%s] Parsed the following data from the buienradar JSON:\n%s",
-            $name, join(q{}, map { "[$name] $_" } Dumper(@precip))
-        )) if ::AttrVal("global", "stacktrace", 0) == 1;
+            q{[%s] Parsed the following data from the buienradar JSON:\n%s},
+            $name, join(q{}, map { qq{[$name] $_} } Dumper(@precip))
+        )) if ::AttrVal('global', 'stacktrace', 0) == 1;
 
         if (scalar @precip > 0) {
             my $rainLaMetric        = join(q{,}, map {$_ * 1000} @precip[0..11]);
@@ -806,7 +809,7 @@ sub ParseHttpResponse {
             my $rainAmount          = $precip[0];
             my $isRaining           = undef;
             my $intervalsWithRain   = scalar map { $_ > 0 ? $_ : () } @precip;
-            $hash->{".RainStart"}   = "unknown";
+            $hash->{'.RainStart'}   = q{unknown};
 
             for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
 
@@ -823,7 +826,7 @@ sub ParseHttpResponse {
                 # there is precipitation and start is not yet set
                 if (!$rainStart and $isRaining) {
                     $rainStart  = $start;
-                    $hash->{".RainStart"} = $rainStart;
+                    $hash->{'.RainStart'} = $rainStart;
                 }
 
                 # It's raining again, so we have to reset rainEnd for a new chance
@@ -838,7 +841,7 @@ sub ParseHttpResponse {
 
                 if (time() ~~ [$start..$end]) {
                     $rainNow    = $precip;
-                    $hash->{".RainStart"} = 0;
+                    $hash->{'.RainStart'} = 0;
                 }
 
                 $precipitation_forecast{$start} = {
@@ -848,24 +851,24 @@ sub ParseHttpResponse {
                 };
             }
 
-            $hash->{".SERIALIZED"} = Storable::freeze(\%precipitation_forecast);
+            $hash->{'.SERIALIZED'} = Storable::freeze(\%precipitation_forecast);
 
             ::readingsBeginUpdate($hash);
-                ::readingsBulkUpdate( $hash, "state", (($rainNow) ? sprintf( "%.3f", $rainNow) : "unknown"));
-                ::readingsBulkUpdate( $hash, "rainTotal", sprintf( "%.3f", $rainTotal) );
-                ::readingsBulkUpdate( $hash, "rainAmount", sprintf( "%.3f", $rainAmount) );
-                ::readingsBulkUpdate( $hash, "rainNow", (($rainNow) ? sprintf( "%.3f", $rainNow) : "unknown"));
-                ::readingsBulkUpdate( $hash, "rainLaMetric", $rainLaMetric );
-                ::readingsBulkUpdate( $hash, "rainDataStart", strftime "%R", localtime $dataStart);
-                ::readingsBulkUpdate( $hash, "rainDataEnd", strftime "%R", localtime $dataEnd );
-                ::readingsBulkUpdate( $hash, "rainMax", sprintf( "%.3f", $rainMax ) );
-                ::readingsBulkUpdate( $hash, "rainBegin", (($rainStart) ? strftime "%R", localtime $rainStart : 'unknown'));
-                ::readingsBulkUpdate( $hash, "rainEnd", (($rainEnd) ? strftime "%R", localtime $rainEnd : 'unknown'));
-                ::readingsBulkUpdate( $hash, "rainData", $rainData);
-                ::readingsBulkUpdate( $hash, "rainDuration", $intervalsWithRain * 5);
-                ::readingsBulkUpdate( $hash, "rainDurationIntervals", $intervalsWithRain);
-                ::readingsBulkUpdate( $hash, "rainDurationPercent", ($intervalsWithRain / scalar @precip) * 100);
-                ::readingsBulkUpdate( $hash, "rainDurationTime", sprintf("%02d:%02d",(( $intervalsWithRain * 5 / 60), $intervalsWithRain * 5 % 60)));
+                ::readingsBulkUpdate( $hash, 'state', (($rainNow) ? sprintf( '%.3f', $rainNow) : 'unknown'));
+                ::readingsBulkUpdate( $hash, 'rainTotal', sprintf( '%.3f', $rainTotal) );
+                ::readingsBulkUpdate( $hash, 'rainAmount', sprintf( '%.3f', $rainAmount) );
+                ::readingsBulkUpdate( $hash, 'rainNow', (($rainNow) ? sprintf( '%.3f', $rainNow) : 'unknown'));
+                ::readingsBulkUpdate( $hash, 'rainLaMetric', $rainLaMetric );
+                ::readingsBulkUpdate( $hash, 'rainDataStart', strftime '%R', localtime $dataStart);
+                ::readingsBulkUpdate( $hash, 'rainDataEnd', strftime '%R', localtime $dataEnd );
+                ::readingsBulkUpdate( $hash, 'rainMax', sprintf( '%.3f', $rainMax ) );
+                ::readingsBulkUpdate( $hash, 'rainBegin', (($rainStart) ? strftime '%R', localtime $rainStart : 'unknown'));
+                ::readingsBulkUpdate( $hash, 'rainEnd', (($rainEnd) ? strftime '%R', localtime $rainEnd : 'unknown'));
+                ::readingsBulkUpdate( $hash, 'rainData', $rainData);
+                ::readingsBulkUpdate( $hash, 'rainDuration', $intervalsWithRain * 5);
+                ::readingsBulkUpdate( $hash, 'rainDurationIntervals', $intervalsWithRain);
+                ::readingsBulkUpdate( $hash, 'rainDurationPercent', ($intervalsWithRain / scalar @precip) * 100);
+                ::readingsBulkUpdate( $hash, 'rainDurationTime', sprintf('%02d:%02d',(( $intervalsWithRain * 5 / 60), $intervalsWithRain * 5 % 60)));
             ::readingsEndUpdate( $hash, 1 );
         }
     }
@@ -879,24 +882,24 @@ sub ResetResult {
     $hash->{'.SERIALIZED'} = undef;
 
     ::readingsBeginUpdate($hash);
-        ::readingsBulkUpdate( $hash, "rainTotal", "unknown" );
-        ::readingsBulkUpdate( $hash, "rainAmount", "unknown" );
-        ::readingsBulkUpdate( $hash, "rainNow", "unknown" );
-        ::readingsBulkUpdate( $hash, "rainLaMetric", "unknown" );
-        ::readingsBulkUpdate( $hash, "rainDataStart", "unknown");
-        ::readingsBulkUpdate( $hash, "rainDataEnd", "unknown" );
-        ::readingsBulkUpdate( $hash, "rainMax", "unknown" );
-        ::readingsBulkUpdate( $hash, "rainBegin", "unknown");
-        ::readingsBulkUpdate( $hash, "rainEnd", "unknown");
-        ::readingsBulkUpdate( $hash, "rainData", "unknown");
+        ::readingsBulkUpdate( $hash, 'rainTotal', 'unknown' );
+        ::readingsBulkUpdate( $hash, 'rainAmount', 'unknown' );
+        ::readingsBulkUpdate( $hash, 'rainNow', 'unknown' );
+        ::readingsBulkUpdate( $hash, 'rainLaMetric', 'unknown' );
+        ::readingsBulkUpdate( $hash, 'rainDataStart', 'unknown');
+        ::readingsBulkUpdate( $hash, 'rainDataEnd', 'unknown' );
+        ::readingsBulkUpdate( $hash, 'rainMax', 'unknown' );
+        ::readingsBulkUpdate( $hash, 'rainBegin', 'unknown');
+        ::readingsBulkUpdate( $hash, 'rainEnd', 'unknown');
+        ::readingsBulkUpdate( $hash, 'rainData', 'unknown');
     ::readingsEndUpdate( $hash, 1 );
 
     return;
 }
 
 sub Debugging {
-    local $OFS = "\n";
-    ::Debug("@_") if ::AttrVal("global", "verbose", undef) == 4 or ::AttrVal($device, "debug", 0) == 1;
+    local $OFS = '\n';
+    ::Debug('@_') if ::AttrVal('global', 'verbose', undef) == 4 or ::AttrVal($device, 'debug', 0) == 1;
     return;
 }
 
