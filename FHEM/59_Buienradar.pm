@@ -878,10 +878,13 @@ sub Debugging {
 =over 1
 
 =item helper
+
 =item summary Precipitation forecasts based on buienradar.nl
+
 =item summary_DE Niederschlagsvorhersage auf Basis des Wetterdienstes buienradar.nl
 
 =begin html
+=back
 
 <p><span id="Buienradar"></span></p>
 <h2 id="buienradar">Buienradar</h2>
