@@ -182,7 +182,7 @@ sub Initialize {
             'interval:10,60,120,180,240,300'
         )
     ) . " $::readingFnAttributes";
-    $hash->{".PNG"} = "";
+    $hash->{".PNG"} = q{};
     $hash->{REGION} = 'de';
 }
 
@@ -252,13 +252,13 @@ sub Get {
     }
     elsif ( $opt eq "refresh" ) {
         RequestUpdate($hash);
-        return "";
+        return q{};
     }
     elsif ( $opt eq "startsIn" ) {
         my $begin = ::ReadingsVal( $name, "rainBegin", "unknown" );
         my ( $sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst ) =
           localtime(time);
-        my $result = "";
+        my $result = q{};
 
         if ( $begin ne "unknown" ) {
 
@@ -811,12 +811,12 @@ sub ParseHttpResponse {
 
     my %precipitation_forecast;
 
-    if ( $err ne "" ) {
+    if ( $err ne q{} ) {
         # Debugging("$name: error while requesting " . $param->{url} . " - $err" );
         ::readingsSingleUpdate($hash, 'state', "Error: " . $err . " => " . $data, 1);
         ResetResult($hash);
     }
-    elsif ( $data ne "" ) {
+    elsif ( $data ne q{} ) {
         # Debugging("$name returned: $data");
         my $forecast_data;
         my $error;
@@ -843,7 +843,7 @@ sub ParseHttpResponse {
                 $@
             );
             ::Log3($name, 1, "[$name] $error");
-            ::Log3($name, 3, "[$name] " . join("", map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return undef;
@@ -852,7 +852,7 @@ sub ParseHttpResponse {
         unless ($forecast_data->{'success'}) {
             $error = "Got JSON but buienradar.nl has some troubles delivering meaningful data!";
             ::Log3($name, 1, "[$name] $error");
-            ::Log3($name, 3, "[$name] " . join("", map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
+            ::Log3($name, 3, "[$name] " . join(q{}, map { "[$name] $_" } Dumper($data))) if ::AttrVal("global", "stacktrace", 0) eq "1";
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return undef;
@@ -863,7 +863,7 @@ sub ParseHttpResponse {
 
         ::Log3($name, 3, sprintf(
             "[%s] Parsed the following data from the buienradar JSON:\n%s",
-            $name, join("", map { "[$name] $_" } Dumper(@precip))
+            $name, join(q{}, map { "[$name] $_" } Dumper(@precip))
         )) if ::AttrVal("global", "stacktrace", 0) eq "1";
 
         if (scalar @precip > 0) {
