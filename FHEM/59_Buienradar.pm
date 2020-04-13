@@ -759,8 +759,21 @@ sub ParseHttpResponse {
                 $hash->{URL},
                 $param->{'code'}
             );
-            ::Log3($name, 1, '[$name] $error');
-            ::Log3($name, 3, '[$name] ' . Dumper($param)) if ::AttrVal('global', 'stacktrace', 0) == 1;
+
+            Debugging({msg => 'HTTP Response code is: ' . $param->{'code'}});
+
+            if ($param->{'code'} eq '404') {
+                my $response_body;
+                $response_body = eval { $response_body = from_json($data) } unless @errors;
+
+                unless ($@) {
+                    Debugging(Dumper {body => $response_body});
+                    $error = qq[Location is not in coverage for region '$hash->{REGION}'];
+                }
+            }
+
+            ::Log3($name, 1, qq{[$name] $error'});
+            ::Log3($name, 3, qq{[$name] } . Dumper($param));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return;
