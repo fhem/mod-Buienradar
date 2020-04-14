@@ -1,4 +1,4 @@
-<span id="Buienradar" />
+<a name="Buienradar" />
 
 ## Buienradar
 Buienradar provides access to precipitation forecasts by the dutch service [Buienradar.nl](https://www.buienradar.nl).
@@ -32,18 +32,31 @@ So the smallest possible definition is:
 
 ### Readings
 Buienradar provides several readings:
+
 * ``rainAmount``            - amount of predicted precipitation in mm/h for the next 5 minute interval.
+
 * ``rainBegin``             - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
+
 * ``raindEnd``              - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
+
 * ``rainDataStart``         - starting time of gathered data.
+
 * ``rainDataEnd``           - ending time of gathered data.
+
 * ``rainLaMetric``          - data formatted for a LaMetric device.
+
 * ``rainMax``               - maximal amount of precipitation for **any** 5 minute interval of the gathered data in mm/h.
+
 * ``rainNow``               - amount of precipitation for the **current** 5 minute interval in mm/h.
+
 * ``rainTotal``             - total amount of precipition for the gathered data in mm/h.
+
 * ``rainDuration``          - duration of the precipitation contained in the forecast
+
 * ``rainDurationTime``      - duration of the precipitation contained in the forecast in HH:MM
+
 * ``rainDurationIntervals`` - amount of intervals with precipitation
+
 * ``rainDurationPercent``   - percentage of interavls with precipitation
 
 <span id="Buienradarattr" />
