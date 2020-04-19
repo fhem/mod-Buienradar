@@ -184,11 +184,11 @@ sub Initialize {
     my ($hash) = @_;
 
     $hash->{DefFn}       = \&FHEM::Buienradar::Define;
-    $hash->{UndefFn}     = 'FHEM::Buienradar::Undefine';
-    $hash->{GetFn}       = 'FHEM::Buienradar::Get';
-    $hash->{SetFn}       = 'FHEM::Buienradar::Set';
-    $hash->{AttrFn}      = 'FHEM::Buienradar::Attr';
-    $hash->{FW_detailFn} = 'FHEM::Buienradar::Detail';
+    $hash->{UndefFn}     = \&FHEM::Buienradar::Undefine;
+    $hash->{GetFn}       = \&FHEM::Buienradar::Get;
+    $hash->{SetFn}       = \&FHEM::Buienradar::Set;
+    $hash->{AttrFn}      = \&FHEM::Buienradar::Attr;
+    $hash->{FW_detailFn} = \&FHEM::Buienradar::Detail;
     $hash->{AttrList}    = join(q{ },
         (
             'disabled:on,off',
@@ -196,7 +196,6 @@ sub Initialize {
             'interval:10,60,120,180,240,300'
         )
     ) . qq[ $::readingFnAttributes ];
-    $hash->{'.PNG'} = q{};
     $hash->{REGION} = $default_region;
 
     return;
@@ -222,7 +221,7 @@ sub Detail {
 #####################################
 sub Undefine {
     my ( $hash, $arg ) = @_;
-    ::RemoveInternalTimer( $hash, 'FHEM::Buienradar::Timer' );
+    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
     return;
 }
 
@@ -354,7 +353,7 @@ sub Attr {
                         if $attribute_value !~ /^(on|off|0|1)$/;
 
                     if ($attribute_value =~ /(on|1)/) {
-                        ::RemoveInternalTimer( $hash, 'FHEM::Buienradar::Timer' );
+                        ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::Timer );
                         $::attr{$device_name}{'disable'} = 1;
                         $hash->{NEXTUPDATE} = undef;
                         $hash->{STATE} = 'inactive';
@@ -478,13 +477,13 @@ sub Timer {
     my ($hash) = @_;
     my $nextupdate = 0;
 
-    ::RemoveInternalTimer( $hash, 'FHEM::Buienradar::Timer' );
+    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
     $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
     RequestUpdate($hash);
 
-    ::InternalTimer( $nextupdate, 'FHEM::Buienradar::Timer', $hash );
+    ::InternalTimer( $nextupdate, \&FHEM::Buienradar::Timer, $hash );
 
     return 1;
 }
