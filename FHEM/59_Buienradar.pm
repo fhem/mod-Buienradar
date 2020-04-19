@@ -57,6 +57,7 @@ Readonly our $version               => '3.0.5';
 Readonly our $default_interval      => ONE_MINUTE * 2;
 Readonly our $debugging_min_verbose => 4;
 Readonly our $default_region        => q{de};
+Readonly our $default_bar_character => q{=};
 
 =pod
     Translations
@@ -244,8 +245,7 @@ sub Undefine {
         $VAR1 = '1 Tage, 03 Stunden, 46 Minuten, 40 Sekunden';
 
 =cut
-sub timediff2str
-{
+sub timediff2str {
     my $s = shift;
 
     return unless defined wantarray;
@@ -695,8 +695,59 @@ sub LogProxy {
     );
 }
 
+=pod
+
+=over 1
+
+=item C<FHEM::Buienradar::TextChart>
+
+C<FHEM::Buienradar::TextChart> returns the precipitation data as textual chart representation
+
+=back
+
+=over 1
+
+=item Example
+
+=begin text
+
+8:25 |   0.000 |
+18:30 |   0.000 |
+18:35 |   0.000 |
+18:40 |   0.000 |
+18:45 |   0.000 |
+18:50 |   0.000 |
+18:55 |   0.000 |
+19:00 |   0.000 |
+19:05 |   0.000 |
+19:10 |   0.000 |
+19:15 |   0.060 | #
+19:20 |   0.370 | ####
+19:25 |   0.650 | #######
+19:30 |   0.490 | #####
+19:35 |   0.220 | ##
+19:40 |   0.110 | #
+19:45 |   0.290 | ###
+19:50 |   0.560 | ######
+19:55 |   0.700 | #######
+20:00 |   0.320 | ###
+20:05 |   0.560 | ######
+20:10 |   0.870 | #########
+20:15 |   0.810 | ########
+20:20 |   1.910 | ###################
+20:25 |   1.070 | ###########
+
+=end text
+
+=item Fixed value of 0
+
+=item Maximal amount of rain in a 5 minute interval
+
+=back
+=cut
 sub TextChart {
     my $name = shift;
+    my $bar_character = shift || $default_bar_character;
     my $hash = $::defs{$name};
 
     unless ($hash->{'.SERIALIZED'}) {
@@ -707,12 +758,15 @@ sub TextChart {
 
     my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
-    my $data = join '\n', map {
+    my $data = join qq{\n}, map {
         my ($time, $precip, $bar) = (
             POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
             sprintf('% 7.3f', $storedData{$_}{'precipitation'}),
-            # @todo
-            (($storedData{$_}{'precipitation'} < 5) ? q{=} x  POSIX::lround(abs($storedData{$_}{'precipitation'} * 10)) : (q{=} x  50) . q{>}),
+            (
+                ($storedData{$_}{'precipitation'} < 50)
+                    ? $bar_character x  POSIX::lround(abs($storedData{$_}{'precipitation'} * 10))
+                    : ($bar_character x  50) . q{>}
+            ),
         );
         qq[$time | $precip | $bar]
     } sort keys %storedData;

@@ -88,17 +88,23 @@ Buienradar offers besides the usual view as device also the possibility to visua
 
         { FHEM::Buienradar::LogProxy("buienradar device name")}
         
-* A plain text representation can be display by
+* A plain text representation can be displayed with
 
-        { FHEM::Buienradar::TextChart("buienradar device name")}
+        { FHEM::Buienradar::TextChart(q{buienradar device name}, q{bar chart character})}
         
-    Every line represents a record of the whole set in a format like
+    The bar chart character is optional and defaults to `=`.
     
-        22:25 |   0.060 | =
-        22:30 |   0.370 | ====
-        22:35 |   0.650 | =======
+    Every line represents a record of the whole set, i.e. if called by
+    
+        { FHEM::Buienradar::TextChart(q{buienradar_test_device}, q{#})}
+    
+    the result will look similar to
+    
+        22:25 |   0.060 | #
+        22:30 |   0.370 | ####
+        22:35 |   0.650 | #######
         
-    For every 0.1 mm/h precipitation a ``=`` is displayed, but the output is capped to 50 units. If more than 50 units
-    would be display, the bar is appended with a ``>``.
+    For every 0.1 mm/h precipitation a ``#`` is displayed, but the output is capped to 50 units. If
+    more than 50 units would be display, the bar is truncated and appended with a ``>``.
     
-        23:00 |  11.800 | ==================================================>
+        23:00 |  11.800 | ##################################################>
