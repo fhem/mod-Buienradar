@@ -61,30 +61,39 @@ Readonly our $default_interval => ONE_MINUTE * 2;
 =cut
 Readonly our %Translations => (
     'GChart' => {
-        'hAxis' => {
-            'de'    =>  'Uhrzeit',
-            'en'    =>  'Time',
+        'hAxis'  => {
+            'de' => 'Uhrzeit',
+            'en' => 'Time',
         },
-        'vAxis' => {
-            'de'    => 'mm/h',
-            'en'    => 'mm/h',
+        'vAxis'  => {
+            'de' => 'mm/h',
+            'en' => 'mm/h',
         },
-        'title' => {
-            'de'    =>  'Niederschlagsvorhersage für %s, %s',
-            'en'    =>  'Precipitation forecast for %s, %s',
+        'title'  => {
+            'de' => 'Niederschlagsvorhersage für %s, %s',
+            'en' => 'Precipitation forecast for %s, %s',
         },
         'legend' => {
-            'de'    => 'Niederschlag',
-            'en'    => 'Precipitation',
+            'de' => 'Niederschlag',
+            'en' => 'Precipitation',
         },
-    }
+    },
+    'Set'    => {
+        'interval' => {
+            'de'    =>  'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
+            'en'    =>  'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
+        },
+    },
 );
 
 =pod
     Global variables
 =cut
-our $device;
+our $device_name;
 our @errors;
+our $global_hash;
+our $language;
+
 
 GP_Export(
     qw(
@@ -389,7 +398,7 @@ sub Attr {
         }
 
         when ('interval') {
-            return q[${attribute_value} is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!]
+            return FHEM::Buienradar::Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Set'}{'interval'}{$language}}])
                 if $attribute_value !~ /^(10|60|120|180|240|300)$/ and $command eq 'set';
 
             given ($command) {
@@ -415,6 +424,7 @@ sub Attr {
 sub Define {
 
     my ( $hash, $def ) = @_;
+    $global_hash = $hash;
 
     my @a = split( '[ \t][ \t]*', $def );
     my $latitude;
@@ -437,7 +447,7 @@ sub Define {
     ::readingsSingleUpdate($hash, 'state', 'Initialized', 1);
 
     my $name = $a[0];
-    $device = $name;
+    $device_name = $name;
 
     $hash->{VERSION}    = $version;
     $hash->{INTERVAL}   = $FHEM::Buienradar::default_interval;
@@ -446,6 +456,8 @@ sub Define {
     $hash->{URL}        = undef;
     # @todo this looks like a good candidate for a refactoring
     $hash->{'.HTML'}    = '<DIV>';
+    # get language for language dependend legend
+    $FHEM::Buienradar::language = lc ::AttrVal('global', 'language', 'DE');
 
     ::readingsBeginUpdate($hash);
         ::readingsBulkUpdate( $hash, 'rainNow', 'unknown' );
@@ -583,9 +595,6 @@ sub GChart {
         );
         qq{['$k', $v]}
     } sort keys %storedData;
-
-    # get language for language dependend legend
-    my $language = lc ::AttrVal('global', 'language', 'DE');
 
     # create data for the GChart
     my $hAxis   = $FHEM::Buienradar::Translations{'GChart'}{'hAxis'}{$language};
@@ -915,8 +924,13 @@ sub ResetResult {
 
 sub Debugging {
     local $OFS = '\n';
-    ::Debug("@_") if ::AttrVal('global', 'verbose', undef) == 3 or ::AttrVal($device, 'debug', 0) eq '1';
+    ::Debug("@_") if ::AttrVal('global', 'verbose', undef) == 3 or ::AttrVal($device_name, 'debug', 0) eq '1';
     return;
+}
+
+sub Error {
+    my $message = shift || q{Something bad happened. Unknown error!};
+    return qq{[$FHEM::Buienradar::device_name] Error: $message};
 }
 
 1;
