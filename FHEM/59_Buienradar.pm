@@ -53,8 +53,9 @@ use Readonly;
 =pod
     Settings
 =cut
-Readonly our $version => '3.0.5';
-Readonly our $default_interval => ONE_MINUTE * 2;
+Readonly our $version               => '3.0.5';
+Readonly our $default_interval      => ONE_MINUTE * 2;
+Readonly our $debugging_min_verbose => 4;
 
 =pod
     Translations
@@ -330,28 +331,18 @@ sub Attr {
     my ($command, $device_name, $attribute_name, $attribute_value) = @_;
     my $hash = $::defs{$device_name};
 
-    Debugging(
-        'Attr called', '\n',
-        Dumper (
-            $command, $device_name, $attribute_name, $attribute_value
-        )
-    );
+    FHEM::Buienradar::Debugging(Dumper({
+        command     =>  $command,
+        device      =>  $device_name,
+        attribute   =>  $attribute_name,
+        value       =>  $attribute_value
+    }));
 
     given ($attribute_name) {
         # JFTR: disabled will also set disable to be compatible to FHEM::IsDisabled()
         #       This is a ugly hack, with some side-effects like you can set disabled, disable will be automatically
         #       set, you can delete disable but disabled will still be set.
         when ('disabled') {
-            Debugging(
-                Dumper (
-                    {
-                        'attribute_value' => $attribute_value,
-                        'attr' => 'disabled',
-                        'command' => $command,
-                    }
-                )
-            );
-
             given ($command) {
                 when ('set') {
                     return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
@@ -514,7 +505,7 @@ sub RequestUpdate {
     };
 
     ::HttpUtils_NonblockingGet($param);
-    ::Log3( $hash->{NAME}, 4, qq[$hash->{NAME}: Update requested] );
+    FHEM::Buienradar::Debugging(q{Data update requested});
 
     return;
 }
@@ -575,12 +566,7 @@ sub GChart {
     my $hash = $::defs{$name};
 
     unless ($hash->{'.SERIALIZED'}) {
-        ::Log3($name, 3,
-            sprintf(
-                q{[%s] Can't return serizalized data for FHEM::Buienradar::GChart.},
-                $name
-            )
-        );
+        FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::GChart.});
 
         # return dummy data
         return;
@@ -685,12 +671,7 @@ sub LogProxy {
     my $hash = $::defs{$name};
 
     unless ($hash->{'.SERIALIZED'}) {
-        ::Log3($name, 3,
-            sprintf(
-                q{[%s] Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data},
-                $name
-            )
-        );
+        FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data});
 
         # return dummy data
         return (0, 0, 0);
@@ -717,13 +698,7 @@ sub TextChart {
     my $hash = $::defs{$name};
 
     unless ($hash->{'.SERIALIZED'}) {
-        ::Log3($name, 3,
-            sprintf(
-                q{[%s] Can't return serizalized data for FHEM::Buienradar::TextChart.},
-                $name
-            )
-        );
-
+        FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
         # return dummy data
         return;
     }
@@ -749,9 +724,6 @@ sub ParseHttpResponse {
     my $name = $hash->{NAME};
     $hash->{'.RainStart'} = undef;
 
-    #Debugging('*** RESULT ***');
-    #Debugging(Dumper {param => $param, data => $data, error => $err});
-
     my %precipitation_forecast;
 
     if ( $err ne q{} ) {
@@ -769,20 +741,20 @@ sub ParseHttpResponse {
                 $param->{'code'}
             );
 
-            Debugging({msg => 'HTTP Response code is: ' . $param->{'code'}});
+            FHEM::Buienradar::Debugging(qq[HTTP Response code is: $param->{'code'}]);
 
             if ($param->{'code'} eq '404') {
                 my $response_body;
                 $response_body = eval { $response_body = from_json($data) } unless @errors;
 
                 unless ($@) {
-                    Debugging(Dumper {body => $response_body});
+                    FHEM::Buienradar::Debugging(qq{Repsonse body}, Dumper($response_body));
                     $error = qq[Location is not in coverage for region '$hash->{REGION}'];
                 }
             }
 
-            ::Log3($name, 1, qq{[$name] $error'});
-            ::Log3($name, 3, qq{[$name] } . Dumper($param));
+            FHEM::Buienradar::Error(qq{$error});
+            FHEM::Buienradar::Debugging((qq{[$name] }, Dumper($param)));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return;
@@ -791,22 +763,19 @@ sub ParseHttpResponse {
         $forecast_data = eval { $forecast_data = from_json($data) } unless @errors;
 
         if ($@) {
-            $error = sprintf(
-                q[Can't evaluate JSON from %s: %s],
-                $hash->{URL},
-                $@
-            );
-            ::Log3($name, 1, '[$name] $error');
-            ::Log3($name, 3, '[$name] ' . join(q{}, map { qq{[$name] $_} } Dumper($data))) if ::AttrVal('global', 'stacktrace', 0) == 1;
-            ::readingsSingleUpdate($hash, 'state', $error, 1);
+
+            $error = qq{Can't evaluate JSON from $hash->{URL}: $@};
+            FHEM::Buienradar::Error(qq{$error});
+            FHEM::Buienradar::Debugging(join(q{}, map { qq{[$name] $_} } Dumper($data)));
+            ::readingsSingleUpdate($hash, q{state}, $error, 1);
             ResetResult($hash);
             return;
         }
 
         unless ($forecast_data->{'success'}) {
-            $error = 'Got JSON but buienradar.nl has some troubles delivering meaningful data!';
-            ::Log3($name, 1, '[$name] $error');
-            ::Log3($name, 3, '[$name] ' . join(q{}, map { qq{[$name] $_} } Dumper($data))) if ::AttrVal('global', 'stacktrace', 0) == 1;
+            $error = q{Got JSON from buienradar.nl, but had some troubles delivering meaningful data!};
+            FHEM::Buienradar::Error(qq{$error});
+            FHEM::Buienradar::Debugging(join(q{}, map { qq{[$name] $_} } Dumper($data)));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return;
@@ -815,10 +784,7 @@ sub ParseHttpResponse {
         my @precip;
         @precip = @{$forecast_data->{'precip'}} unless @errors;
 
-        ::Log3($name, 3, sprintf(
-            q{[%s] Parsed the following data from the buienradar JSON:\n%s},
-            $name, join(q{}, map { qq{[$name] $_} } Dumper(@precip))
-        )) if ::AttrVal('global', 'stacktrace', 0) == 1;
+        FHEM::Buienradar::Debugging(q{Received data: } . Dumper(@{$forecast_data->{'precip'}}));
 
         if (scalar @precip > 0) {
             my $rainLaMetric        = join(q{,}, map {$_ * 1000} @precip[0..11]);
@@ -876,6 +842,8 @@ sub ParseHttpResponse {
                 };
             }
 
+            FHEM::Buienradar::Debugging(Dumper(%precipitation_forecast));
+
             $hash->{'.SERIALIZED'} = Storable::freeze(\%precipitation_forecast);
 
             ::readingsBeginUpdate($hash);
@@ -923,8 +891,11 @@ sub ResetResult {
 }
 
 sub Debugging {
-    local $OFS = '\n';
-    ::Debug("@_") if ::AttrVal('global', 'verbose', undef) == 3 or ::AttrVal($device_name, 'debug', 0) eq '1';
+    local $OFS = qq{\n};
+    ::Debug(join($OFS, (qq{[$FHEM::Buienradar::device_name]}, qq{@_}))) if (
+        int(::AttrVal(q{global}, q{verbose}, 0)) >= $FHEM::Buienradar::debugging_min_verbose
+        or  int(::AttrVal($device_name, q{debug}, 0)) == 1
+    );
     return;
 }
 
