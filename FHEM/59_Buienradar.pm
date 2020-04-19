@@ -449,8 +449,6 @@ sub Define {
     $hash->{LATITUDE}   = $latitude;
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
-    # @todo this looks like a good candidate for a refactoring
-    $hash->{'.HTML'}    = '<DIV>';
     # get language for language dependend legend
     $FHEM::Buienradar::language = lc ::AttrVal('global', 'language', 'DE');
 
