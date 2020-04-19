@@ -79,11 +79,15 @@ Readonly our %Translations => (
             'en' => 'Precipitation',
         },
     },
-    'Set'    => {
+    'Attr'    => {
         'interval' => {
-            'de'    =>  'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
-            'en'    =>  'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
+            'de' => 'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
+            'en' => 'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
         },
+        'region'   => {
+            'de' => q{ist kein valider Wert für die Region. Einzig 'de' oder 'nl' werden unterstützt!},
+            'en' => q{is no valid value for region. Only 'de' or 'nl' are allowed!},
+        }
     },
 );
 
@@ -330,7 +334,7 @@ sub Get {
 sub Attr {
     my ($command, $device_name, $attribute_name, $attribute_value) = @_;
     my $hash = $::defs{$device_name};
-
+    
     FHEM::Buienradar::Debugging(Dumper({
         command     =>  $command,
         device      =>  $device_name,
@@ -371,7 +375,7 @@ sub Attr {
         }
 
         when ('region') {
-            return qq[${attribute_value} is no valid value for region. Only 'de' or 'nl' are allowed!]
+            return Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
                 if $attribute_value !~ /^(de|nl)$/ and $command eq 'set';
 
             given ($command) {
@@ -389,7 +393,7 @@ sub Attr {
         }
 
         when ('interval') {
-            return FHEM::Buienradar::Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Set'}{'interval'}{$language}}])
+            return FHEM::Buienradar::Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
                 if $attribute_value !~ /^(10|60|120|180|240|300)$/ and $command eq 'set';
 
             given ($command) {
