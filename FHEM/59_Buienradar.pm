@@ -47,7 +47,7 @@ use English;
 use Storable;
 use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
-use v5.10;
+use 5.10;
 use Readonly;
 
 =pod
