@@ -56,6 +56,7 @@ use Readonly;
 Readonly our $version               => '3.0.5';
 Readonly our $default_interval      => ONE_MINUTE * 2;
 Readonly our $debugging_min_verbose => 4;
+Readonly our $default_region        => q{de};
 
 =pod
     Translations
@@ -182,7 +183,7 @@ sub Initialize {
 
     my ($hash) = @_;
 
-    $hash->{DefFn}       = 'FHEM::Buienradar::Define';
+    $hash->{DefFn}       = \&FHEM::Buienradar::Define;
     $hash->{UndefFn}     = 'FHEM::Buienradar::Undefine';
     $hash->{GetFn}       = 'FHEM::Buienradar::Get';
     $hash->{SetFn}       = 'FHEM::Buienradar::Set';
@@ -196,7 +197,7 @@ sub Initialize {
         )
     ) . qq[ $::readingFnAttributes ];
     $hash->{'.PNG'} = q{};
-    $hash->{REGION} = 'de';
+    $hash->{REGION} = $default_region;
 
     return;
 }
