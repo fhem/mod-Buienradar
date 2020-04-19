@@ -300,7 +300,7 @@ sub Get {
         when ('startsIn') {
             my $begin = $hash->{'.RainStart'};
             return q[No data available] unless $begin;
-            return q[It is raining] if $begin = 0;
+            return q[It is raining] if $begin == 0;
 
             my $timeDiffSec = $begin - time;
             return scalar timediff2str($timeDiffSec);
