@@ -595,7 +595,7 @@ sub GChart {
     );
     my $legend  = $Translations{'GChart'}{'legend'}{$language};
 
-    return <<'CHART'
+    return <<"CHART"
 <div id='chart_${name}'; style='width:100%; height:100%'></div>
 <script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script>
 <script type='text/javascript'>
