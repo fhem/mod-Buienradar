@@ -556,6 +556,21 @@ END_MESSAGE
     return ($as_html);
 }
 
+=pod
+
+=cut
+sub GetGChartDataSet {
+    my $start = shift;
+    my $precipitation = shift;
+
+    my ($k, $v) = (
+        POSIX::strftime('%H:%M', localtime $start),
+        sprintf('%.3f', $precipitation)
+    );
+
+    return qq{['$k', $v]}
+}
+
 =over 1
 
 =item C<FHEM::Buienradar::GChart>
@@ -580,11 +595,7 @@ sub GChart {
     # read & parse stored data
     my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
     my $data = join ', ', map {
-        my ($k, $v) = (
-            POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
-            sprintf('%.3f', $storedData{$_}{'precipitation'})
-        );
-        qq{['$k', $v]}
+        GetGChartDataSet($storedData{$_}{'start'}, $storedData{$_}{'precipitation'});
     } sort keys %storedData;
 
     # create data for the GChart
