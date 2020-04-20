@@ -762,20 +762,32 @@ sub TextChart {
 
     my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
+    my ($time, $precip, $bar);
     my $data = join qq{\n}, map {
-        my ($time, $precip, $bar) = (
-            POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
-            sprintf('% 7.3f', $storedData{$_}{'precipitation'}),
-            (
-                ($storedData{$_}{'precipitation'} < 50)
-                    ? $bar_character x  POSIX::lround(abs($storedData{$_}{'precipitation'} * 10))
-                    : ($bar_character x  50) . q{>}
-            ),
-        );
-        qq[$time | $precip | $bar]
+        join ' | ', ShowTextChartBar(%{ Storable::thaw($hash->{'.SERIALIZED'}) }, $bar_character);
     } sort keys %storedData;
 
     return $data;
+}
+
+=pod
+    Build the char bar for the text chart
+=cut
+sub ShowTextChartBar {
+    my %storedData = shift;
+    my $bar_character = shift;
+
+    my ($time, $precip, $bar) = (
+        POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
+        sprintf('% 7.3f', $storedData{$_}{'precipitation'}),
+        (
+            ($storedData{$_}{'precipitation'} < 50)
+                ? $bar_character x  POSIX::lround(abs($storedData{$_}{'precipitation'} * 10))
+                : ($bar_character x  50) . q{>}
+        ),
+    );
+
+    return ($time, $precip, $bar);
 }
 
 sub ParseHttpResponse {
