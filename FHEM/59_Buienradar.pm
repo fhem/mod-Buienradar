@@ -62,7 +62,7 @@ Readonly our $default_bar_character => q{=};
 =pod
     Translations
 =cut
-Readonly our %Translations => (
+Readonly my %Translations => (
     'GChart' => {
         'hAxis'  => {
             'de' => 'Uhrzeit',
@@ -96,10 +96,10 @@ Readonly our %Translations => (
 =pod
     Global variables
 =cut
-our $device_name;
-our @errors;
-our $global_hash;
-our $language;
+my $device_name;
+my @errors;
+my $global_hash;
+my $language;
 
 
 GP_Export(
@@ -333,6 +333,7 @@ sub Get {
 
 sub Attr {
     my ($command, $device_name, $attribute_name, $attribute_value) = @_;
+
     my $hash = $::defs{$device_name};
     
     FHEM::Buienradar::Debugging(Dumper({
@@ -402,7 +403,7 @@ sub Attr {
                 }
 
                 when ('del') {
-                    $hash->{INTERVAL} = $FHEM::Buienradar::default_interval;
+                    $hash->{INTERVAL} = $default_interval;
                 }
             }
 
@@ -445,12 +446,12 @@ sub Define {
     $device_name = $name;
 
     $hash->{VERSION}    = $version;
-    $hash->{INTERVAL}   = $FHEM::Buienradar::default_interval;
+    $hash->{INTERVAL}   = $default_interval;
     $hash->{LATITUDE}   = $latitude;
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
     # get language for language dependend legend
-    $FHEM::Buienradar::language = lc ::AttrVal('global', 'language', 'DE');
+    $language = lc ::AttrVal('global', 'language', 'DE');
 
     ::readingsBeginUpdate($hash);
         ::readingsBulkUpdate( $hash, 'rainNow', 'unknown' );
@@ -585,14 +586,14 @@ sub GChart {
     } sort keys %storedData;
 
     # create data for the GChart
-    my $hAxis   = $FHEM::Buienradar::Translations{'GChart'}{'hAxis'}{$language};
-    my $vAxis   = $FHEM::Buienradar::Translations{'GChart'}{'vAxis'}{$language};
+    my $hAxis   = $Translations{'GChart'}{'hAxis'}{$language};
+    my $vAxis   = $Translations{'GChart'}{'vAxis'}{$language};
     my $title   = sprintf(
-        $FHEM::Buienradar::Translations{'GChart'}{'title'}{$language},
+        $Translations{'GChart'}{'title'}{$language},
         $hash->{LATITUDE},
         $hash->{LONGITUDE}
     );
-    my $legend  = $FHEM::Buienradar::Translations{'GChart'}{'legend'}{$language};
+    my $legend  = $Translations{'GChart'}{'legend'}{$language};
 
     return <<'CHART'
 <div id='chart_${name}'; style='width:100%; height:100%'></div>
@@ -633,6 +634,7 @@ sub GChart {
 
 CHART
 }
+
 =over 1
 
 =item C<FHEM::Buienradar::LogProxy>
@@ -949,7 +951,7 @@ sub ResetResult {
 sub Debugging {
     local $OFS = qq{\n};
     ::Debug(join($OFS, (qq{[$FHEM::Buienradar::device_name]}, qq{@_}))) if (
-        int(::AttrVal(q{global}, q{verbose}, 0)) >= $FHEM::Buienradar::debugging_min_verbose
+        int(::AttrVal(q{global}, q{verbose}, 0)) >= $debugging_min_verbose
         or  int(::AttrVal($device_name, q{debug}, 0)) == 1
     );
     return;
