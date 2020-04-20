@@ -397,7 +397,7 @@ sub Attr {
 
         when ('interval') {
             return FHEM::Buienradar::Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
-                if $attribute_value !~ /^(10|60|120|180|240|300)$/x and $command eq 'set';
+                if $attribute_value !~ /^(?: 10 | 60 | 120 | 180 | 240 | 300 )$/x and $command eq 'set';
 
             given ($command) {
                 when ('set') {
