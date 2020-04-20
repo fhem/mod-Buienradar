@@ -33,7 +33,10 @@
 
 =cut
 
-package FHEM::Buienradar;
+# @todo
+# ATM, it's not possible to comply to this Perl::Critic rule, because
+# the current state of the FHEM API does require this bogus XX_Name.pm convention
+package FHEM::Buienradar;   ## no critic (RequireFilenameMatchesPackage)
 
 use strict;
 use warnings;
