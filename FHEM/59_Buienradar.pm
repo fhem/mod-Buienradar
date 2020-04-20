@@ -353,7 +353,7 @@ sub Attr {
             given ($command) {
                 when ('set') {
                     return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
-                        if $attribute_value !~ /^(?:on | off | 0 |1 )$/x;
+                        if $attribute_value !~ /^(?: on | off | 0 | 1 )$/x;
 
                     if ($attribute_value =~ /(on|1)/x) {
                         ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::Timer );
