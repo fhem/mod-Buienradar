@@ -353,9 +353,9 @@ sub Attr {
             given ($command) {
                 when ('set') {
                     return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
-                        if $attribute_value !~ /^(on|off|0|1)$/;
+                        if $attribute_value !~ /^(on|off|0|1)$/x;
 
-                    if ($attribute_value =~ /(on|1)/) {
+                    if ($attribute_value =~ /(on|1)/x) {
                         ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::Timer );
                         $::attr{$device_name}{'disable'} = 1;
                         $hash->{NEXTUPDATE} = undef;
@@ -363,7 +363,7 @@ sub Attr {
                         return;
                     }
 
-                    if ($attribute_value =~ /(off|0)/) {
+                    if ($attribute_value =~ /(off|0)/x) {
                         $::attr{$device_name}{'disable'} = 0;
                         Timer($hash);
                         return;
@@ -379,7 +379,7 @@ sub Attr {
 
         when ('region') {
             return Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
-                if $attribute_value !~ /^(de|nl)$/ and $command eq 'set';
+                if $attribute_value !~ /^(de|nl)$/x and $command eq 'set';
 
             given ($command) {
                 when ('set') {
@@ -397,7 +397,7 @@ sub Attr {
 
         when ('interval') {
             return FHEM::Buienradar::Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
-                if $attribute_value !~ /^(10|60|120|180|240|300)$/ and $command eq 'set';
+                if $attribute_value !~ /^(10|60|120|180|240|300)$/x and $command eq 'set';
 
             given ($command) {
                 when ('set') {
@@ -518,7 +518,7 @@ sub RequestUpdate {
 sub HTML {
     my ( $name, $width ) = @_;
     my $hash = $::defs{$name};
-    my @values = split /:/, ::ReadingsVal($name, 'rainData', '0:0');
+    my @values = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
 
     my $as_html = <<'END_MESSAGE';
 <style>
