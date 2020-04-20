@@ -205,9 +205,9 @@ sub Initialize {
 }
 
 sub Detail {
-    my ( $FW_wname, $d, $room, $pageHash ) =
+    my ( $FW_wname, $name, $room, $pageHash ) =
       @_;    # pageHash is set for summaryFn.
-    my $hash = $::defs{$d};
+    my $hash = GetHash($name);
 
     return if ( !defined( $hash->{URL} ) );
 
@@ -281,6 +281,44 @@ sub timediff2str {
     );
 }
 
+=pod
+
+@todo
+Accesses $::defs. This is just a kludge for the non-existen FHEM API to access device details
+Should be fixed if possible!
+
+=cut
+sub GetHash {
+    my $name = shift;
+    return $::defs{$name};
+}
+
+=pod
+
+@todo
+Accesses $::defs{$device}{disable}. This is just a kludge for the non-existen FHEM API to access device details
+Should be fixed if possible!
+
+=cut
+sub Disable {
+    my $name = shift;
+    $::attr{$name}{'disable'} = 1;
+    return;
+}
+
+=pod
+
+@todo
+Accesses $::defs{$device}{disable}. This is just a kludge for the non-existen FHEM API to access device details
+Should be fixed if possible!
+
+=cut
+sub Enable {
+    my $name = shift;
+    $::attr{$name}{'disable'} = 0;
+    return;
+}
+
 ###################################
 sub Set {
     my ( $hash, $name, $opt, @args ) = @_;
@@ -334,13 +372,12 @@ sub Get {
 }
 
 sub Attr {
-    my ($command, $device_name, $attribute_name, $attribute_value) = @_;
-
-    my $hash = $::defs{$device_name};
+    my ($command, $name, $attribute_name, $attribute_value) = @_;
+    my $hash = GetHash($name);
     
     FHEM::Buienradar::Debugging(Dumper({
         command     =>  $command,
-        device      =>  $device_name,
+        device      =>  $name,
         attribute   =>  $attribute_name,
         value       =>  $attribute_value
     }));
@@ -357,21 +394,21 @@ sub Attr {
 
                     if ($attribute_value =~ /(?: on | 1)/x) {
                         ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::Timer );
-                        $::attr{$device_name}{'disable'} = 1;
+                        Disable($name);
                         $hash->{NEXTUPDATE} = undef;
                         $hash->{STATE} = 'inactive';
                         return;
                     }
 
                     if ($attribute_value =~ /(off|0)/x) {
-                        $::attr{$device_name}{'disable'} = 0;
+                        Enable($name);
                         Timer($hash);
                         return;
                     }
                 }
 
                 when ('del') {
-                    delete $::attr{$device_name}{'disable'};
+                    Enable($name);
                     Timer($hash);
                 }
             }
@@ -517,7 +554,7 @@ sub RequestUpdate {
 
 sub HTML {
     my ( $name, $width ) = @_;
-    my $hash = $::defs{$name};
+    my $hash = GetHash($name);
     my @values = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
 
     my $as_html = <<'END_MESSAGE';
@@ -583,7 +620,7 @@ a PNG data.
 =cut
 sub GChart {
     my $name = shift;
-    my $hash = $::defs{$name};
+    my $hash = GetHash($name);
 
     unless ($hash->{'.SERIALIZED'}) {
         FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::GChart.});
@@ -685,7 +722,7 @@ FTUI. It returns a list containing three elements:
 =cut
 sub LogProxy {
     my $name = shift;
-    my $hash = $::defs{$name};
+    my $hash = GetHash($name);
 
     unless ($hash->{'.SERIALIZED'}) {
         FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data});
@@ -763,12 +800,12 @@ C<FHEM::Buienradar::TextChart> returns the precipitation data as textual chart r
 sub TextChart {
     my $name = shift;
     my $bar_character = shift || $default_bar_character;
-    my $hash = $::defs{$name};
+    my $hash = GetHash($name);
 
     unless ($hash->{'.SERIALIZED'}) {
         FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
         # return dummy data
-        return;
+        return
     }
 
     my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
