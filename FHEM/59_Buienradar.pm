@@ -975,7 +975,7 @@ sub ResetResult {
 
 sub Debugging {
     local $OFS = qq{\n};
-    ::Debug(join($OFS, (qq{[$FHEM::Buienradar::device_name]}, qq{@_}))) if (
+    ::Debug(join($OFS, (qq{[$device_name]}, qq{@_}))) if (
         int(::AttrVal(q{global}, q{verbose}, 0)) >= $debugging_min_verbose
         or  int(::AttrVal($device_name, q{debug}, 0)) == 1
     );
