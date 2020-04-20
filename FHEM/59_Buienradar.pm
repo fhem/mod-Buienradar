@@ -379,7 +379,7 @@ sub Attr {
 
         when ('region') {
             return Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
-                if $attribute_value !~ /^(de|nl)$/x and $command eq 'set';
+                if $attribute_value !~ /^(?: de | nl )$/x and $command eq 'set';
 
             given ($command) {
                 when ('set') {
