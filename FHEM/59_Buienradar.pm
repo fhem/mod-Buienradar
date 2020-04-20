@@ -110,18 +110,20 @@ GP_Export(
 
 # try to use JSON::MaybeXS wrapper
 #   for chance of better performance + open code
-eval {
+my $eval_return;
+
+$eval_return = eval {
     require JSON::MaybeXS;
     import JSON::MaybeXS qw( decode_json encode_json );
     1;
 };
 
-if ($@) {
+if (!$eval_return) {
     local $@ = undef;
 
     # try to use JSON wrapper
     #   for chance of better performance
-    eval {
+    $eval_return = eval {
 
         # JSON preference order
         local $ENV{PERL_JSON_BACKEND} =
@@ -133,40 +135,40 @@ if ($@) {
         1;
     };
 
-    if ($@) {
+    if (!$eval_return) {
         local $@ = undef;
 
         # In rare cases, Cpanel::JSON::XS may
         #   be installed but JSON|JSON::MaybeXS not ...
-        eval {
+        $eval_return = eval {
             require Cpanel::JSON::XS;
             import Cpanel::JSON::XS qw(decode_json encode_json);
             1;
         };
 
-        if ($@) {
+        if (!$eval_return) {
             local $@ = undef;
 
             # In rare cases, JSON::XS may
             #   be installed but JSON not ...
-            eval {
+            $eval_return = eval {
                 require JSON::XS;
                 import JSON::XS qw(decode_json encode_json);
                 1;
             };
 
-            if ($@) {
+            if (!$eval_return) {
                 local $@ = undef;
 
                 # Fallback to built-in JSON which SHOULD
                 #   be available since 5.014 ...
-                eval {
+                $eval_return = eval {
                     require JSON::PP;
                     import JSON::PP qw(decode_json encode_json);
                     1;
                 };
 
-                if ($@) {
+                if (!$eval_return) {
                     local $@ = undef;
 
                     # Fallback to JSON::backportPP in really rare cases
