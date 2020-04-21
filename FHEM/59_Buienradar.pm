@@ -50,7 +50,7 @@ use English;
 use Storable;
 use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
-use 5.10.0;
+use 5.010;                                  # we do not want perl be older than from 2007
 use Readonly;
 
 =pod
