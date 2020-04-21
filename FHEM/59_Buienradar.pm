@@ -284,6 +284,7 @@ sub timediff2str {
     );
 }
 
+## no critic (ProhibitPackageVars)
 =pod
 
 @todo
@@ -292,6 +293,7 @@ Should be fixed if possible!
 
 =cut
 sub GetHash {
+
     my $name = shift;
     return $::defs{$name};
 }
@@ -321,6 +323,7 @@ sub Enable {
     $::attr{$name}{'disable'} = 0;
     return;
 }
+## use critic
 
 ###################################
 sub Set {
