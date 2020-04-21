@@ -99,7 +99,6 @@ Readonly my %Translations => (
 =pod
     Global variables
 =cut
-my $device_name;
 my @errors;
 my $global_hash;
 my $language;
@@ -381,7 +380,7 @@ sub Attr {
     my ($command, $name, $attribute_name, $attribute_value) = @_;
     my $hash = GetHash($name);
     
-    FHEM::Buienradar::Debugging(Dumper({
+    Debugging($name, Dumper({
         command     =>  $command,
         device      =>  $name,
         attribute   =>  $attribute_name,
@@ -421,7 +420,7 @@ sub Attr {
         }
 
         when ('region') {
-            return Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
+            return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
                 if $attribute_value !~ /^(?: de | nl )$/x and $command eq 'set';
 
             given ($command) {
@@ -439,7 +438,7 @@ sub Attr {
         }
 
         when ('interval') {
-            return FHEM::Buienradar::Error(qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
+            return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
                 if $attribute_value !~ /^(?: 10 | 60 | 120 | 180 | 240 | 300 )$/x and $command eq 'set';
 
             given ($command) {
@@ -488,8 +487,7 @@ sub Define {
     ::readingsSingleUpdate($hash, 'state', 'Initialized', 1);
 
     my $name = $a[0];
-    $device_name = $name;
-
+    $hash->{NAME}       = $name;
     $hash->{VERSION}    = $version;
     $hash->{INTERVAL}   = $default_interval;
     $hash->{LATITUDE}   = $latitude;
@@ -553,7 +551,7 @@ sub RequestUpdate {
     };
 
     ::HttpUtils_NonblockingGet($param);
-    FHEM::Buienradar::Debugging(q{Data update requested});
+    Debugging($hash->{NAME}, q{Data update requested});
 
     return;
 }
@@ -629,7 +627,7 @@ sub GChart {
     my $hash = GetHash($name);
 
     unless ($hash->{'.SERIALIZED'}) {
-        FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::GChart.});
+        Error($name, q{Can't return serizalized data for FHEM::Buienradar::GChart.});
 
         # return dummy data
         return;
@@ -731,7 +729,7 @@ sub LogProxy {
     my $hash = GetHash($name);
 
     unless ($hash->{'.SERIALIZED'}) {
-        FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data});
+        Error($name, q{Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data});
 
         # return dummy data
         return (0, 0, 0);
@@ -809,7 +807,7 @@ sub TextChart {
     my $hash = GetHash($name);
 
     unless ($hash->{'.SERIALIZED'}) {
-        FHEM::Buienradar::Error(q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
+        Error($name, q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
         # return dummy data
         return
     }
@@ -844,6 +842,11 @@ sub ShowTextChartBar {
     return ($time, $precip, $bar);
 }
 
+## no critic (ProhibitExcessComplexity)
+=pod
+    @todo
+    Must be
+=cut
 sub ParseHttpResponse {
     my ( $param, $err, $data ) = @_;
     my $hash = $param->{hash};
@@ -867,20 +870,20 @@ sub ParseHttpResponse {
                 $param->{'code'}
             );
 
-            FHEM::Buienradar::Debugging(qq[HTTP Response code is: $param->{'code'}]);
+            Debugging($name, qq[HTTP Response code is: $param->{'code'}]);
 
             if ($param->{'code'} eq '404') {
                 my $response_body;
                 $response_body = eval { $response_body = from_json($data) } unless @errors;
 
                 unless ($@) {
-                    FHEM::Buienradar::Debugging(qq{Repsonse body}, Dumper($response_body));
+                    Debugging($name, qq{Repsonse body}, Dumper($response_body));
                     $error = qq[Location is not in coverage for region '$hash->{REGION}'];
                 }
             }
 
-            FHEM::Buienradar::Error(qq{$error});
-            FHEM::Buienradar::Debugging((qq{[$name] }, Dumper($param)));
+            Error($name, qq{$error});
+            Debugging($name, Dumper($param));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return;
@@ -891,8 +894,8 @@ sub ParseHttpResponse {
         if ($@) {
 
             $error = qq{Can't evaluate JSON from $hash->{URL}: $@};
-            FHEM::Buienradar::Error(qq{$error});
-            FHEM::Buienradar::Debugging(join(q{}, map { qq{[$name] $_} } Dumper($data)));
+            Error($name, qq{$error});
+            Debugging($name, join(q{}, map { qq{[$name] $_} } Dumper($data)));
             ::readingsSingleUpdate($hash, q{state}, $error, 1);
             ResetResult($hash);
             return;
@@ -900,8 +903,8 @@ sub ParseHttpResponse {
 
         unless ($forecast_data->{'success'}) {
             $error = q{Got JSON from buienradar.nl, but had some troubles delivering meaningful data!};
-            FHEM::Buienradar::Error(qq{$error});
-            FHEM::Buienradar::Debugging(join(q{}, map { qq{[$name] $_} } Dumper($data)));
+            Error($name, qq{$error});
+            Debugging($name, join(q{}, map { qq{[$name] $_} } Dumper($data)));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             ResetResult($hash);
             return;
@@ -910,7 +913,7 @@ sub ParseHttpResponse {
         my @precip;
         @precip = @{$forecast_data->{'precip'}} unless @errors;
 
-        FHEM::Buienradar::Debugging(q{Received data: } . Dumper(@{$forecast_data->{'precip'}}));
+        Debugging($name, q{Received data: } . Dumper(@{$forecast_data->{'precip'}}));
 
         if (scalar @precip > 0) {
             my $rainLaMetric        = join(q{,}, map {$_ * 1000} @precip[0..11]);
@@ -968,7 +971,7 @@ sub ParseHttpResponse {
                 };
             }
 
-            FHEM::Buienradar::Debugging(Dumper(%precipitation_forecast));
+            Debugging($name, Dumper(%precipitation_forecast));
 
             $hash->{'.SERIALIZED'} = Storable::freeze(\%precipitation_forecast);
 
@@ -994,6 +997,7 @@ sub ParseHttpResponse {
 
     return;
 }
+## use critic
 
 sub ResetResult {
     my $hash = shift;
@@ -1018,6 +1022,7 @@ sub ResetResult {
 
 sub Debugging {
     local $OFS = qq{\n};
+    my $device_name = shift;
     ::Debug(join($OFS, (qq{[$device_name]}, qq{@_}))) if (
         int(::AttrVal(q{global}, q{verbose}, 0)) >= $debugging_min_verbose
         or  int(::AttrVal($device_name, q{debug}, 0)) == 1
@@ -1026,8 +1031,9 @@ sub Debugging {
 }
 
 sub Error {
+    my $device_name = shift;
     my $message = shift || q{Something bad happened. Unknown error!};
-    return qq{[$FHEM::Buienradar::device_name] Error: $message};
+    return qq{[$device_name] Error: $message};
 }
 
 1;
