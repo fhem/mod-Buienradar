@@ -477,8 +477,10 @@ sub Define {
     $global_hash = $hash;
 
     my @a = split( '[ \t][ \t]*', $def );
+    my $name = $a[0];
     my $latitude;
     my $longitude;
+    my $language = lc ::AttrVal('global', 'language', 'DE');
 
     if ( ( int(@a) == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
     {
@@ -490,13 +492,12 @@ sub Define {
         $longitude = $a[3];
     }
     else {
-        # @todo this looks bogus and unnecessary
-        return int(@a) . q{Syntax: define <name> Buienradar [<latitude> <longitude>]};
+        return Error($name, q{Syntax: define <name> Buienradar [<latitude> <longitude>]})
     }
 
     ::readingsSingleUpdate($hash, 'state', 'Initialized', 1);
 
-    my $name = $a[0];
+
     $hash->{NAME}       = $name;
     $hash->{VERSION}    = $version;
     $hash->{INTERVAL}   = $default_interval;
@@ -504,7 +505,7 @@ sub Define {
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
     # get language for language dependend legend
-    $language = lc ::AttrVal('global', 'language', 'DE');
+
 
     ::readingsBeginUpdate($hash);
         ::readingsBulkUpdate( $hash, 'rainNow', 'unknown' );
