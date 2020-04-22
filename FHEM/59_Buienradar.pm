@@ -66,6 +66,16 @@ Readonly our $default_bar_character => q{=};
     Translations
 =cut
 Readonly my %Translations => (
+    'HTMLChart' => {
+        'title'      => {
+            'de' => q{Niederschlagsdiagramm},
+            'en' => q{Precipitation chart}
+        },
+        'data_start' => {
+            'de' => q{Datenbeginn um},
+            'en' => q{Data start at},
+        }
+    },
     'GChart' => {
         'hAxis'  => {
             'de' => 'Uhrzeit',
@@ -561,10 +571,10 @@ sub HTML {
     my $hash = GetHash($name);
     my @values = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
 
-    my $as_html = <<'END_MESSAGE';
+    my $as_html = <<'CSS_STYLE';
 <style>
 
-.BRchart div {
+.buienradar .htmlchart div {
   font: 10px sans-serif;
   background-color: steelblue;
   text-align: right;
@@ -574,26 +584,27 @@ sub HTML {
 }
  
 </style>
-<div class='BRchart'>
-END_MESSAGE
+<div class='buienradar'>
+CSS_STYLE
 
-    # @todo the html looks terribly ugly
-    $as_html .= qq[<BR>Niederschlag (<a href=./fhem?detail=$name>$name</a>)<BR>];
-
-    $as_html .= ::ReadingsVal( $name, 'rainDataStart', 'unknown' ) . '<BR>';
+    $as_html .= qq[<p><a href="./fhem?detail=$name">${Translations{'HTMLChart'}{'title'}{$language}}</a>];
+    $as_html .= sprintf(q{<p>%s: %s</p>},
+        $Translations{'HTMLChart'}{'data_start'}{$language},
+        ::ReadingsVal( $name, 'rainDataStart', 'unknown' )
+    );
     my $factor =
       ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
-    foreach my $val (@values) {
-        # @todo candidate for refactoring to sprintf
-        $as_html .=
-            q{<div style='width: }
-          . ( int( $val * $factor ) + 30 )
-          . q{px;'>}
-          . sprintf( '%.3f', $val )
-          . q{</div>};
+
+    $as_html .= q[<div class='htmlchart'>];
+    foreach my $bar_value (@values) {
+        $as_html .= sprintf(
+            q{<div style='width: %dpx'>%.3f</div>},
+            ( int( $bar_value * $factor ) + 30 ),
+            $bar_value
+        );
     }
 
-    $as_html .= q[</DIV><BR>];
+    $as_html .= q[</div>];
     return ($as_html);
 }
 
