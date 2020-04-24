@@ -13,16 +13,21 @@ Die minimalste Definition lautet demnach:
 
     define <devicename> Buienradar
   
+<span id="Buienradarset" />  
+
+### Set 
+Folgende Set-Aufrufe werden unterstützt:
+
+* ``refresh``       - Neue Daten abfragen.
+
 <span id="Buienradarget" />  
 
 ### Get
 Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:
 
 * ``rainDuration``  - Die voraussichtliche Dauer des n&auml;chsten Niederschlags in Minuten.
-* ``startse``       - Der n&auml;chste Niederschlag beginnt in <var>n</var> Minuten. **Obsolet!**
-* ``refresh``       - Neue Daten abfragen.
+* ``startsIn``      - Der n&auml;chste Niederschlag beginnt in <var>n</var> Minuten. **Obsolet!**
 * ``version``       - Aktuelle Version abfragen.
-* ``testVal``       - Rechnet einen Buienradar-Wert zu Testzwecken in mm/m² um. Dies war für die alte <abbr>API</abbr> von Buienradar.nl nötig. **Obsolet!**
 
 <span id="Buienradarreadings" />  
 
@@ -47,7 +52,12 @@ Aktuell liefert Buienradar folgende Readings:
 ### Attribute
 
 * <a name="disabled"></a> ``disabled on|off``   - Wenn ``disabled`` auf `on` gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. ``off`` reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.
+
+    **Achtung!** Aus Kompatibilitätsgründen zu `FHEM::IsDisabled()` wird bei einem Aufruf von `disabled` auch `disable` als weiteres Attribut gesetzt. Wird `disable` gesetzt oder gelöscht, beeinflusst
+        dies `disabled` nicht! _`disable` sollte nicht verwendet werden!_
+
 * <a name="region"></a> ``region nl|de`` - Erlaubte Werte sind ``nl`` (Standardwert) und ``de``. In einigen Fällen, insbesondere im Süden und Osten Deutschlands, liefert ``de`` überhaupt Werte.
+
 * <a name="interval"></a>  ``interval 10|60|120|180|240|300`` - Aktualisierung der Daten alle <var>n</var> Sekunden. **Achtung!** 10 Sekunden ist ein sehr aggressiver Wert und sollte mit Bedacht gewählt werden, <abbr>z.B.</abbr> bei der Fehlersuche. Standardwert sind 120 Sekunden. 
 
 ### Visualisierungen

@@ -12,16 +12,21 @@ So the smallest possible definition is:
 
     define <devicename> Buienradar
   
+<span id="Buienradarset" />  
+
+### Set
+<var>Set</var> will get you the following:
+
+* ``refresh``       - get new data from Buienradar.nl.
+
 <span id="Buienradarget" />  
 
 ### Get
 <var>Get</var> will get you the following:
 
 * ``rainDuration``  - predicted duration of the next precipitation in minutes.
-* ``startse``       - next precipitation starts in <var>n</var> minutes. **Obsolete!**
-* ``refresh``       - get new data from Buienradar.nl.
+* ``startsIn``      - next precipitation starts in <var>n</var> minutes. **Obsolete!**
 * ``version``       - get current version of the Buienradar module.
-* ``testVal``       - converts the gathered values from the old Buienradar <abbr>API</abbr> to mm/m². **Obsolete!**
 
 <span id="Buienradarreadings" />  
 
@@ -45,7 +50,11 @@ Buienradar provides several readings:
 
 ### Attributes
 * <a name="disabled"></a> ``disabled on|off``   - If ``disabled`` is set to `on`, no further requests to Buienradar.nl will be performed. ``off`` reactivates the device, also if the attribute ist simply deleted.
+
+    **Caution!** To be compatible with `FHEM::IsDisabled()`, any set or delete with `disabled` will also create or delete an additional `disable` attribute. Is `disable` (without d) set or deleted, `disabled` (with d) will not be affected. _Just don't use `disable`_.
+
 * <a name="region"></a> ``region nl|de`` - Allowed values are ``nl`` (default value) and ``de``. In some cases, especially in the south and east of Germany, ``de`` returns values at all.
+
 * <a name="interval"></a> ``interval 10|60|120|180|240|300`` - Data update every <var>n</var> seconds. **Attention!** 10 seconds is a very aggressive value and should be chosen carefully,  <abbr>e.g.</abbr> when troubleshooting. The default value is 120 seconds.  
 
 ### Visualisation

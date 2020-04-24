@@ -1,6 +1,6 @@
-Last Buienradar updates (20.08.2019)
-  49c484b 20.08.2019 12:03 [FHEMBUIENRADAR-37] add a text only bar chart (Issue #13)
-  f03d945 20.08.2019 10:55 [FHEMBUIENRADAR-36] Fixed issue #12 - rainEnd is not correctly calculated
-  cb52502 19.08.2019 21:37 [FHEMBUIENRADAR-35] fixed perl warning if rainNow is not set (because there is now rain atm)
-  8331376 19.08.2019 19:23 [FHEMBUIENRADAR-35] fixed rainNow calculation in 2.1 merged into 2.2
-  dff5ac3 19.08.2019 19:16 [FHEMBUIENRADAR-35] fixed rainNow calculation
+Last Buienradar updates (30.12.2019)
+  4237567 30.12.2019 15:17 [FHEMBUIENRADAR-42] set refresh instead auf get refresh
+  a0da99c 30.12.2019 15:09 [FHEMBUIENRADAR-40] [FHEMBUIENRADAR-41] updated documentation
+  8d1ff76 30.12.2019 15:09 [FHEMBUIENRADAR-40] [FHEMBUIENRADAR-41] updated documentation
+  1e79758 30.12.2019 15:04 [FHEMBUIENRADAR-40] updated meta
+  29b5590 30.12.2019 14:59 [FHEMBUIENRADAR-41] Removed testVal #15

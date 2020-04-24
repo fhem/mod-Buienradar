@@ -4,7 +4,7 @@
 #
 
 function install_webserver {
-    apt install apache2
+    apt install -y apache2 apache2-bin apache2-data apache2-utils
 }
 
 function redirect_dns {
@@ -13,13 +13,14 @@ function redirect_dns {
 
 function create_mockdata {
     mkdir -p /var/www/html/api/3.4
-    rm /var/www/html/api/3.4/forecast.php
+    test -e /var/www/html/api/3.4/forecast.php && rm /var/www/html/api/3.4/forecast.php
     ln -s /vagrant/deployment/mock-data/forecast.json /var/www/html/api/3.4/forecast.php
 }
 
 function install_config {
-    rm /etc/apache2/sites-available/mock-data.conf
+    test -e /etc/apache2/sites-available/mock-data.conf &&  rm /etc/apache2/sites-available/mock-data.conf
     ln -s /vagrant/deployment/mock-data/mock-data.conf /etc/apache2/sites-available/
+    a2enmod ssl
     a2ensite mock-data
 }
 
