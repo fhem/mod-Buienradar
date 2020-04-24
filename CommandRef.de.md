@@ -92,15 +92,19 @@ Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, 
         
 * Für eine reine Text-Ausgabe der Daten als Graph, kann
 
-        { FHEM::Buienradar::TextChart("name des buienradar device")}
+        { FHEM::Buienradar::TextChart(q{name des buienradar device}, q{verwendetes zeichen})}
         
-    verwendet werden. Ausgegeben wird ein für jeden Datensatz eine Zeile im Muster
+    verwendet werden. Das `verwendete zeichen` ist optional und mit `=` vorbelegt. Ausgegeben wird beispielsweise für den Aufruf
     
-        22:25 |   0.060 | =
-        22:30 |   0.370 | ====
-        22:35 |   0.650 | =======
+        { FHEM::Buienradar::TextChart(q{buienradar_test}, q{#}) }
         
-    wobei für jede 0.1 mm/h Niederschlag ein ``=`` ausgegeben wird, maximal jedoch 50 Einheiten. Mehr werden mit einem
-    ``>`` abgekürzt.
+     für jeden Datensatz eine Zeile im Muster
     
-        23:00 |  11.800 | ==================================================>
+        22:25 |   0.060 | #
+        22:30 |   0.370 | ###
+        22:35 |   0.650 | #######
+        
+    wobei für jede 0.1 mm/h Niederschlag das `#` verwendet wird, maximal jedoch 50 Einheiten.
+    Mehr werden mit einem `>` abgekürzt.
+    
+        23:00 |  11.800 | ##################################################>
