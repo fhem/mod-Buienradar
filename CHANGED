@@ -1,6 +1,6 @@
-Last Buienradar updates (14.04.2020)
-  147f165 13.04.2020 23:52 #40 reenable Timer() when disabled attribute ist just deleted
-  540bcde 13.04.2020 23:50 #41 fix an issue with Debugging() only responding with @_
-  b2fe8be 13.04.2020 23:48 #21 if a location is out of coverage for the selected region, please show proper error message instead of simply a HTTP/404
-  642f8ec 13.04.2020 23:12 #39 fixed not interpolated return value for Get()
-  62321bb 13.04.2020 23:09 #38 fixed no result from get rainDuration
+Last Buienradar updates (24.04.2020)
+  aac4bda 24.04.2020 18:58 #108 ignore unused capturing groups
+  1f30d4a 22.04.2020 11:01 #93 refactored the bogus `define` error message, don't I18N it
+  e397219 22.04.2020 10:52 #102 #98 beautified the HTML charts markup, I18N for the labels there
+  d9c0c17 21.04.2020 12:04 #87 removed globally used device name
+  90a60e6 21.04.2020 06:55 #46 resolved the version string finally

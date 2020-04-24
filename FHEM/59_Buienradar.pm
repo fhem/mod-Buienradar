@@ -56,7 +56,7 @@ use Readonly;
 =pod
     Settings
 =cut
-Readonly our $version               => '3.0.5';
+Readonly our $version               => '3.0.6';
 Readonly our $default_interval      => ONE_MINUTE * 2;
 Readonly our $debugging_min_verbose => 4;
 Readonly our $default_region        => q{de};
@@ -1160,14 +1160,17 @@ can be retrieved.</code></pre>
     <pre><code>  { FHEM::Buienradar::LogProxy("buienradar device name")}</code></pre>
   </li>
   <li>
-    <p>A plain text representation can be display by</p>
-    <pre><code>  { FHEM::Buienradar::TextChart("buienradar device name")}</code></pre>
-    <p>Every line represents a record of the whole set in a format like</p>
-    <pre><code>  22:25 |   0.060 | =
-  22:30 |   0.370 | ====
-  22:35 |   0.650 | =======</code></pre>
-    <p>For every 0.1 mm/h precipitation a <code>=</code> is displayed, but the output is capped to 50 units. If more than 50 units would be display, the bar is appended with a <code>&gt;</code>.</p>
-    <pre><code>  23:00 |  11.800 | ==================================================&gt;</code></pre>
+    <p>A plain text representation can be displayed with</p>
+    <pre><code>  { FHEM::Buienradar::TextChart(q{buienradar device name}, q{bar chart character})}</code></pre>
+    <p>The bar chart character is optional and defaults to <code>=</code>.</p>
+    <p>Every line represents a record of the whole set, i.e. if called by</p>
+    <pre><code>  { FHEM::Buienradar::TextChart(q{buienradar_test_device}, q{#})}</code></pre>
+    <p>the result will look similar to</p>
+    <pre><code>  22:25 |   0.060 | #
+  22:30 |   0.370 | ####
+  22:35 |   0.650 | #######</code></pre>
+    <p>For every 0.1 mm/h precipitation a <code>#</code> is displayed, but the output is capped to 50 units. If more than 50 units would be display, the bar is truncated and appended with a <code>&gt;</code>.</p>
+    <pre><code>  23:00 |  11.800 | ##################################################&gt;</code></pre>
   </li>
 </ul>
 
@@ -1245,7 +1248,7 @@ can be retrieved.</code></pre>
 <h3>Attribute</h3>
 <ul>
   <li>
-    <p><a name="disabled" id="disabled"></a> <code>disabled on|ofLf</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.</p>
+    <p><a name="disabled" id="disabled"></a> <code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.</p>
     <p><strong>Achtung!</strong> Aus Kompatibilitätsgründen zu <code>FHEM::IsDisabled()</code> wird bei einem Aufruf von <code>disabled</code> auch <code>disable</code> als weiteres Attribut gesetzt. Wird <code>disable</code> gesetzt oder gelöscht, beeinflusst dies <code>disabled</code> nicht! <em><code>disable</code> sollte nicht verwendet werden!</em></p>
   </li>
   <li>
@@ -1272,13 +1275,15 @@ abgerufen werden.</code></pre>
   </li>
   <li>
     <p>Für eine reine Text-Ausgabe der Daten als Graph, kann</p>
-    <pre><code>  { FHEM::Buienradar::TextChart("name des buienradar device")}</code></pre>
-    <p>verwendet werden. Ausgegeben wird ein für jeden Datensatz eine Zeile im Muster</p>
-    <pre><code>  22:25 |   0.060 | =
-  22:30 |   0.370 | ====
-  22:35 |   0.650 | =======</code></pre>
-    <p>wobei für jede 0.1 mm/h Niederschlag ein <code>=</code> ausgegeben wird, maximal jedoch 50 Einheiten. Mehr werden mit einem <code>&gt;</code> abgekürzt.</p>
-    <pre><code>  23:00 |  11.800 | ==================================================&gt;</code></pre>
+    <pre><code>  { FHEM::Buienradar::TextChart(q{name des buienradar device}, q{verwendetes zeichen})}</code></pre>
+    <p>verwendet werden. Das <code>verwendete zeichen</code> ist optional und mit <code>=</code> vorbelegt. Ausgegeben wird beispielsweise für den Aufruf</p>
+    <pre><code>  { FHEM::Buienradar::TextChart(q{buienradar_test}, q{#}) }</code></pre>
+    <p>für jeden Datensatz eine Zeile im Muster</p>
+    <pre><code>  22:25 |   0.060 | #
+  22:30 |   0.370 | ###
+  22:35 |   0.650 | #######</code></pre>
+    <p>wobei für jede 0.1 mm/h Niederschlag das <code>#</code> verwendet wird, maximal jedoch 50 Einheiten. Mehr werden mit einem <code>&gt;</code> abgekürzt.</p>
+    <pre><code>  23:00 |  11.800 | ##################################################&gt;</code></pre>
   </li>
 </ul>
 
@@ -1288,7 +1293,7 @@ abgerufen werden.</code></pre>
 
 =for :application/json;q=META.json 59_Buienradar.pm
 {
-    "abstract": "FHEM module for precipiation forecasts basing on buienradar.nl",
+    "abstract": "FHEM module for precipitation forecasts basing on buienradar.nl",
     "x_lang": {
         "de": {
             "abstract": "FHEM-Modul f&uuml;r Regen- und Regenmengenvorhersagen auf Basis von buienradar.nl"
@@ -1296,7 +1301,7 @@ abgerufen werden.</code></pre>
     },
     "keywords": [
         "Buienradar",
-        "Precipiation",
+        "Precipitation",
         "Rengenmenge",
         "Regenvorhersage",
         "hoeveelheid regen",
@@ -1305,7 +1310,7 @@ abgerufen werden.</code></pre>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "3.0.5",
+    "version": "3.0.6",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
