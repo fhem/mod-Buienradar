@@ -407,7 +407,7 @@ sub Attr {
                     return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
                         if $attribute_value !~ /^(?: on | off | 0 | 1 )$/x;
 
-                    if ($attribute_value =~ /(?: on | 1)/x) {
+                    if ($attribute_value =~ /(?: on | 1 )/x) {
                         ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::Timer );
                         Disable($name);
                         $hash->{NEXTUPDATE} = undef;
@@ -415,7 +415,7 @@ sub Attr {
                         return;
                     }
 
-                    if ($attribute_value =~ /(off|0)/x) {
+                    if ($attribute_value =~ /(?: off | 0 )/x) {
                         Enable($name);
                         Timer($hash);
                         return;
@@ -1245,7 +1245,7 @@ can be retrieved.</code></pre>
 <h3>Attribute</h3>
 <ul>
   <li>
-    <p><a name="disabled" id="disabled"></a> <code>disabled on|off</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.</p>
+    <p><a name="disabled" id="disabled"></a> <code>disabled on|ofLf</code> - Wenn <code>disabled</code> auf <code>on</code> gesetzt wird, wird das Device keine weiteren Anfragen mehr an Buienradar.nl durchführen. <code>off</code> reaktiviert das Modul, ebenso wenn das Attribut gelöscht wird.</p>
     <p><strong>Achtung!</strong> Aus Kompatibilitätsgründen zu <code>FHEM::IsDisabled()</code> wird bei einem Aufruf von <code>disabled</code> auch <code>disable</code> als weiteres Attribut gesetzt. Wird <code>disable</code> gesetzt oder gelöscht, beeinflusst dies <code>disabled</code> nicht! <em><code>disable</code> sollte nicht verwendet werden!</em></p>
   </li>
   <li>
