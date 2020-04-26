@@ -61,6 +61,7 @@ Readonly our $default_interval      => ONE_MINUTE * 2;
 Readonly our $debugging_min_verbose => 4;
 Readonly our $default_region        => q{de};
 Readonly our $default_bar_character => q{=};
+Readonly our $default_language      => q{en};
 
 =pod
     Translations
@@ -637,6 +638,7 @@ a PNG data.
 sub GChart {
     my $name = shift;
     my $hash = GetHash($name);
+    my $language = lc ::AttrVal(q{global}, q{language}, $default_language);
 
     unless ($hash->{'.SERIALIZED'}) {
         Error($name, q{Can't return serizalized data for FHEM::Buienradar::GChart.});
@@ -660,6 +662,8 @@ sub GChart {
         $hash->{LONGITUDE}
     );
     my $legend  = $Translations{'GChart'}{'legend'}{$language};
+    Debugging($name, qq{Legend langauge is: $language});
+    Debugging($name, qq{Legend is: $legend});
 
     return <<"CHART"
 <div id='chart_${name}'; style='width:100%; height:100%'></div>
@@ -692,7 +696,7 @@ sub GChart {
         var my_div = document.getElementById(
             'chart_${name}');        var chart = new google.visualization.AreaChart(my_div);
         google.visualization.events.addListener(chart, 'ready', function () {
-            my_div.innerHTML = '<img src='' + chart.getImageURI() + ''>';
+            my_div.innerHTML = '<img src=' + chart.getImageURI() + '>';
         });
 
         chart.draw(data, options);}
