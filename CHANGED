@@ -1,6 +1,3 @@
-Last Buienradar updates (24.04.2020)
-  aac4bda 24.04.2020 18:58 #108 ignore unused capturing groups
-  1f30d4a 22.04.2020 11:01 #93 refactored the bogus `define` error message, don't I18N it
-  e397219 22.04.2020 10:52 #102 #98 beautified the HTML charts markup, I18N for the labels there
-  d9c0c17 21.04.2020 12:04 #87 removed globally used device name
-  90a60e6 21.04.2020 06:55 #46 resolved the version string finally
+2020-04-26 - #113 added github action for creating controls file, documentation and meta data
+Last Buienradar updates (26.04.2020)
+  a7a39e1 26.04.2020 15:25 #113 added github action for creating controls file, documentation and meta data
