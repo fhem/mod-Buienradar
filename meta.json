@@ -1,5 +1,5 @@
 {
-    "abstract": "FHEM module for precipiation forecasts basing on buienradar.nl",
+    "abstract": "FHEM module for precipitation forecasts basing on buienradar.nl",
     "x_lang": {
         "de": {
             "abstract": "FHEM-Modul f&uuml;r Regen- und Regenmengenvorhersagen auf Basis von buienradar.nl"
@@ -7,7 +7,7 @@
     },
     "keywords": [
         "Buienradar",
-        "Precipiation",
+        "Precipitation",
         "Rengenmenge",
         "Regenvorhersage",
         "hoeveelheid regen",
@@ -16,7 +16,7 @@
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "2.1.0",
+    "version": "3.0.6",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],

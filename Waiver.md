@@ -1,4 +1,4 @@
-# Copyright waiver for <http://example.org/projects/hello-world>
+# Copyright waiver for FHEM::Buienradar
 
 I dedicate any and all copyright interest in this software to the
 public domain. I make this dedication for the benefit of the public at

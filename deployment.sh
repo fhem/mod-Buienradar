@@ -32,23 +32,23 @@ function install_puppet {
     echo Installing puppet from $puppet_target
 
     dpkg -i $puppet_target
-    aptitude -q update
-    aptitude install -y puppet-agent
+    $APT_BIN -q update
+    $APT_BIN install -y puppet-agent
 
 }
 
-function setup_apt {
+function setup_pm {
     echo '##########################'
     echo '##########################'
-    echo Installing aptitude
+    echo Installing apt
 
     apt-get --allow-releaseinfo-change update
 
-    command -v aptitude || {
-        apt-get install -y aptitude
+    command -v apt || {
+        apt-get install -y apt
     }
 
-    export APT_BIN="aptitude"
+    export APT_BIN="apt"
 }
 
 function upgrade_system {
@@ -56,8 +56,8 @@ function upgrade_system {
     echo '##########################'
     echo Upgrading system
 
-    aptitude -q update
-    aptitude -y -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" safe-upgrade
+    $APT_BIN -q update
+    $APT_BIN -y upgrade
 }
 
 function install_tools {
@@ -65,7 +65,7 @@ function install_tools {
     echo '##########################'
     echo Installing base tools
 
-    aptitude install -y htop tree vim git dnsutils telnet cpanminus build-essential
+    $APT_BIN install -y htop tree vim git dnsutils telnet cpanminus build-essential curl wget
 }
 
 function set_time {
@@ -79,8 +79,8 @@ function set_time {
     dpkg-reconfigure -f noninteractive tzdata
     
     # update time via ntp
-    aptitude install ntpdate
-    ntpdate europe.pool.ntp.org
+    # $APT_BIN install ntpdate
+    # ntpdate europe.pool.ntp.org
 
     # activate ntp and set timezone in systemd-mode
     timedatectl set-ntp true
@@ -135,13 +135,12 @@ function show_ip {
 
 export DEBIAN_FRONTEND=noninteractive
 
-sudo -n su
-setup_apt
+#sudo -n su
+setup_pm
 upgrade_system
 install_tools
 set_time
 set_locale
-
 
 # install application specific library files
 echo "Try to install files in library at ${LIBRARY_DIR}"
