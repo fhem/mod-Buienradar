@@ -1,3 +1,4 @@
-2020-04-26 - #113 added github action for creating controls file, documentation and meta data
+2020-04-26 - Fixed #119 Missing labels in the GChart
+Fixed #114 Quoting in GChart HTML markup was broken and threw an error
 Last Buienradar updates (26.04.2020)
-  a7a39e1 26.04.2020 15:25 #113 added github action for creating controls file, documentation and meta data
+  ee6417f 26.04.2020 15:35 Fixed #119 Missing labels in the GChart Fixed #114 Quoting in GChart HTML markup was broken and threw an error
