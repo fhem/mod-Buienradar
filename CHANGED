@@ -1,6 +1,6 @@
-Last Buienradar updates (30.12.2019)
-  4237567 30.12.2019 15:17 [FHEMBUIENRADAR-42] set refresh instead auf get refresh
-  a0da99c 30.12.2019 15:09 [FHEMBUIENRADAR-40] [FHEMBUIENRADAR-41] updated documentation
-  8d1ff76 30.12.2019 15:09 [FHEMBUIENRADAR-40] [FHEMBUIENRADAR-41] updated documentation
-  1e79758 30.12.2019 15:04 [FHEMBUIENRADAR-40] updated meta
-  29b5590 30.12.2019 14:59 [FHEMBUIENRADAR-41] Removed testVal #15
+Last Buienradar updates (28.04.2020)
+  dfbfe5f 13.04.2020 22:47 #27 unified operators to low precedence
+  80b3df4 13.04.2020 22:31 #24 Used interpolating string delimiters only for strings that actually interpolate, switched mostly to q / qq, fixed an issue with $name
+  2ed4b4d 13.04.2020 22:31 #33 strftime → POSIX::strftime
+  d9411c8 13.04.2020 22:28 #24 Used interpolating string delimiters only for strings that actually interpolate, switched mostly to q / qq
+  f7bfda6 13.04.2020 20:40 #28 added missing explicit returns
