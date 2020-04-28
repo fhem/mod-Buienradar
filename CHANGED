@@ -1,3 +1,3 @@
-2020-04-28 - Merge remote-tracking branch 'origin/development/3.0.7' into development/3.0.7
+2020-04-28 - #106 moved handling for get rainDuration to for/when, solves partly #105
 Last Buienradar updates (28.04.2020)
-  12b6f42 28.04.2020 08:41 Merge remote-tracking branch 'origin/development/3.0.7' into development/3.0.7
+  3183430 28.04.2020 08:52 #106 moved handling for get rainDuration to for/when, solves partly #105
