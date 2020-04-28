@@ -132,8 +132,6 @@ Readonly my %Translations => (
 =cut
 my @errors;
 my $global_hash;
-my $language;
-
 
 GP_Export(
     qw(
@@ -437,6 +435,7 @@ sub Attr {
     my $attribute_name  = shift;
     my $attribute_value = shift;
     my $hash            = GetHash($name);
+    my $language        = GetLanguage();
     
     Debugging($name, Dumper({
         command     =>  $command,
@@ -542,7 +541,7 @@ sub Define {
     my $arguments_length = scalar @arguments;
     my $latitude;
     my $longitude;
-    my $language = lc ::AttrVal('global', 'language', 'DE');
+    my $language = GetLanguage();
 
     if ( ( $arguments_length == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
     {
@@ -635,7 +634,7 @@ sub HTML {
     my $width       = shift;
     my $hash        = GetHash($name);
     my @values      = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
-    my $language    = GetLanguage;
+    my $language    = GetLanguage();
 
     my $as_html = <<'CSS_STYLE';
 <style>
@@ -703,7 +702,7 @@ a PNG data.
 sub GChart {
     my $name = shift;
     my $hash = GetHash($name);
-    my $language = lc ::AttrVal(q{global}, q{language}, $default_language);
+    my $language = GetLanguage();
 
     unless ($hash->{'.SERIALIZED'}) {
         Error($name, q{Can't return serizalized data for FHEM::Buienradar::GChart.});
