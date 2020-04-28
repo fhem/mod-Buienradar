@@ -207,7 +207,7 @@ if (!$eval_return) {
 #####################################
 sub Initialize {
 
-    my ($hash) = @_;
+    my $hash = shift;
 
     $hash->{DefFn}       = \&FHEM::Buienradar::Define;
     $hash->{UndefFn}     = \&FHEM::Buienradar::Undefine;
@@ -227,10 +227,12 @@ sub Initialize {
     return;
 }
 
-sub Detail {
-    my ( $FW_wname, $name, $room, $pageHash ) =
-      @_;    # pageHash is set for summaryFn.
-    my $hash = GetHash($name);
+sub Detail
+    my $FW_wname    = shift;
+    my $name        = shift;
+    my $room        = shift;
+    my $pageHash    = shift;
+    my $hash        = GetHash($name);
 
     return if ( !defined( $hash->{URL} ) );
 
@@ -246,7 +248,8 @@ sub Detail {
 
 #####################################
 sub Undefine {
-    my ( $hash, $arg ) = @_;
+    my $hash    = shift;
+    my $arg     = shift;
     ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
     return;
 }
@@ -354,7 +357,11 @@ sub GetLanguage {
 
 ###################################
 sub Set {
-    my ( $hash, $name, $opt, @args ) = @_;
+    my $hash = shift;
+    my $name = shift;
+    my $opt  = shift;
+    my @args = shift;
+
     return qq['set $name' needs at least one argument] unless ( defined($opt) );
 
     for ($opt) {
@@ -373,7 +380,10 @@ sub Set {
 
 sub Get {
 
-    my ( $hash, $name, $opt, @args ) = @_;
+    my $hash = shift;
+    my $name = shift;
+    my $opt  = shift;
+    my @args = shift;
 
     return qq['get $name' needs at least one argument] unless ( defined($opt) );
 
@@ -405,8 +415,11 @@ sub Get {
 }
 
 sub Attr {
-    my ($command, $name, $attribute_name, $attribute_value) = @_;
-    my $hash = GetHash($name);
+    my $command         = shift;
+    my $name            = shift;
+    my $attribute_name  = shift;
+    my $attribute_value = shift;
+    my $hash            = GetHash($name);
     
     Debugging($name, Dumper({
         command     =>  $command,
@@ -491,8 +504,9 @@ sub Attr {
 #####################################
 sub Define {
 
-    my ( $hash, $def ) = @_;
-    $global_hash = $hash;
+    my $hash        = shift;
+    my $def         = shift;
+    $global_hash    = $hash;
 
     my @arguments = split( '[ \t][ \t]*', $def );
     my $name = $arguments[0];
@@ -546,7 +560,7 @@ sub Define {
 }
 
 sub Timer {
-    my ($hash) = @_;
+    my ($hash) = shift;
     my $nextupdate = 0;
 
     ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
@@ -561,7 +575,7 @@ sub Timer {
 }
 
 sub RequestUpdate {
-    my ($hash) = @_;
+    my ($hash) = shift;
     my $region = $hash->{REGION};
 
     # @todo candidate for refactoring to sprintf
@@ -587,7 +601,8 @@ sub RequestUpdate {
 }
 
 sub HTML {
-    my ( $name, $width ) = @_;
+    my $name        = shift;
+    my $width       = shift;
     my $hash        = GetHash($name);
     my @values      = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
     my $language    = GetLanguage;
@@ -884,10 +899,12 @@ sub ShowTextChartBar {
     Must be
 =cut
 sub ParseHttpResponse {
-    my ( $param, $err, $data ) = @_;
-    my $hash = $param->{hash};
-    my $name = $hash->{NAME};
-    $hash->{'.RainStart'} = undef;
+    my $param               = shift;
+    my $err                 = shift;
+    my $data                = shift;
+    my $hash                = $param->{hash};
+    my $name                = $hash->{NAME};
+    $hash->{'.RainStart'}   = undef;
 
     my %precipitation_forecast;
 
