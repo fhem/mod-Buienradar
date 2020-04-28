@@ -54,7 +54,9 @@ use 5.0101;                          # we do not want perl be older than from 20
 use Readonly;
 
 =pod
+
     Settings
+
 =cut
 Readonly our $version               => '3.0.6';
 Readonly our $default_interval      => ONE_MINUTE * 2;
@@ -64,7 +66,9 @@ Readonly our $default_bar_character => q{=};
 Readonly our $default_language      => q{en};
 
 =pod
+
     Translations
+
 =cut
 Readonly my %Translations => (
     'general' => {
@@ -118,7 +122,9 @@ Readonly my %Translations => (
 );
 
 =pod
+
     Global variables
+
 =cut
 my @errors;
 my $global_hash;
@@ -349,7 +355,9 @@ sub Enable {
 ## use critic
 
 =pod
+
     Get the value of the global language setting
+
 =cut
 sub GetLanguage {
     return lc ::AttrVal(q{global}, 'language', 'en')
@@ -875,7 +883,9 @@ sub TextChart {
 }
 
 =pod
+
     Build the char bar for the text chart
+
 =cut
 sub ShowTextChartBar {
     my %storedData = shift;
@@ -896,8 +906,10 @@ sub ShowTextChartBar {
 
 ## no critic (ProhibitExcessComplexity)
 =pod
+
     @todo
-    Must be
+    Must be refactored
+
 =cut
 sub ParseHttpResponse {
     my $param               = shift;
@@ -1093,6 +1105,8 @@ sub Error {
 1;
 
 =pod
+
+=encoding utf8
 
 =over 1
 
