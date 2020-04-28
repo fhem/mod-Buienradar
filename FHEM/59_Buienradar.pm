@@ -477,20 +477,20 @@ sub Define {
     my ( $hash, $def ) = @_;
     $global_hash = $hash;
 
-    my @a = split( '[ \t][ \t]*', $def );
-    my $name = $a[0];
+    my @arguments = split( '[ \t][ \t]*', $def );
+    my $name = $arguments[0];
     my $latitude;
     my $longitude;
     my $language = lc ::AttrVal('global', 'language', 'DE');
 
-    if ( ( int(@a) == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
+    if ( ( int(@arguments) == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
     {
         $latitude  = ::AttrVal( 'global', 'latitude',  51.0 );
         $longitude = ::AttrVal( 'global', 'longitude', 7.0 );
     }
-    elsif ( int(@a) == 4 ) {
-        $latitude  = $a[2];
-        $longitude = $a[3];
+    elsif ( int(@arguments) == 4 ) {
+        $latitude  = $arguments[2];
+        $longitude = $arguments[3];
     }
     else {
         return Error($name, q{Syntax: define <name> Buienradar [<latitude> <longitude>]})
