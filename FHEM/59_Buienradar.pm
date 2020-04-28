@@ -50,7 +50,7 @@ use English;
 use Storable;
 use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
-use 5.010;                                  # we do not want perl be older than from 2007
+use 5.0101;                          # we do not want perl be older than from 2007, so > 5.10.1
 use Readonly;
 
 =pod
@@ -357,8 +357,8 @@ sub Set {
     my ( $hash, $name, $opt, @args ) = @_;
     return qq['set $name' needs at least one argument] unless ( defined($opt) );
 
-    given ($opt) {
-        when ('refresh') {
+    for ($opt) {
+        when (q{refresh}) {
             RequestUpdate($hash);
             return q{};
         }
@@ -415,12 +415,12 @@ sub Attr {
         value       =>  $attribute_value
     }));
 
-    given ($attribute_name) {
+    for ($attribute_name) {
         # JFTR: disabled will also set disable to be compatible to FHEM::IsDisabled()
         #       This is a ugly hack, with some side-effects like you can set disabled, disable will be automatically
         #       set, you can delete disable but disabled will still be set.
         when ('disabled') {
-            given ($command) {
+            for ($command) {
                 when ('set') {
                     return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
                         if $attribute_value !~ /^(?: on | off | 0 | 1 )$/x;
@@ -451,7 +451,7 @@ sub Attr {
             return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
                 if $attribute_value !~ /^(?: de | nl )$/x and $command eq 'set';
 
-            given ($command) {
+            for ($command) {
                 when ('set') {
                     $hash->{REGION} = $attribute_value;
                 }
@@ -469,7 +469,7 @@ sub Attr {
             return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
                 if $attribute_value !~ /^(?: 10 | 60 | 120 | 180 | 240 | 300 )$/x and $command eq 'set';
 
-            given ($command) {
+            for ($command) {
                 when ('set') {
                     $hash->{INTERVAL} = $attribute_value;
                 }
