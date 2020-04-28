@@ -227,7 +227,7 @@ sub Initialize {
     return;
 }
 
-sub Detail
+sub Detail {
     my $FW_wname    = shift;
     my $name        = shift;
     my $room        = shift;
@@ -238,9 +238,9 @@ sub Detail
 
     # @todo error in the second return: missing target attribute
     # @todo I18N
-    if (::ReadingsVal($hash->{NAME}, 'rainData', 'unknown') ne 'unknown') {
+    if (::ReadingsVal($name, 'rainData', 'unknown') ne 'unknown') {
         return
-            HTML($hash->{NAME}) . qq[<p><a href="$hash->{URL}" target="_blank">Raw JSON data (new window)</a></p> ]
+            HTML($name) . qq[<p><a href="$hash->{URL}" target="_blank">Raw JSON data (new window)</a></p> ];
     } else {
         return qq[<div><a href="$hash->{URL}">Raw JSON data (new window)</a></div>];
     }
@@ -575,12 +575,13 @@ sub Timer {
 }
 
 sub RequestUpdate {
-    my ($hash) = shift;
-    my $region = $hash->{REGION};
+    my ($hash)  = shift;
+    my $region  = $hash->{REGION};
+    my $name    = $hash->{NAME};
 
     # @todo candidate for refactoring to sprintf
     $hash->{URL} =
-      ::AttrVal( $hash->{NAME}, 'BaseUrl', 'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php' )
+      ::AttrVal( $name, 'BaseUrl', 'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php' )
         . '?lat='       . $hash->{LATITUDE}
         . '&lon='       . $hash->{LONGITUDE}
         . '&region='    . $region
@@ -595,7 +596,7 @@ sub RequestUpdate {
     };
 
     ::HttpUtils_NonblockingGet($param);
-    Debugging($hash->{NAME}, q{Data update requested});
+    Debugging($name, q{Data update requested});
 
     return;
 }
