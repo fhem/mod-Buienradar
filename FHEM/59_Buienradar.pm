@@ -377,7 +377,7 @@ sub Get {
 
     return qq['get $name' needs at least one argument] unless ( defined($opt) );
 
-    given($opt)
+    for ($opt)
     {
         when ('version') {
             return $version;
@@ -392,15 +392,15 @@ sub Get {
             my $timeDiffSec = $begin - time;
             return scalar timediff2str($timeDiffSec);
         }
-    }
 
-    if ( $opt eq 'rainDuration' ) {
-        return ::ReadingsVal($name, 'rainDuration', 'unknown');
-    }
-    else {
-        return qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
-    }
+        when ('rainDuration') {
+            return ::ReadingsVal($name, 'rainDuration', 'unknown');
+        }
 
+        default {
+            return qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
+        }
+    }
     return;
 }
 
