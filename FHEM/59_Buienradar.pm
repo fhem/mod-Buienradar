@@ -67,14 +67,24 @@ Readonly our $default_language      => q{en};
     Translations
 =cut
 Readonly my %Translations => (
+    'general' => {
+        'unknown' => {
+            'de' => q{unbekannt},
+            'en' => q{unknown},
+        },
+        'at' => {
+            'de' => q{um},
+            'en' => q{at},
+        }
+    },
     'HTMLChart' => {
         'title'      => {
             'de' => q{Niederschlagsdiagramm},
             'en' => q{Precipitation chart}
         },
         'data_start' => {
-            'de' => q{Datenbeginn um},
-            'en' => q{Data start at},
+            'de' => q{Datenbeginn},
+            'en' => q{Data start},
         }
     },
     'GChart' => {
@@ -335,6 +345,13 @@ sub Enable {
 }
 ## use critic
 
+=pod
+    Get the value of the global language setting
+=cut
+sub GetLanguage {
+    return lc ::AttrVal(q{global}, 'language', 'en')
+}
+
 ###################################
 sub Set {
     my ( $hash, $name, $opt, @args ) = @_;
@@ -570,8 +587,9 @@ sub RequestUpdate {
 
 sub HTML {
     my ( $name, $width ) = @_;
-    my $hash = GetHash($name);
-    my @values = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
+    my $hash        = GetHash($name);
+    my @values      = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
+    my $language    = GetLanguage;
 
     my $as_html = <<'CSS_STYLE';
 <style>
@@ -589,10 +607,11 @@ sub HTML {
 <div class='buienradar'>
 CSS_STYLE
 
-    $as_html .= qq[<p><a href="./fhem?detail=$name">${Translations{'HTMLChart'}{'title'}{$language}}</a>];
-    $as_html .= sprintf(q{<p>%s: %s</p>},
+    $as_html .= qq[<p><a href="./fhem?detail=$name">$name</a>];
+    $as_html .= sprintf(q{<p>%s %s %s</p>},
         $Translations{'HTMLChart'}{'data_start'}{$language},
-        ::ReadingsVal( $name, 'rainDataStart', 'unknown' )
+        $Translations{'general'}{'at'}{$language},
+        ::ReadingsVal( $name, 'rainDataStart', $Translations{'general'}{'unknown'}{$language} )
     );
     my $factor =
       ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
