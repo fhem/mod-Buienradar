@@ -506,7 +506,7 @@ sub Define {
         $latitude  = ::AttrVal( 'global', 'latitude',  51.0 );
         $longitude = ::AttrVal( 'global', 'longitude', 7.0 );
     }
-    elsif ( arguments_length == 4 ) {
+    elsif ( $arguments_length == 4 ) {
         $latitude  = $arguments[2];
         $longitude = $arguments[3];
     }
