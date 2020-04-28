@@ -496,16 +496,17 @@ sub Define {
 
     my @arguments = split( '[ \t][ \t]*', $def );
     my $name = $arguments[0];
+    my $arguments_length = scalar @arguments;
     my $latitude;
     my $longitude;
     my $language = lc ::AttrVal('global', 'language', 'DE');
 
-    if ( ( int(@arguments) == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
+    if ( ( $arguments_length == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
     {
         $latitude  = ::AttrVal( 'global', 'latitude',  51.0 );
         $longitude = ::AttrVal( 'global', 'longitude', 7.0 );
     }
-    elsif ( int(@arguments) == 4 ) {
+    elsif ( arguments_length == 4 ) {
         $latitude  = $arguments[2];
         $longitude = $arguments[3];
     }
