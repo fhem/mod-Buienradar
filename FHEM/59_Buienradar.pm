@@ -110,14 +110,18 @@ Readonly my %Translations => (
         },
     },
     'Attr'    => {
-        'interval' => {
+        'interval'      => {
             'de' => 'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
             'en' => 'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
         },
-        'region'   => {
+        'region'        => {
             'de' => q{ist kein valider Wert für die Region. Einzig 'de' oder 'nl' werden unterstützt!},
             'en' => q{is no valid value for region. Only 'de' or 'nl' are allowed!},
-        }
+        },
+        'default_chart' => {
+            'de' => q{ist kein valider Wert für den Standard-Graphen. Valide Werte sind none, GChart,TextChart oder HTMLChart},
+            'en' => q{is not a valid value for the default chart. Valid values are none, GChart,TextChart or HTMLChart},
+        },
     },
 );
 
@@ -225,7 +229,8 @@ sub Initialize {
         (
             'disabled:on,off',
             'region:nl,de',
-            'interval:10,60,120,180,240,300'
+            'interval:10,60,120,180,240,300',
+            'default_chart:none,HTMLChart,GChart,TextChart'
         )
     ) . qq[ $::readingFnAttributes ];
     $hash->{REGION} = $default_region;
@@ -244,12 +249,16 @@ sub Detail {
 
     # @todo error in the second return: missing target attribute
     # @todo I18N
-    if (::ReadingsVal($name, 'rainData', 'unknown') ne 'unknown') {
-        return
-            HTML($name) . qq[<p><a href="$hash->{URL}" target="_blank">Raw JSON data (new window)</a></p> ];
-    } else {
-        return qq[<div><a href="$hash->{URL}">Raw JSON data (new window)</a></div>];
+    if (::ReadingsVal($name, 'rainData', 'unknown') ne q{unknown}) {
+        for (::AttrVal($name, q{default_chart}, q{none})) {
+            when (q{HTMLChart}) { return HTML($name) }
+            when (q{GChart}) { return GChart($name) }
+            when (q{TextChart}) { return q{<pre><code>} . TextChart($name, q{#}) . q{</code></pre}}
+            default { return q{} }
+        }
     }
+
+    return;
 }
 
 #####################################
@@ -502,6 +511,18 @@ sub Attr {
 
             Timer($hash);
             return;
+        }
+
+        when (q{default_chart}) {
+            for ($command) {
+                when (q{set}) {
+                    return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'default_chart'}{$language}}])
+                        if not grep {$attribute_value} qw{ none HTMLChart GChart TextChart };
+                }
+                when (q{del}) {
+                    return;
+                }
+            }
         }
 
     }
@@ -874,9 +895,8 @@ sub TextChart {
 
     my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
-    my ($time, $precip, $bar);
     my $data = join qq{\n}, map {
-        join ' | ', ShowTextChartBar(%{ Storable::thaw($hash->{'.SERIALIZED'}) }, $bar_character);
+        join ' | ', ShowTextChartBar($hash->{q{.SERIALIZED}}, $bar_character);
     } sort keys %storedData;
 
     return $data;
@@ -888,8 +908,9 @@ sub TextChart {
 
 =cut
 sub ShowTextChartBar {
-    my %storedData = shift;
-    my $bar_character = shift;
+    my $data            = shift;
+    my $bar_character   = shift;
+    my %storedData      = %{ Storable::thaw($data) };
 
     my ($time, $precip, $bar) = (
         POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
