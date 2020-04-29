@@ -1,2 +1,2 @@
 DEL ./FHEM/59_Buienradar.pm
-UPD 2020-04-28_20:44:20 46818 FHEM/59_Buienradar.pm
+UPD 2020-04-29_16:56:14 46807 FHEM/59_Buienradar.pm
