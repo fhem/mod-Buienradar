@@ -251,7 +251,7 @@ sub Detail {
         for (::AttrVal($name, q{default_chart}, q{none})) {
             when (q{HTMLChart}) { return HTML($name) }
             when (q{GChart}) { return GChart($name) }
-            when (q{TextChart}) { return q{<pre><code>} . TextChart($name, q{#}) . q{</code></pre}}
+            when (q{TextChart}) { return q[<pre>] . TextChart($name, q{#}) . q[</pre>] }
             default { return q{} }
         }
     }
