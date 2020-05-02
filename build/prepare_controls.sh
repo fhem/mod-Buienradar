@@ -69,5 +69,5 @@ update_changed() {
 }
 
 substitute
-create_controlfile
-update_changed
+# create_controlfile
+# update_changed
