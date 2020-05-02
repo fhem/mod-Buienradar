@@ -24,11 +24,6 @@ jobs:
         run: |
           bash $CONTROLS_CREATE_SCRIPT $CONTROLS_FILENAME
           cat $CONTROLS_FILENAME
-      - name: update CHANGED
-        run: |
-          LOG=$(date +"%Y-%m-%d")
-          LOG+=" - $(git log -1 --pretty=%B)"
-          echo "$LOG" | cat - CHANGED > temp && mv temp CHANGED
       - name: git commit back
         run: |
           git config --global user.email "action@github.com"
