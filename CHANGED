@@ -1,14 +1,8 @@
-# Release v3.0.7
-## Content
-[See complete list](https://github.com/fhem/mod-Buienradar/milestone/9)
-
-### Bugfixes
+Release v3.0.7
 Fixes #119 Missing labels in the GChart
 Fixes #114 Quoting in GChart HTML markup was broken and threw an error
 Fixes #117 fixed an issue with missing device name in the HTML bar chart, added translations
 Fixes #91 POD throws some errors
-
-### Enhancements
 Closes #113 Added GitHub actions for creating the controls, documentation and meta data
 Closes #104 `@a` is ambiguous, `@arguments` is not
 Closes #122 Don't use `int` for getting the array length
@@ -20,6 +14,4 @@ Closes #103 Make default chart configurable
 Closes #125 Refactored TextChart for a more economic approach to handling stored data 
 Closes #126 unified handling for `$language`
 Closes #120 CHANGED is not very interesting
-
-### Documentation
 Closes #112 Updated the README: clarified the branching model, added installation advice, fixed some mispellings
