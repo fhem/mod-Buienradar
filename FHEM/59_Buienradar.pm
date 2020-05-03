@@ -58,7 +58,7 @@ use Readonly;
     Settings
 
 =cut
-Readonly our $version               => '3.0.6';
+Readonly our $version               => '3.0.7';
 Readonly our $default_interval      => ONE_MINUTE * 2;
 Readonly our $debugging_min_verbose => 4;
 Readonly our $default_region        => q{de};
