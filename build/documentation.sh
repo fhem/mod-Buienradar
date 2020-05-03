@@ -45,3 +45,5 @@ substitute() {
     git add CommandRef.*
     git add meta.json
 }
+
+substitute
