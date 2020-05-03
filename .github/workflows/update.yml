@@ -22,8 +22,7 @@ jobs:
           filename: $CONTROLS_FILENAME
       - name: Add Documentation
         run: |
-          bash $CONTROLS_CREATE_SCRIPT $CONTROLS_FILENAME
-          cat $CONTROLS_FILENAME
+          bash $DOCUMENTATION_SCRIPT
       - name: Update CHANGED file
         run: |
           LOG=$(date +"%Y-%m-%d")
