@@ -50,30 +50,45 @@ use English;
 use Storable;
 use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
-use 5.010;                                  # we do not want perl be older than from 2007
+use 5.0101;                          # we do not want perl be older than from 2007, so > 5.10.1
 use Readonly;
 
 =pod
+
     Settings
+
 =cut
-Readonly our $version               => '3.0.6';
+Readonly our $version               => '3.0.7';
 Readonly our $default_interval      => ONE_MINUTE * 2;
 Readonly our $debugging_min_verbose => 4;
 Readonly our $default_region        => q{de};
 Readonly our $default_bar_character => q{=};
+Readonly our $default_language      => q{en};
 
 =pod
+
     Translations
+
 =cut
 Readonly my %Translations => (
+    'general' => {
+        'unknown' => {
+            'de' => q{unbekannt},
+            'en' => q{unknown},
+        },
+        'at' => {
+            'de' => q{um},
+            'en' => q{at},
+        }
+    },
     'HTMLChart' => {
         'title'      => {
             'de' => q{Niederschlagsdiagramm},
             'en' => q{Precipitation chart}
         },
         'data_start' => {
-            'de' => q{Datenbeginn um},
-            'en' => q{Data start at},
+            'de' => q{Datenbeginn},
+            'en' => q{Data start},
         }
     },
     'GChart' => {
@@ -95,24 +110,28 @@ Readonly my %Translations => (
         },
     },
     'Attr'    => {
-        'interval' => {
+        'interval'      => {
             'de' => 'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
             'en' => 'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
         },
-        'region'   => {
+        'region'        => {
             'de' => q{ist kein valider Wert für die Region. Einzig 'de' oder 'nl' werden unterstützt!},
             'en' => q{is no valid value for region. Only 'de' or 'nl' are allowed!},
-        }
+        },
+        'default_chart' => {
+            'de' => q{ist kein valider Wert für den Standard-Graphen. Valide Werte sind none, GChart,TextChart oder HTMLChart},
+            'en' => q{is not a valid value for the default chart. Valid values are none, GChart,TextChart or HTMLChart},
+        },
     },
 );
 
 =pod
+
     Global variables
+
 =cut
 my @errors;
 my $global_hash;
-my $language;
-
 
 GP_Export(
     qw(
@@ -196,7 +215,7 @@ if (!$eval_return) {
 #####################################
 sub Initialize {
 
-    my ($hash) = @_;
+    my $hash = shift;
 
     $hash->{DefFn}       = \&FHEM::Buienradar::Define;
     $hash->{UndefFn}     = \&FHEM::Buienradar::Undefine;
@@ -208,7 +227,8 @@ sub Initialize {
         (
             'disabled:on,off',
             'region:nl,de',
-            'interval:10,60,120,180,240,300'
+            'interval:10,60,120,180,240,300',
+            'default_chart:none,HTMLChart,GChart,TextChart'
         )
     ) . qq[ $::readingFnAttributes ];
     $hash->{REGION} = $default_region;
@@ -217,25 +237,32 @@ sub Initialize {
 }
 
 sub Detail {
-    my ( $FW_wname, $name, $room, $pageHash ) =
-      @_;    # pageHash is set for summaryFn.
-    my $hash = GetHash($name);
+    my $FW_wname    = shift;
+    my $name        = shift;
+    my $room        = shift;
+    my $pageHash    = shift;
+    my $hash        = GetHash($name);
 
     return if ( !defined( $hash->{URL} ) );
 
     # @todo error in the second return: missing target attribute
     # @todo I18N
-    if (::ReadingsVal($hash->{NAME}, 'rainData', 'unknown') ne 'unknown') {
-        return
-            HTML($hash->{NAME}) . qq[<p><a href="$hash->{URL}" target="_blank">Raw JSON data (new window)</a></p> ]
-    } else {
-        return qq[<div><a href="$hash->{URL}">Raw JSON data (new window)</a></div>];
+    if (::ReadingsVal($name, 'rainData', 'unknown') ne q{unknown}) {
+        for (::AttrVal($name, q{default_chart}, q{none})) {
+            when (q{HTMLChart}) { return HTML($name) }
+            when (q{GChart}) { return GChart($name) }
+            when (q{TextChart}) { return q[<pre>] . TextChart($name, q{#}) . q[</pre>] }
+            default { return q{} }
+        }
     }
+
+    return;
 }
 
 #####################################
 sub Undefine {
-    my ( $hash, $arg ) = @_;
+    my $hash    = shift;
+    my $arg     = shift;
     ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
     return;
 }
@@ -334,13 +361,26 @@ sub Enable {
 }
 ## use critic
 
+=pod
+
+    Get the value of the global language setting
+
+=cut
+sub GetLanguage {
+    return lc ::AttrVal(q{global}, 'language', 'en')
+}
+
 ###################################
 sub Set {
-    my ( $hash, $name, $opt, @args ) = @_;
+    my $hash = shift;
+    my $name = shift;
+    my $opt  = shift;
+    my @args = shift;
+
     return qq['set $name' needs at least one argument] unless ( defined($opt) );
 
-    given ($opt) {
-        when ('refresh') {
+    for ($opt) {
+        when (q{refresh}) {
             RequestUpdate($hash);
             return q{};
         }
@@ -355,11 +395,14 @@ sub Set {
 
 sub Get {
 
-    my ( $hash, $name, $opt, @args ) = @_;
+    my $hash = shift;
+    my $name = shift;
+    my $opt  = shift;
+    my @args = shift;
 
     return qq['get $name' needs at least one argument] unless ( defined($opt) );
 
-    given($opt)
+    for ($opt)
     {
         when ('version') {
             return $version;
@@ -374,21 +417,25 @@ sub Get {
             my $timeDiffSec = $begin - time;
             return scalar timediff2str($timeDiffSec);
         }
-    }
 
-    if ( $opt eq 'rainDuration' ) {
-        return ::ReadingsVal($name, 'rainDuration', 'unknown');
-    }
-    else {
-        return qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
-    }
+        when ('rainDuration') {
+            return ::ReadingsVal($name, 'rainDuration', 'unknown');
+        }
 
+        default {
+            return qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
+        }
+    }
     return;
 }
 
 sub Attr {
-    my ($command, $name, $attribute_name, $attribute_value) = @_;
-    my $hash = GetHash($name);
+    my $command         = shift;
+    my $name            = shift;
+    my $attribute_name  = shift;
+    my $attribute_value = shift;
+    my $hash            = GetHash($name);
+    my $language        = GetLanguage();
     
     Debugging($name, Dumper({
         command     =>  $command,
@@ -397,12 +444,12 @@ sub Attr {
         value       =>  $attribute_value
     }));
 
-    given ($attribute_name) {
+    for ($attribute_name) {
         # JFTR: disabled will also set disable to be compatible to FHEM::IsDisabled()
         #       This is a ugly hack, with some side-effects like you can set disabled, disable will be automatically
         #       set, you can delete disable but disabled will still be set.
         when ('disabled') {
-            given ($command) {
+            for ($command) {
                 when ('set') {
                     return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
                         if $attribute_value !~ /^(?: on | off | 0 | 1 )$/x;
@@ -433,7 +480,7 @@ sub Attr {
             return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
                 if $attribute_value !~ /^(?: de | nl )$/x and $command eq 'set';
 
-            given ($command) {
+            for ($command) {
                 when ('set') {
                     $hash->{REGION} = $attribute_value;
                 }
@@ -451,7 +498,7 @@ sub Attr {
             return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
                 if $attribute_value !~ /^(?: 10 | 60 | 120 | 180 | 240 | 300 )$/x and $command eq 'set';
 
-            given ($command) {
+            for ($command) {
                 when ('set') {
                     $hash->{INTERVAL} = $attribute_value;
                 }
@@ -465,6 +512,18 @@ sub Attr {
             return;
         }
 
+        when (q{default_chart}) {
+            for ($command) {
+                when (q{set}) {
+                    return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'default_chart'}{$language}}])
+                        if not grep {$attribute_value} qw{ none HTMLChart GChart TextChart };
+                }
+                when (q{del}) {
+                    return;
+                }
+            }
+        }
+
     }
 
     return;
@@ -473,23 +532,25 @@ sub Attr {
 #####################################
 sub Define {
 
-    my ( $hash, $def ) = @_;
-    $global_hash = $hash;
+    my $hash        = shift;
+    my $def         = shift;
+    $global_hash    = $hash;
 
-    my @a = split( '[ \t][ \t]*', $def );
-    my $name = $a[0];
+    my @arguments = split( '[ \t][ \t]*', $def );
+    my $name = $arguments[0];
+    my $arguments_length = scalar @arguments;
     my $latitude;
     my $longitude;
-    my $language = lc ::AttrVal('global', 'language', 'DE');
+    my $language = GetLanguage();
 
-    if ( ( int(@a) == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
+    if ( ( $arguments_length == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
     {
         $latitude  = ::AttrVal( 'global', 'latitude',  51.0 );
         $longitude = ::AttrVal( 'global', 'longitude', 7.0 );
     }
-    elsif ( int(@a) == 4 ) {
-        $latitude  = $a[2];
-        $longitude = $a[3];
+    elsif ( $arguments_length == 4 ) {
+        $latitude  = $arguments[2];
+        $longitude = $arguments[3];
     }
     else {
         return Error($name, q{Syntax: define <name> Buienradar [<latitude> <longitude>]})
@@ -527,7 +588,7 @@ sub Define {
 }
 
 sub Timer {
-    my ($hash) = @_;
+    my ($hash) = shift;
     my $nextupdate = 0;
 
     ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
@@ -542,12 +603,13 @@ sub Timer {
 }
 
 sub RequestUpdate {
-    my ($hash) = @_;
-    my $region = $hash->{REGION};
+    my ($hash)  = shift;
+    my $region  = $hash->{REGION};
+    my $name    = $hash->{NAME};
 
     # @todo candidate for refactoring to sprintf
     $hash->{URL} =
-      ::AttrVal( $hash->{NAME}, 'BaseUrl', 'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php' )
+      ::AttrVal( $name, 'BaseUrl', 'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php' )
         . '?lat='       . $hash->{LATITUDE}
         . '&lon='       . $hash->{LONGITUDE}
         . '&region='    . $region
@@ -562,15 +624,17 @@ sub RequestUpdate {
     };
 
     ::HttpUtils_NonblockingGet($param);
-    Debugging($hash->{NAME}, q{Data update requested});
+    Debugging($name, q{Data update requested});
 
     return;
 }
 
 sub HTML {
-    my ( $name, $width ) = @_;
-    my $hash = GetHash($name);
-    my @values = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
+    my $name        = shift;
+    my $width       = shift;
+    my $hash        = GetHash($name);
+    my @values      = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
+    my $language    = GetLanguage();
 
     my $as_html = <<'CSS_STYLE';
 <style>
@@ -588,10 +652,11 @@ sub HTML {
 <div class='buienradar'>
 CSS_STYLE
 
-    $as_html .= qq[<p><a href="./fhem?detail=$name">${Translations{'HTMLChart'}{'title'}{$language}}</a>];
-    $as_html .= sprintf(q{<p>%s: %s</p>},
+    $as_html .= qq[<p><a href="./fhem?detail=$name">$name</a>];
+    $as_html .= sprintf(q{<p>%s %s %s</p>},
         $Translations{'HTMLChart'}{'data_start'}{$language},
-        ::ReadingsVal( $name, 'rainDataStart', 'unknown' )
+        $Translations{'general'}{'at'}{$language},
+        ::ReadingsVal( $name, 'rainDataStart', $Translations{'general'}{'unknown'}{$language} )
     );
     my $factor =
       ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
@@ -637,6 +702,7 @@ a PNG data.
 sub GChart {
     my $name = shift;
     my $hash = GetHash($name);
+    my $language = GetLanguage();
 
     unless ($hash->{'.SERIALIZED'}) {
         Error($name, q{Can't return serizalized data for FHEM::Buienradar::GChart.});
@@ -660,6 +726,8 @@ sub GChart {
         $hash->{LONGITUDE}
     );
     my $legend  = $Translations{'GChart'}{'legend'}{$language};
+    Debugging($name, qq{Legend langauge is: $language});
+    Debugging($name, qq{Legend is: $legend});
 
     return <<"CHART"
 <div id='chart_${name}'; style='width:100%; height:100%'></div>
@@ -692,7 +760,7 @@ sub GChart {
         var my_div = document.getElementById(
             'chart_${name}');        var chart = new google.visualization.AreaChart(my_div);
         google.visualization.events.addListener(chart, 'ready', function () {
-            my_div.innerHTML = '<img src='' + chart.getImageURI() + ''>';
+            my_div.innerHTML = '<img src=' + chart.getImageURI() + '>';
         });
 
         chart.draw(data, options);}
@@ -826,20 +894,22 @@ sub TextChart {
 
     my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
-    my ($time, $precip, $bar);
     my $data = join qq{\n}, map {
-        join ' | ', ShowTextChartBar(%{ Storable::thaw($hash->{'.SERIALIZED'}) }, $bar_character);
+        join ' | ', ShowTextChartBar($hash->{q{.SERIALIZED}}, $bar_character);
     } sort keys %storedData;
 
     return $data;
 }
 
 =pod
+
     Build the char bar for the text chart
+
 =cut
 sub ShowTextChartBar {
-    my %storedData = shift;
-    my $bar_character = shift;
+    my $data            = shift;
+    my $bar_character   = shift;
+    my %storedData      = %{ Storable::thaw($data) };
 
     my ($time, $precip, $bar) = (
         POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
@@ -856,14 +926,18 @@ sub ShowTextChartBar {
 
 ## no critic (ProhibitExcessComplexity)
 =pod
+
     @todo
-    Must be
+    Must be refactored
+
 =cut
 sub ParseHttpResponse {
-    my ( $param, $err, $data ) = @_;
-    my $hash = $param->{hash};
-    my $name = $hash->{NAME};
-    $hash->{'.RainStart'} = undef;
+    my $param               = shift;
+    my $err                 = shift;
+    my $data                = shift;
+    my $hash                = $param->{hash};
+    my $name                = $hash->{NAME};
+    $hash->{'.RainStart'}   = undef;
 
     my %precipitation_forecast;
 
@@ -1051,6 +1125,8 @@ sub Error {
 1;
 
 =pod
+
+=encoding utf8
 
 =over 1
 
