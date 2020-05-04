@@ -16,7 +16,7 @@
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "3.0.6",
+    "version": "3.0.7",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
@@ -60,7 +60,8 @@
                 "FHEM": 5.00918799,
                 "perl": 5.10,
                 "Meta": 0,
-                "JSON": 0
+                "JSON": 0,
+                "Readonly": 0
             },
             "recommends": {
             
