@@ -14,7 +14,19 @@ set -o errexit
 # catch exits and clean up if any is catched
 trap "" INT TERM EXIT
 
-LIBRARY_DIR="/vagrant/deployment/"
+
+case "$1" in
+    deployment)
+        LIBRARY_DIR="/vagrant/deployment/"
+    ;;
+    integration)
+        LIBRARY_DIR="/vagrant/integration/"
+    ;;
+    default)
+        echo "$1 is not a valid environment: deployment or integration"
+    ;;
+esac
+
 LOCALE="de_DE.utf8"
 
 function install_puppet {
