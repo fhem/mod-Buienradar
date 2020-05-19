@@ -1,3 +1,4 @@
+2020-05-19 - #146 use -no_match_vars for English
 2020-05-19 - #145 $version → $VERSION
 2020-05-19 - #144 added missing POD sections, moved LICENSE below
 2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
