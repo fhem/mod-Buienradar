@@ -16,7 +16,7 @@ trap "" INT TERM EXIT
 
 
 case "$1" in
-    deployment)
+    development)
         LIBRARY_DIR="/vagrant/deployment/"
     ;;
     integration)

@@ -9,7 +9,7 @@
 
 Vagrant.configure("2") do |config|
 
-    config.vm.define "FHEM-Buienradar-Dev" do |machine|
+    config.vm.define "buienradar-dev" do |machine|
         machine.vm.box = "debian/contrib-buster64"
         machine.vm.hostname = "FHEM-Buienradar-Dev"
 
@@ -28,7 +28,10 @@ Vagrant.configure("2") do |config|
             v.memory = 2048
         end
 
-        machine.vm.provision "shell", path: "deployment.sh"
+        machine.vm.provision "shell" do |s|
+            s.path = "deployment.sh"
+            s.args = "development"
+        end
     end
 
     config.vm.define "FHEM-Buienradar-Integration" do |machine|
