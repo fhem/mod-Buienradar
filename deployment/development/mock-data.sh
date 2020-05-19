@@ -30,4 +30,4 @@ create_mockdata
 install_config
 
 systemctl restart apache2
-curl -Is 'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=51.9293504&lon=8.377413199999978&region=nl&unit=mm/u' --cacert /vagrant/deployment/mock-data/buienradar.crt
+curl -Is 'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=51.9293504&lon=8.377413199999978&region=nl&unit=mm/u' --cacert /vagrant/deployment/development/mock-data/buienradar.crt
