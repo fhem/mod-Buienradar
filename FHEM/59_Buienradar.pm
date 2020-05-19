@@ -52,6 +52,7 @@ use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
 use 5.0101;                          # we do not want perl be older than from 2007, so > 5.10.1
 use Readonly;
+use FHEM::Meta;
 
 =pod
 
@@ -233,7 +234,7 @@ sub Initialize {
     ) . qq[ $::readingFnAttributes ];
     $hash->{REGION} = $default_region;
 
-    return;
+    return FHEM::Meta::InitMod( __FILE__, $hash );
 }
 
 sub Detail {
@@ -535,6 +536,8 @@ sub Define {
     my $hash        = shift;
     my $def         = shift;
     $global_hash    = $hash;
+
+    return $@ unless ( FHEM::Meta::SetInternals($hash) );
 
     my @arguments = split( '[ \t][ \t]*', $def );
     my $name = $arguments[0];
