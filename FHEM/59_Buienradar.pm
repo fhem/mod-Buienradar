@@ -11,7 +11,7 @@ use List::Util;
 use Time::Seconds;
 use POSIX;
 use Data::Dumper;
-use English;
+use English qw( -no_match_vars );
 use Storable;
 use GPUtils qw(GP_Import GP_Export);
 use experimental qw( switch );
