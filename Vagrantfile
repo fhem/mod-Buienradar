@@ -29,14 +29,14 @@ Vagrant.configure("2") do |config|
         end
 
         machine.vm.provision "shell" do |s|
-            s.path = "deployment.sh"
+            s.path = "deployment/deployment.sh"
             s.args = "development"
         end
     end
 
-    config.vm.define "FHEM-Buienradar-Integration" do |machine|
+    config.vm.define "buienradar-integration" do |machine|
         machine.vm.box = "debian/contrib-buster64"
-        machine.vm.hostname = "FHEM-Buienradar-Integration"
+        machine.vm.hostname = "buienradar-integration"
 
         machine.vm.network "public_network", bridge: [
             "en0: WLAN (AirPort)",
@@ -54,7 +54,7 @@ Vagrant.configure("2") do |config|
         end
 
         machine.vm.provision "shell" do |s|
-            s.path = "deployment.sh"
+            s.path = "deployment/deployment.sh"
             s.args = "integration"
         end
     end

@@ -6,6 +6,8 @@
 #   |
 #   +----------------------------------------------------------------------------
 
+deployment_dir="/vagrant/deployment"
+
 # prepare environment
 #   See http://www.davidpashley.com/articles/writing-robust-shell-scripts/
 set -o nounset
@@ -17,10 +19,10 @@ trap "" INT TERM EXIT
 
 case "$1" in
     development)
-        LIBRARY_DIR="/vagrant/deployment/"
+        LIBRARY_DIR="$deployment_dir/development"
     ;;
     integration)
-        LIBRARY_DIR="/vagrant/integration/"
+        LIBRARY_DIR="$deployment_dir/integration"
     ;;
     default)
         echo "$1 is not a valid environment: deployment or integration"

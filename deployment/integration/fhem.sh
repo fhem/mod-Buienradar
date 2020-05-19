@@ -22,7 +22,7 @@ function install_fhem {
 
 function install_cfg {
     rm -rf /opt/fhem/fhem.cfg
-    ln -s /vagrant/integration/fhem/fhem.cfg /opt/fhem/fhem.cfg
+    ln -s /vagrant/development/integration/fhem/fhem.cfg /opt/fhem/fhem.cfg
 }
 
 function add_sudoers {
@@ -34,7 +34,7 @@ function add_sudoers {
 }
 
 function perl_modules {
-    cpanm install App::cpanoutdated Perl::PrereqScanner::NotQuiteLite IO::Socket::INET6 Socket6 Cpanel::JSON::XS
+    cpanm install App::cpanoutdated Perl::PrereqScanner::NotQuiteLite IO::Socket::INET6 Socket6 Cpanel::JSON::XS JSON::MaybeXS
 }
 
 perl_modules
