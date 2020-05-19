@@ -22,7 +22,7 @@ function install_fhem {
 
 function install_cfg {
     rm -rf /opt/fhem/fhem.cfg
-    ln -s /vagrant/deployment/developmentfhem/fhem.cfg /opt/fhem/fhem.cfg
+    ln -s /vagrant/deployment/development/fhem/fhem.cfg /opt/fhem/fhem.cfg
 }
 
 function install_modules {
