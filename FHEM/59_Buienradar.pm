@@ -1,38 +1,3 @@
-=pod
-
- This is free and unencumbered software released into the public domain.
-
-  59_Buienradar.pm
-       2018 lubeda
-       2019 ff. Christoph Morrison, <fhem@christoph-jeschke.de>
-
- Anyone is free to copy, modify, publish, use, compile, sell, or
- distribute this software, either in source code form or as a compiled
- binary, for any purpose, commercial or non-commercial, and by any
- means.
-
- In jurisdictions that recognize copyright laws, the author or authors
- of this software dedicate any and all copyright interest in the
- software to the public domain. We make this dedication for the benefit
- of the public at large and to the detriment of our heirs and
- successors. We intend this dedication to be an overt act of
- relinquishment in perpetuity of all present and future rights to this
- software under copyright law.
-
- THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
- OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- OTHER DEALINGS IN THE SOFTWARE.
-
-  For more information, please refer to <http://unlicense.org/>
-
- See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
-
-=cut
-
 # @todo
 # ATM, it's not possible to comply to this Perl::Critic rule, because
 # the current state of the FHEM API does require this bogus XX_Name.pm convention
@@ -1127,9 +1092,284 @@ sub Error {
 
 1;
 
+__END__
+
 =pod
 
 =encoding utf8
+
+=head1 NAME
+
+    FHEM::Buienradar - Support for Buienradar.nl precipitation data
+
+=head1 VERSION
+
+    3.0.8
+
+=head1 SYNOPSIS
+
+    See POD section below
+
+=head1 DESCRIPTION
+
+    See POD section below
+
+=head1 SUBROUTINES/METHODS
+
+=over 1
+
+=item timediff2str($seconds)
+
+Create a human readable representation for a given time t, like x minutes, y seconds, but only
+with the necessary pieces.
+
+Respects your wishes regarding scalar / list context, e.g.
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item *  C<$seconds> - time to handle in seconds
+
+=back
+
+=item Return values
+
+=over 3
+
+=item * If called in list context: a list containing four elements
+
+    # list context
+    say Dumper(timediff2str(10000))
+    > $VAR1 = '1';
+    > $VAR2 = '3';
+    > $VAR3 = '46';
+    > $VAR4 = '40';
+
+=item * If called in scalar context: a formatted string
+
+    say Dumper(scalar timediff2str(100000));
+    > $VAR1 = '1 Tage, 03 Stunden, 46 Minuten, 40 Sekunden';
+
+=back
+
+=back
+
+=item chart_textbar($device_name)
+
+Returns the precipitation data as textual chart representation
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item * C<$device_name> - name of the Buienradar device, getting the data from
+
+=back
+
+=item Return values
+
+=over 3
+
+=item * Text chart as a plain text string
+
+=begin text
+
+    8:25  |   0.000 |
+    18:30 |   0.000 |
+    18:35 |   0.000 |
+    18:40 |   0.000 |
+    18:45 |   0.000 |
+    18:50 |   0.000 |
+    18:55 |   0.000 |
+    19:00 |   0.000 |
+    19:05 |   0.000 |
+    19:10 |   0.000 |
+    19:15 |   0.060 | #
+    19:20 |   0.370 | ####
+    19:25 |   0.650 | #######
+    19:30 |   0.490 | #####
+    19:35 |   0.220 | ##
+    19:40 |   0.110 | #
+    19:45 |   0.290 | ###
+    19:50 |   0.560 | ######
+    19:55 |   0.700 | #######
+    20:00 |   0.320 | ###
+    20:05 |   0.560 | ######
+    20:10 |   0.870 | #########
+    20:15 |   0.810 | ########
+    20:20 |   1.910 | ###################
+    20:25 |   1.070 | ###########
+
+=end text
+
+=back
+
+=back
+
+=item chart_html_bar($device_name, $max_width)
+
+Get precipitation data as HTML bar chart
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item * C<$device_name> - name of the Buienradar device, getting the data from
+
+=item * C<$width> - Maximum width in px for the HTML bars
+
+=back
+
+=item Return values
+
+=over 3
+
+=item * Chart as HTML as single string
+
+=back
+
+=back
+
+=item chart_gchart($device_name)
+
+Get precipitation data as Google Chart
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item * C<$device_name> - name of the Buienradar device, getting the data from
+
+=back
+
+=item Return values
+
+Log look-alike data, like
+
+=over 3
+
+=item   * The generated HTML source code
+
+=back
+
+=back
+
+=item logproxy_wrapper($device_name)
+
+Returns FHEM log look-alike data from the current data for using it with
+FTUI.
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item * C<$device_name> - name of the Buienradar device, getting the data from
+
+=back
+
+=item Return values
+
+=over 3
+
+=item   * LogProxy compatible data
+
+=begin text
+
+2019-08-05_14:40:00 0.000
+2019-08-05_13:45:00 0.000
+2019-08-05_14:25:00 0.000
+2019-08-05_15:15:00 0.000
+2019-08-05_14:55:00 0.000
+2019-08-05_15:30:00 0.000
+2019-08-05_14:45:00 0.000
+2019-08-05_15:25:00 0.000
+2019-08-05_13:30:00 0.000
+2019-08-05_13:50:00 0.000
+
+=end text
+
+=item   * Fixed value of 0
+
+=item   * Maximal amount of rain in a 5 minute interval
+
+=back
+
+=back
+
+=back
+
+=head1 DIAGNOSTICS
+
+=head1 AUTHOR
+
+    Christoph Morrison, <fhem@christoph-jeschke.de>
+    <https://github.com/christoph-morrison>
+
+=head1 CONTRIBUTORS
+
+    lubeda <https://github.com/lubeda>
+
+=head1 DEPENDENCIES
+
+=over 1
+
+=item * Perl 5.13.9
+
+=item * Readonly <https://metacpan.org/pod/Readonly>
+
+=item * JSON::MaybeXS <https://metacpan.org/pod/JSON::MaybeXS>
+
+=back
+
+=head1 INCOMPATIBILITIES
+
+=head1 CONFIGURATION AND ENVIRONMENT
+
+=head1 BUGS AND LIMITATIONS
+
+    Please report bugs here: <https://github.com/fhem/mod-Buienradar/issues>
+
+=head1 LICENSE AND COPYRIGHT
+
+    SPDX Identifier: Unlicense
+
+    This is free and unencumbered software released into the public domain.
+
+    Anyone is free to copy, modify, publish, use, compile, sell, or
+    distribute this software, either in source code form or as a compiled
+    binary, for any purpose, commercial or non-commercial, and by any
+    means.
+
+    In jurisdictions that recognize copyright laws, the author or authors
+    of this software dedicate any and all copyright interest in the
+    software to the public domain. We make this dedication for the benefit
+    of the public at large and to the detriment of our heirs and
+    successors. We intend this dedication to be an overt act of
+    relinquishment in perpetuity of all present and future rights to this
+    software under copyright law.
+
+    THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+    OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+
+    For more information, please refer to <http://unlicense.org/>
+
+    See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
 
 =over 1
 
