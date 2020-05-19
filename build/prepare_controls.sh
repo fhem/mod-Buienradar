@@ -37,6 +37,4 @@ update_changed() {
     git add CHANGED
 }
 
-# substitute
 create_controlfile
-# update_changed
