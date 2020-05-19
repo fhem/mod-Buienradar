@@ -934,7 +934,7 @@ sub ShowTextChartBar {
         sprintf('% 7.3f', $storedData{$_}{'precipitation'}),
         (
             ($storedData{$_}{'precipitation'} < 50)
-                ? $bar_character x  POSIX::lround(abs($storedData{$_}{'precipitation'} * 10))
+                ? $bar_character x  POSIX::lround(abs $storedData{$_}{'precipitation'} * 10)
                 : ($bar_character x  50) . q{>}
         ),
     );
