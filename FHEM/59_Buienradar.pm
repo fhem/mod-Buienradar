@@ -24,7 +24,7 @@ use FHEM::Meta;
     Settings
 
 =cut
-Readonly our $version               => '3.0.7';
+Readonly our $VERSION               => q{3.0.7};
 Readonly our $default_interval      => ONE_MINUTE * 2;
 Readonly our $debugging_min_verbose => 4;
 Readonly our $default_region        => q{de};
@@ -371,7 +371,7 @@ sub Get {
     for ($opt)
     {
         when ('version') {
-            return $version;
+            return $VERSION;
         }
 
         # @todo I18N
@@ -528,7 +528,7 @@ sub Define {
 
 
     $hash->{NAME}       = $name;
-    $hash->{VERSION}    = $version;
+    $hash->{VERSION}    = $VERSION;
     $hash->{INTERVAL}   = $default_interval;
     $hash->{LATITUDE}   = $latitude;
     $hash->{LONGITUDE}  = $longitude;
