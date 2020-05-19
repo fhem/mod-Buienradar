@@ -927,14 +927,14 @@ sub TextChart {
 sub ShowTextChartBar {
     my $data            = shift;
     my $bar_character   = shift;
-    my %storedData      = %{ Storable::thaw($data) };
+    my %stored_data     = %{ Storable::thaw($data) };
 
     my ($time, $precip, $bar) = (
-        POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
-        sprintf('% 7.3f', $storedData{$_}{'precipitation'}),
+        POSIX::strftime('%H:%M', localtime $stored_data{$_}{'start'}),
+        sprintf('% 7.3f', $stored_data{$_}{'precipitation'}),
         (
-            ($storedData{$_}{'precipitation'} < 50)
-                ? $bar_character x  POSIX::lround(abs $storedData{$_}{'precipitation'} * 10)
+            ($stored_data{$_}{'precipitation'} < 50)
+                ? $bar_character x  POSIX::lround(abs $stored_data{$_}{'precipitation'} * 10)
                 : ($bar_character x  50) . q{>}
         ),
     );
