@@ -915,11 +915,11 @@ sub TextChart {
         return
     }
 
-    my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
+    my %stored_data = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
     my $data = join qq{\n}, map {
         join ' | ', chart_text_show_bar($hash->{q{.SERIALIZED}}, $bar_character);
-    } sort keys %storedData;
+    } sort keys %stored_data;
 
     return $data;
 }
