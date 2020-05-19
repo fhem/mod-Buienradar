@@ -33,7 +33,7 @@ Aktuell lassen sich folgende Daten mit einem Get-Aufruf beziehen:
 
 ### Readings
 Aktuell liefert Buienradar folgende Readings:
-* ``rainAmount``            - Menge des gemeldeten Niederschlags in mm/h für den nächsten 5-Minuten-Intervall.
+* ``rainAmount``            - Menge des gemeldeten Niederschlags für die nächste Stunde in mm/h.
 * ``rainBegin``             - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.
 * ``raindEnd``              - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.
 * ``rainDataStart``         - Zeitlicher Beginn der gelieferten Niederschlagsdaten.
@@ -91,3 +91,11 @@ Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, 
     ``>`` abgekürzt.
     
         23:00 |  11.800 | ==================================================>
+
+* Eine kompakte graphische Darstellung wird mit 
+
+        { FHEM::Buienradar::ColourBarChart("Name des Buienradar-Devices") }
+        
+    dargestellt. Erzeugt wird eine zweizeilige, mit CSS formatierte HTML-Tabelle, die für jeden Wert
+    eine eigene Zelle mit unterschiedlicher Blauintensität als Hintergrundfarbe und eine Legende
+    abbildet.

@@ -18,6 +18,8 @@ Vagrant.configure("2") do |config|
             "en0: Ethernet"
         ]
 
+        machine.vm.network "forwarded_port", guest: 8083, host: 8083
+
         # mount for later created user "fhem" with later uid 999
         machine.vm.synced_folder ".", "/vagrant",
             owner: "998", group: "dialout"

@@ -3,22 +3,25 @@
 #   Add a http server to mock json data
 #
 
+test -z "$APT_BIN" && APT_BIN="apt"
+
 function install_webserver {
-    apt install -y apache2 apache2-bin apache2-data apache2-utils
+    $APT_BIN install -y apache2
 }
 
 function redirect_dns {
     echo "127.0.0.1 cdn-secure.buienalarm.nl" |tee -a /etc/hosts
 }
 
-function create_mockdata {
+function create_mockdata
+{
     mkdir -p /var/www/html/api/3.4
     test -e /var/www/html/api/3.4/forecast.php && rm /var/www/html/api/3.4/forecast.php
     ln -s /vagrant/deployment/mock-data/forecast.json /var/www/html/api/3.4/forecast.php
 }
 
 function install_config {
-    test -e /etc/apache2/sites-available/mock-data.conf &&  rm /etc/apache2/sites-available/mock-data.conf
+    test -e /etc/apache2/sites-available/mock-data.conf && rm /etc/apache2/sites-available/mock-data.conf
     ln -s /vagrant/deployment/mock-data/mock-data.conf /etc/apache2/sites-available/
     a2enmod ssl
     a2ensite mock-data

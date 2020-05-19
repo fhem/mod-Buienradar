@@ -16,6 +16,7 @@ trap "" INT TERM EXIT
 
 LIBRARY_DIR="/vagrant/deployment/"
 LOCALE="de_DE.utf8"
+APT_BIN="apt"
 
 function install_puppet {
     puppet_source="https://apt.puppetlabs.com/puppetlabs-release-pc1-jessie.deb"
@@ -32,23 +33,27 @@ function install_puppet {
     echo Installing puppet from $puppet_target
 
     dpkg -i $puppet_target
-    $APT_BIN -q update
-    $APT_BIN install -y puppet-agent
+    aptitude -q update
+    aptitude install -y puppet-agent
 
 }
 
-function setup_pm {
+function setup_apt {
     echo '##########################'
     echo '##########################'
-    echo Installing apt
+    echo Determing package management tool
 
     apt-get --allow-releaseinfo-change update
 
-    command -v apt || {
-        apt-get install -y apt
+    command -v aptitude && {
+        APT_BIN="aptitude"
     }
 
-    export APT_BIN="apt"
+    command -v apt && {
+        APT_BIN="apt"
+    }
+
+    echo "Using $APT_BIN for package-management";
 }
 
 function upgrade_system {
@@ -56,7 +61,7 @@ function upgrade_system {
     echo '##########################'
     echo Upgrading system
 
-    $APT_BIN -q update
+    $APT_BIN update
     $APT_BIN -y upgrade
 }
 
@@ -79,7 +84,7 @@ function set_time {
     dpkg-reconfigure -f noninteractive tzdata
     
     # update time via ntp
-    # $APT_BIN install ntpdate
+    # aptitude install ntpdate
     # ntpdate europe.pool.ntp.org
 
     # activate ntp and set timezone in systemd-mode
@@ -135,12 +140,16 @@ function show_ip {
 
 export DEBIAN_FRONTEND=noninteractive
 
-#sudo -n su
-setup_pm
+
+
+sudo -n su
+setup_apt
 upgrade_system
 install_tools
 set_time
 set_locale
+show_ip
+
 
 # install application specific library files
 echo "Try to install files in library at ${LIBRARY_DIR}"
@@ -149,7 +158,7 @@ test -d "${LIBRARY_DIR}" && {
     for lib_file in $(find ${LIBRARY_DIR} -iname '*.sh');
     do
         echo "Executing file ${lib_file}"
-        bash ${lib_file};
+        bash "${lib_file}" "$APT_BIN";
     done
 }
 
