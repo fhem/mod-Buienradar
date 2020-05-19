@@ -1,4 +1,5 @@
 2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
+2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
 2020-05-19 - #138 fixed an issue with /deployment: FHEM did not start due missing fhem.cfg, apache did not start because of missing ssl certs
 2020-05-19 - #142 added NCoC
 2020-05-19 - #141 #134 added requirements / recommendations to the CRef and meta.json
