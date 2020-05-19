@@ -22,7 +22,7 @@ use FHEM::Meta;
 ############################################################    Default values
 Readonly our $VERSION               => q{3.0.7};
 Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
-Readonly our $debugging_min_verbose => 4;
+Readonly our $DEBUGGING_MIN_VERBOSE => 4;
 Readonly our $default_region        => q{de};
 Readonly our $default_bar_character => q{=};
 Readonly our $default_language      => q{en};
@@ -518,7 +518,7 @@ sub Debugging {
     local $OFS = qq{\n};
     my $device_name = shift;
     ::Debug(join($OFS, (qq{[$device_name]}, qq{@_}))) if (
-        int(::AttrVal(q{global}, q{verbose}, 0)) >= $debugging_min_verbose
+        int(::AttrVal(q{global}, q{verbose}, 0)) >= $DEBUGGING_MIN_VERBOSE
             or  int(::AttrVal($device_name, q{debug}, 0)) == 1
     );
     return;
