@@ -16,7 +16,7 @@
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "3.0.7",
+    "version": "3.0.8",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
@@ -58,13 +58,13 @@
         "runtime": {
             "requires": {
                 "FHEM": 5.00918799,
-                "perl": 5.10,
+                "perl": 5.0139,
                 "Meta": 0,
-                "JSON": 0,
+                "JSON::MaybeXS": 0,
                 "Readonly": 0
             },
             "recommends": {
-            
+                "JSON": 0
             },
             "suggests": {
             

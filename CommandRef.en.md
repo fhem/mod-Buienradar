@@ -3,6 +3,19 @@
 ## Buienradar
 Buienradar provides access to precipitation forecasts by the dutch service [Buienradar.nl](https://www.buienradar.nl).
 
+<span id="Buienradardependecies"></span>
+
+### Dependencies
+Buienradar depends on the following minimal versions or CPAN-Modules, <abbr>resp.</abbr> 
+
+* Perl ≥ 5.13.9
+* [Readonly](https://metacpan.org/pod/Readonly)
+* [JSON::MaybeXS](https://metacpan.org/pod/JSON::MaybeXS)
+
+Recommended is:
+
+* [Cpanel::JSON::XS](https://metacpan.org/pod/Cpanel::JSON::XS)
+
 <span id="Buienradardefine"></span>
 ### Define
     define <devicename> Buienradar [latitude] [longitude]
