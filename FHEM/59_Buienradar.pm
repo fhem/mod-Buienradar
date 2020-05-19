@@ -1389,7 +1389,7 @@ abgerufen werden.</code></pre>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "3.0.6",
+    "version": "3.0.8",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
@@ -1433,13 +1433,14 @@ abgerufen werden.</code></pre>
                 "FHEM": 5.00918799,
                 "perl": 5.10,
                 "Meta": 0,
-                "JSON": 0
+                "JSON::MaybeXS": 0,
+                "Readonly": 0
             },
             "recommends": {
-            
+                "Cpanel::JSON::XS": 0
             },
             "suggests": {
-            
+
             }
         }
     }
