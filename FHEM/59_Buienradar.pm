@@ -21,7 +21,7 @@ use FHEM::Meta;
 
 ############################################################    Default values
 Readonly our $VERSION               => q{3.0.7};
-Readonly our $default_interval      => ONE_MINUTE * 2;
+Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
 Readonly our $debugging_min_verbose => 4;
 Readonly our $default_region        => q{de};
 Readonly our $default_bar_character => q{=};
@@ -246,7 +246,7 @@ sub Define {
 
     $hash->{NAME}       = $name;
     $hash->{VERSION}    = $VERSION;
-    $hash->{INTERVAL}   = $default_interval;
+    $hash->{INTERVAL}   = $DEFAULT_INTERVAL;
     $hash->{LATITUDE}   = $latitude;
     $hash->{LONGITUDE}  = $longitude;
     $hash->{URL}        = undef;
@@ -264,7 +264,7 @@ sub Define {
     ::CommandAttr(undef, qq[$name region nl])
         unless (::AttrVal($name, 'region', undef));
 
-    ::CommandAttr(undef, qq[$name interval $FHEM::Buienradar::default_interval])
+    ::CommandAttr(undef, qq[$name interval $FHEM::Buienradar::DEFAULT_INTERVAL])
         unless (::AttrVal($name, 'interval', undef));
 
     Timer($hash);
@@ -412,7 +412,7 @@ sub Attr {
                 }
 
                 when ('del') {
-                    $hash->{INTERVAL} = $default_interval;
+                    $hash->{INTERVAL} = $DEFAULT_INTERVAL;
                 }
             }
 
