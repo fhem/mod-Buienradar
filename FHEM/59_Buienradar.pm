@@ -25,7 +25,7 @@ Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
 Readonly our $DEBUGGING_MIN_VERBOSE => 4;
 Readonly our $default_region        => q{de};
 Readonly our $default_bar_character => q{=};
-Readonly our $default_language      => q{en};
+Readonly our $DEFAULT_LANGUAGE      => q{en};
 Readonly our $DEFAULT_LATITUDE      => 51.0;
 Readonly our $DEFAULT_LONGITUDE     => 7.0;
 
@@ -472,7 +472,7 @@ sub enable_device {
 ## use critic
 
 sub get_global_language {
-    return lc ::AttrVal(q{global}, 'language', 'en')
+    return lc ::AttrVal(q{global}, 'language', $DEFAULT_LANGUAGE);
 }
 
 sub debug_message {
