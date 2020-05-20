@@ -289,7 +289,7 @@ sub Set {
 
     for ($opt) {
         when (q{refresh}) {
-            RequestUpdate($hash);
+            request_data_update($hash);
             return q{};
         }
 
@@ -398,7 +398,7 @@ sub Attr {
                 }
             }
 
-            RequestUpdate($hash);
+            request_data_update($hash);
             return;
         }
 
@@ -540,7 +540,7 @@ sub Timer {
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
     $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
-    RequestUpdate($hash);
+    request_data_update($hash);
 
     ::InternalTimer( $nextupdate, \&FHEM::Buienradar::Timer, $hash );
 
@@ -721,7 +721,7 @@ sub ResetResult {
     return;
 }
 
-sub RequestUpdate {
+sub request_data_update {
     my ($hash)  = shift;
     my $region  = $hash->{REGION};
     my $name    = $hash->{NAME};
