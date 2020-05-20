@@ -223,7 +223,7 @@ sub Define {
 
     return $@ unless ( FHEM::Meta::SetInternals($hash) );
 
-    my @arguments = split( '[ \t][ \t]*', $def );
+    my @arguments = split m{ \s+ }xms, $def;
     my $name = $arguments[0];
     my $arguments_length = scalar @arguments;
     my $latitude;
@@ -235,6 +235,7 @@ sub Define {
     Readonly my $ARGUMENT_POSITION_LATITUDE     => 2;
     Readonly my $ARGUMENT_POSITION_LONGITUDE    => 3;
 
+    # todo: Refactor to for()
     if ( $arguments_length == $ARGUMENT_LENGTH_WITHOUT_LOC )
     {
         $latitude  = ::AttrVal( 'global', 'latitude',  $DEFAULT_LATITUDE );
