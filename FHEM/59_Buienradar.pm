@@ -909,10 +909,10 @@ sub TextChart {
     my $bar_character = shift || $default_bar_character;
     my $hash = GetHash($name);
 
-    unless ($hash->{'.SERIALIZED'}) {
+    if (!$hash->{'.SERIALIZED'}) {
         Error($name, q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
         # return dummy data
-        return
+        return;
     }
 
     my %stored_data = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
