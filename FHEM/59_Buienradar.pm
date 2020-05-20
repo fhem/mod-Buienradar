@@ -221,7 +221,9 @@ sub Define {
     my $def         = shift;
     $global_hash    = $hash;
 
-    return $@ unless ( FHEM::Meta::SetInternals($hash) );
+    if (!FHEM::Meta::SetInternals($hash)) {
+        return $EVAL_ERROR
+    };
 
     my @arguments = split m{ \s+ }xms, $def;
     my $name = $arguments[0];
