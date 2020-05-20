@@ -564,6 +564,14 @@ sub parse_http_response {
     my $name  = $hash->{NAME};
     $hash->{'.RainStart'} = undef;
 
+    Readonly my $INTERVAL_LENGTH_MINUTES    => 5;
+    Readonly my $INTERVAL_LENGHT_SECONDS    => $INTERVAL_LENGTH_MINUTES * ONE_MINUTE;
+    # todo: secondary usage!
+    Readonly my $MINUTES_IN_HOUR            => 60;
+    Readonly my $TOTAL_PERCENTAGE           => 100;
+    Readonly my $LAMETRIC_MULTIPILIER       => 1000;
+    Readonly my $LAMETRIC_MAX_VALUES        => 12;
+
     my %precipitation_forecast;
 
     if ( $err ne q{} ) {
@@ -639,13 +647,13 @@ sub parse_http_response {
             q{Received data: } . Dumper( @{ $forecast_data->{'precip'} } ) );
 
         if ( scalar @precip > 0 ) {
-            my $data_lametric = join q{,}, map { $_ * 1000 } @precip[ 0 .. 11 ];
+            my $data_lametric = join q{,}, map { $_ * $LAMETRIC_MULTIPILIER } @precip[ 0 .. $LAMETRIC_MAX_VALUES-1 ];
             my $rain_total    = List::Util::sum @precip;
             my $rain_max      = List::Util::max @precip;
             my $rain_start    = undef;
             my $rain_end      = undef;
             my $data_start    = $forecast_data->{start};
-            my $data_end = $data_start + ( scalar @precip ) * 5 * ONE_MINUTE;
+            my $data_end = $data_start + ( scalar @precip ) * $INTERVAL_LENGHT_SECONDS;
             my $forecast_start      = $data_start;
             my $rain_now            = undef;
             my $rain_data           = join q{:}, @precip;
@@ -657,8 +665,8 @@ sub parse_http_response {
 
             for my $precip_index ( 0 .. $precip_length ) {
 
-                my $start  = $forecast_start + $precip_index * 5 * ONE_MINUTE;
-                my $end    = $start + 5 * ONE_MINUTE;
+                my $start  = $forecast_start + $precip_index * $INTERVAL_LENGHT_SECONDS;
+                my $end    = $start +  $INTERVAL_LENGHT_SECONDS;
                 my $precip = $precip[$precip_index];
                 $is_raining = undef;    # reset
 
@@ -753,18 +761,18 @@ sub parse_http_response {
             );
             ::readingsBulkUpdate( $hash, 'rainData', $rain_data );
             ::readingsBulkUpdate( $hash, 'rainDuration',
-                $intervals_with_rain * 5 );
+                $intervals_with_rain * $INTERVAL_LENGTH_MINUTES );
             ::readingsBulkUpdate( $hash, 'rainDurationIntervals',
                 $intervals_with_rain );
             ::readingsBulkUpdate( $hash, 'rainDurationPercent',
-                ( $intervals_with_rain / scalar @precip ) * 100 );
+                ( $intervals_with_rain / scalar @precip ) * $TOTAL_PERCENTAGE );
             ::readingsBulkUpdate(
                 $hash,
                 'rainDurationTime',
                 sprintf '%02d:%02d',
                     (
-                        ( $intervals_with_rain * 5 / 60 ),
-                        $intervals_with_rain * 5 % 60
+                        ( $intervals_with_rain * $INTERVAL_LENGTH_MINUTES / $MINUTES_IN_HOUR ),
+                        $intervals_with_rain * $INTERVAL_LENGTH_MINUTES % $MINUTES_IN_HOUR
                     )
             );
             ::readingsEndUpdate( $hash, 1 );
