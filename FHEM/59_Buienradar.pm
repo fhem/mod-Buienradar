@@ -226,7 +226,7 @@ sub Define {
     my $arguments_length = scalar @arguments;
     my $latitude;
     my $longitude;
-    my $language = GetLanguage();
+    my $language = get_global_language();
 
     if ( ( $arguments_length == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
     {
@@ -343,7 +343,7 @@ sub Attr {
     my $attribute_name  = shift;
     my $attribute_value = shift;
     my $hash            = GetHash($name);
-    my $language        = GetLanguage();
+    my $language        = get_global_language();
 
     debug_message($name, Dumper({
         command     =>  $command,
@@ -510,7 +510,7 @@ sub Enable {
 }
 ## use critic
 
-sub GetLanguage {
+sub get_global_language {
     return lc ::AttrVal(q{global}, 'language', 'en')
 }
 
@@ -766,7 +766,7 @@ sub chart_html_bar {
     my $width       = shift;
     my $hash        = GetHash($name);
     my @values      = split /:/xms, ::ReadingsVal($name, 'rainData', '0:0');
-    my $language    = GetLanguage();
+    my $language    = get_global_language();
 
     my $as_html = <<'CSS_STYLE';
 <style>
@@ -810,7 +810,7 @@ CSS_STYLE
 sub chart_gchart {
     my $name = shift;
     my $hash = GetHash($name);
-    my $language = GetLanguage();
+    my $language = get_global_language();
 
     if (!$hash->{'.SERIALIZED'}) {
         handle_error($name, q{Can't return serizalized data for FHEM::Buienradar::chart_gchart.});
