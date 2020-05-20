@@ -606,7 +606,7 @@ sub ParseHttpResponse {
         unless ($forecast_data->{'success'}) {
             $error = q{Got JSON from buienradar.nl, but had some troubles delivering meaningful data!};
             Error($name, qq{$error});
-            Debugging($name, join(q{}, map { qq{[$name] $_} } Dumper($data)));
+            Debugging($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             reset_request_result($hash);
             return;
