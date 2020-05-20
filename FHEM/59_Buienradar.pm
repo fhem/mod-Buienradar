@@ -628,7 +628,7 @@ sub ParseHttpResponse {
             my $forecast_start      = $dataStart;
             my $rainNow             = undef;
             my $rainData            = join(q{:}, @precip);
-            my $rainAmount          = $precip[0];
+            my $rain_amount         = $precip[0];
             my $is_raining          = undef;
             my $intervals_with_rain = scalar map { $_ > 0 ? $_ : () } @precip;
             $hash->{'.RainStart'}   = q{unknown};
@@ -681,7 +681,7 @@ sub ParseHttpResponse {
             ::readingsBeginUpdate($hash);
             ::readingsBulkUpdate( $hash, 'state', $rainNow ? sprintf '%.3f', $rainNow : 'unknown');
             ::readingsBulkUpdate( $hash, 'rainTotal', sprintf '%.3f', $rainTotal);
-            ::readingsBulkUpdate( $hash, 'rainAmount', sprintf '%.3f', $rainAmount);
+            ::readingsBulkUpdate( $hash, 'rainAmount', sprintf '%.3f', $rain_amount);
             ::readingsBulkUpdate( $hash, 'rainNow', $rainNow ? sprintf '%.3f', $rainNow : 'unknown');
             ::readingsBulkUpdate( $hash, 'rainLaMetric', $rainLaMetric );
             ::readingsBulkUpdate( $hash, 'rainDataStart', POSIX::strftime '%R', localtime $dataStart);
