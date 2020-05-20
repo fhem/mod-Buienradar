@@ -517,10 +517,13 @@ sub GetLanguage {
 sub Debugging {
     local $OFS = qq{\n};
     my $device_name = shift;
-    ::Debug(join($OFS, (qq{[$device_name]}, qq{@_}))) if (
-        int(::AttrVal(q{global}, q{verbose}, 0)) >= $DEBUGGING_MIN_VERBOSE
-            or  int(::AttrVal($device_name, q{debug}, 0)) == 1
-    );
+    if (
+            int(::AttrVal(q{global}, q{verbose}, 0)) >= $DEBUGGING_MIN_VERBOSE
+        or  int(::AttrVal($device_name, q{debug}, 0)) == 1
+    ) {
+        ::Debug(join($OFS, (qq{[$device_name]}, qq{@_})));
+    }
+
     return;
 }
 
