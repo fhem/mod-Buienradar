@@ -169,6 +169,10 @@ if (!$eval_return) {
 }
 
 ############################################################    FHEM API related
+#   JFTR:
+#       ATM the FHEM API does need an Initialize() subroutine, so this is mandatory
+#
+## no critic (NamingConventions::Capitalization)
 sub Initialize {
 
     my $hash = shift;
@@ -191,6 +195,7 @@ sub Initialize {
 
     return FHEM::Meta::InitMod( __FILE__, $hash );
 }
+## use critic
 
 sub handle_fhemweb_details {
     my $fhemweb_name    = shift;
