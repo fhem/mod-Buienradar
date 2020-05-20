@@ -172,7 +172,7 @@ sub Initialize {
     my $hash = shift;
 
     $hash->{DefFn}       = \&FHEM::Buienradar::Define;
-    $hash->{UndefFn}     = \&FHEM::Buienradar::Undefine;
+    $hash->{UndefFn}     = \&FHEM::Buienradar::handle_undefine;
     $hash->{GetFn}       = \&FHEM::Buienradar::handle_get;
     $hash->{SetFn}       = \&FHEM::Buienradar::handle_set;
     $hash->{AttrFn}      = \&FHEM::Buienradar::handle_attributes;
@@ -272,7 +272,7 @@ sub Define {
     return;
 }
 
-sub Undefine {
+sub handle_undefine {
     my $hash    = shift;
     my $arg     = shift;
     ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::update_timer );
