@@ -362,7 +362,7 @@ sub Attr {
                     return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
                         if $attribute_value !~ /^(?: on | off | 0 | 1 )$/x;
 
-                    if ($attribute_value =~ /(?: on | 1 )/x) {
+                    if (List::Util::any { $_ eq $attribute_value } qw{ on 1 }) {
                         ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::update_timer );
                         disable_device($name);
                         $hash->{NEXTUPDATE} = undef;
