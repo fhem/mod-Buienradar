@@ -810,7 +810,7 @@ sub GChart {
     # read & parse stored data
     my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
     my $data = join ', ', map {
-        GetGChartDataSet($storedData{$_}{'start'}, $storedData{$_}{'precipitation'});
+        chart_gchart_get_dataset($storedData{$_}{'start'}, $storedData{$_}{'precipitation'});
     } sort keys %storedData;
 
     # create data for the GChart
@@ -865,7 +865,7 @@ sub GChart {
 CHART
 }
 
-sub GetGChartDataSet {
+sub chart_gchart_get_dataset {
     my $start = shift;
     my $precipitation = shift;
 
