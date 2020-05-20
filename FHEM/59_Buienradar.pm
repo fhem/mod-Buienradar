@@ -205,7 +205,7 @@ sub Detail {
         for (::AttrVal($name, q{default_chart}, q{none})) {
             when (q{HTMLChart}) { return HTML($name) }
             when (q{GChart}) { return GChart($name) }
-            when (q{TextChart}) { return q[<pre>] . TextChart($name, q{#}) . q[</pre>] }
+            when (q{TextChart}) { return q[<pre>] . chart_textbar($name, q{#}) . q[</pre>] }
             default { return q{} }
         }
     }
@@ -904,7 +904,7 @@ sub LogProxy {
     );
 }
 
-sub TextChart {
+sub chart_textbar {
     my $name = shift;
     my $bar_character = shift || $default_bar_character;
     my $hash = GetHash($name);

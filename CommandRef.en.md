@@ -103,13 +103,13 @@ Buienradar offers besides the usual view as device also the possibility to visua
         
 * A plain text representation can be displayed with
 
-        { FHEM::Buienradar::TextChart(q{buienradar device name}, q{bar chart character})}
+        { FHEM::Buienradar::chart_textbar(q{buienradar device name}, q{bar chart character})}
         
     The bar chart character is optional and defaults to `=`.
     
     Every line represents a record of the whole set, i.e. if called by
     
-        { FHEM::Buienradar::TextChart(q{buienradar_test_device}, q{#})}
+        { FHEM::Buienradar::chart_textbar(q{buienradar_test_device}, q{#})}
     
     the result will look similar to
     

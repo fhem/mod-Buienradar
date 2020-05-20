@@ -106,7 +106,7 @@ Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, 
         
     verwendet werden. Das `verwendete zeichen` ist optional und mit `=` vorbelegt. Ausgegeben wird beispielsweise für den Aufruf
     
-        { FHEM::Buienradar::TextChart(q{buienradar_test}, q{#}) }
+        { FHEM::Buienradar::chart_textbar(q{buienradar_test}, q{#}) }
         
      für jeden Datensatz eine Zeile im Muster
     
