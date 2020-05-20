@@ -261,8 +261,10 @@ sub Define {
     ::readingsEndUpdate( $hash, 1 );
 
     # set default region nl
-    ::CommandAttr(undef, qq[$name region nl])
-        unless (::AttrVal($name, 'region', undef));
+    if (!::AttrVal($name, 'region', undef)) {
+        ::CommandAttr(undef, qq[$name region nl]);
+    }
+
 
     if (!::AttrVal($name, 'interval', undef)) {
         ::CommandAttr(undef, qq[$name interval $FHEM::Buienradar::DEFAULT_INTERVAL]);
