@@ -370,7 +370,7 @@ sub Attr {
                         return;
                     }
 
-                    if ($attribute_value =~ /(?: off | 0 )/x) {
+                    if (List::Util::any { $_ eq $attribute_value } qw{ off 0 }) {
                         enable_device($name);
                         update_timer($hash);
                         return;
