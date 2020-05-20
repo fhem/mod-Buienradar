@@ -618,16 +618,16 @@ sub ParseHttpResponse {
         Debugging($name, q{Received data: } . Dumper(@{$forecast_data->{'precip'}}));
 
         if (scalar @precip > 0) {
-            my $rainLaMetric        = join(q{,}, map {$_ * 1000} @precip[0..11]);
-            my $rainTotal           = List::Util::sum @precip;
-            my $rainMax             = List::Util::max @precip;
-            my $rainStart           = undef;
-            my $rainEnd             = undef;
-            my $dataStart           = $forecast_data->{start};
-            my $dataEnd             = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
-            my $forecast_start      = $dataStart;
-            my $rainNow             = undef;
-            my $rainData            = join q{:}, @precip;
+            my $data_lametric       = join q{,}, map {$_ * 1000} @precip[0..11];
+            my $rain_total          = List::Util::sum @precip;
+            my $rain_max            = List::Util::max @precip;
+            my $rain_start          = undef;
+            my $rain_end            = undef;
+            my $data_start          = $forecast_data->{start};
+            my $data_end            = $data_start + (scalar @precip) * 5 * ONE_MINUTE;
+            my $forecast_start      = $data_start;
+            my $rain_now            = undef;
+            my $rain_data           = join q{:}, @precip;
             my $rain_amount         = $precip[0];
             my $is_raining          = undef;
             my $intervals_with_rain = scalar map { $_ > 0 ? $_ : () } @precip;
@@ -647,23 +647,23 @@ sub ParseHttpResponse {
                 }
 
                 # there is precipitation and start is not yet set
-                if (not $rainStart and $is_raining) {
-                    $rainStart  = $start;
-                    $hash->{'.RainStart'} = $rainStart;
+                if (not $rain_start and $is_raining) {
+                    $rain_start  = $start;
+                    $hash->{'.RainStart'} = $rain_start;
                 }
 
                 # It's raining again, so we have to reset rainEnd for a new chance
-                if ($is_raining and $rainEnd) {
-                    $rainEnd    = undef;
+                if ($is_raining and $rain_end) {
+                    $rain_end    = undef;
                 }
 
                 # It's not longer raining, so set rainEnd (again)
-                if ($rainStart and not $is_raining and not $rainEnd) {
-                    $rainEnd    = $start;
+                if ($rain_start and not $is_raining and not $rain_end) {
+                    $rain_end    = $start;
                 }
 
                 if (time() ~~ [$start..$end]) {
-                    $rainNow    = $precip;
+                    $rain_now    = $precip;
                     $hash->{'.RainStart'} = 0;
                 }
 
@@ -679,17 +679,17 @@ sub ParseHttpResponse {
             $hash->{'.SERIALIZED'} = Storable::freeze(\%precipitation_forecast);
 
             ::readingsBeginUpdate($hash);
-            ::readingsBulkUpdate( $hash, 'state', $rainNow ? sprintf '%.3f', $rainNow : 'unknown');
-            ::readingsBulkUpdate( $hash, 'rainTotal', sprintf '%.3f', $rainTotal);
+            ::readingsBulkUpdate( $hash, 'state', $rain_now ? sprintf '%.3f', $rain_now : 'unknown');
+            ::readingsBulkUpdate( $hash, 'rainTotal', sprintf '%.3f', $rain_total);
             ::readingsBulkUpdate( $hash, 'rainAmount', sprintf '%.3f', $rain_amount);
-            ::readingsBulkUpdate( $hash, 'rainNow', $rainNow ? sprintf '%.3f', $rainNow : 'unknown');
-            ::readingsBulkUpdate( $hash, 'rainLaMetric', $rainLaMetric );
-            ::readingsBulkUpdate( $hash, 'rainDataStart', POSIX::strftime '%R', localtime $dataStart);
-            ::readingsBulkUpdate( $hash, 'rainDataEnd', POSIX::strftime '%R', localtime $dataEnd );
-            ::readingsBulkUpdate( $hash, 'rainMax', sprintf '%.3f', $rainMax ) ;
-            ::readingsBulkUpdate( $hash, 'rainBegin', (($rainStart) ? POSIX::strftime '%R', localtime $rainStart : 'unknown'));
-            ::readingsBulkUpdate( $hash, 'rainEnd', (($rainEnd) ? POSIX::strftime '%R', localtime $rainEnd : 'unknown'));
-            ::readingsBulkUpdate( $hash, 'rainData', $rainData);
+            ::readingsBulkUpdate( $hash, 'rainNow', $rain_now ? sprintf '%.3f', $rain_now : 'unknown');
+            ::readingsBulkUpdate( $hash, 'rainLaMetric', $data_lametric );
+            ::readingsBulkUpdate( $hash, 'rainDataStart', POSIX::strftime '%R', localtime $data_start);
+            ::readingsBulkUpdate( $hash, 'rainDataEnd', POSIX::strftime '%R', localtime $data_end );
+            ::readingsBulkUpdate( $hash, 'rainMax', sprintf '%.3f', $rain_max ) ;
+            ::readingsBulkUpdate( $hash, 'rainBegin', (($rain_start) ? POSIX::strftime '%R', localtime $rain_start : 'unknown'));
+            ::readingsBulkUpdate( $hash, 'rainEnd', (($rain_end) ? POSIX::strftime '%R', localtime $rain_end : 'unknown'));
+            ::readingsBulkUpdate( $hash, 'rainData', $rain_data);
             ::readingsBulkUpdate( $hash, 'rainDuration', $intervals_with_rain * 5);
             ::readingsBulkUpdate( $hash, 'rainDurationIntervals', $intervals_with_rain);
             ::readingsBulkUpdate( $hash, 'rainDurationPercent', ($intervals_with_rain / scalar @precip) * 100);
