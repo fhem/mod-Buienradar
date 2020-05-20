@@ -178,7 +178,7 @@ sub Initialize {
     $hash->{GetFn}       = \&FHEM::Buienradar::handle_get;
     $hash->{SetFn}       = \&FHEM::Buienradar::handle_set;
     $hash->{AttrFn}      = \&FHEM::Buienradar::handle_attributes;
-    $hash->{FW_detailFn} = \&FHEM::Buienradar::Detail;
+    $hash->{FW_detailFn} = \&FHEM::Buienradar::handle_fhemweb_details;
     $hash->{AttrList}    = join(q{ },
         (
             'disabled:on,off',
@@ -192,7 +192,7 @@ sub Initialize {
     return FHEM::Meta::InitMod( __FILE__, $hash );
 }
 
-sub Detail {
+sub handle_fhemweb_details {
     my $fhemweb_name    = shift;
     my $name            = shift;
     my $room            = shift;
