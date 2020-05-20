@@ -50,11 +50,11 @@ Readonly my %Translations => (
         }
     },
     'GChart' => {
-        'hAxis'  => {
+        'legend_time_axis'  => {
             'de' => 'Uhrzeit',
             'en' => 'Time',
         },
-        'vAxis'  => {
+        'legend_volume_axis'  => {
             'de' => 'mm/h',
             'en' => 'mm/h',
         },
@@ -814,8 +814,8 @@ sub GChart {
     } sort keys %storedData;
 
     # create data for the GChart
-    my $hAxis   = $Translations{'GChart'}{'hAxis'}{$language};
-    my $vAxis   = $Translations{'GChart'}{'vAxis'}{$language};
+    my $legend_time_axis   = $Translations{'GChart'}{'legend_time_axis'}{$language};
+    my $legend_volume_axis = $Translations{'GChart'}{'legend_volume_axis'}{$language};
     my $title   = sprintf
         $Translations{'GChart'}{'title'}{$language},
         $hash->{LATITUDE},
@@ -841,7 +841,7 @@ sub GChart {
         var options = {
             title: '${title}',
             hAxis: {
-                title: '${hAxis}',
+                title: '${legend_time_axis}',
                 slantedText:true,
                 slantedTextAngle: 45,
                 textStyle: {
@@ -849,7 +849,7 @@ sub GChart {
             },
             vAxis: {
                 minValue: 0,
-                title: '${vAxis}'
+                title: '${legend_volume_axis}'
             }
         };
 
