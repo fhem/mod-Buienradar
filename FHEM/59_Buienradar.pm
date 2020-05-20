@@ -404,7 +404,7 @@ sub Attr {
 
         when ('interval') {
             return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
-                if $attribute_value !~ /^(?: 10 | 60 | 120 | 180 | 240 | 300 )$/x and $command eq 'set';
+                if($command eq q{set} && !List::Util::any { $_ eq $attribute_value } qw{ 10 60 120 180 240 300 });
 
             for ($command) {
                 when ('set') {
