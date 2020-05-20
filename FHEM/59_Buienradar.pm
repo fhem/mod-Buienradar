@@ -23,7 +23,7 @@ use FHEM::Meta;
 Readonly our $VERSION               => q{3.0.7};
 Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
 Readonly our $DEBUGGING_MIN_VERBOSE => 4;
-Readonly our $default_region        => q{de};
+Readonly our $DEFAULT_REGION        => q{de};
 Readonly our $DEFAULT_TEXT_BAR_CHAR => q{=};
 Readonly our $DEFAULT_LANGUAGE      => q{en};
 Readonly our $DEFAULT_LATITUDE      => 51.0;
@@ -118,7 +118,7 @@ sub Initialize {
             'default_chart:none,HTMLChart,GChart,TextChart'
         )
     ) . qq[ $::readingFnAttributes ];
-    $hash->{REGION} = $default_region;
+    $hash->{REGION} = $DEFAULT_REGION;
 
     return FHEM::Meta::InitMod( __FILE__, $hash );
 }
