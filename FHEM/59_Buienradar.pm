@@ -895,7 +895,7 @@ sub LogProxy {
             join(
                 q{ }, (
                     POSIX::strftime('%F_%T', localtime $data{$_}{'start'}),
-                    sprintf('%.3f', $data{$_}{'precipitation'})
+                    sprintf '%.3f', $data{$_}{'precipitation'}
                 )
             )
         } keys %data),
