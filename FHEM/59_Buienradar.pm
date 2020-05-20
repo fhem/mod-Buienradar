@@ -39,7 +39,7 @@ Readonly my %Translations => (
             'en' => q{at},
         }
     },
-    'HTMLChart' => {
+    'chart_html_bar' => {
         'title'      => {
             'de' => q{Niederschlagsdiagramm},
             'en' => q{Precipitation chart}
@@ -203,7 +203,7 @@ sub Detail {
     # @todo I18N
     if (::ReadingsVal($name, 'rainData', 'unknown') ne q{unknown}) {
         for (::AttrVal($name, q{default_chart}, q{none})) {
-            when (q{HTMLChart}) { return HTML($name) }
+            when (q{HTMLChart}) { return chart_html_bar($name) }
             when (q{GChart}) { return chart_gchart($name) }
             when (q{TextChart}) { return q[<pre>] . chart_textbar($name, q{#}) . q[</pre>] }
             default { return q{} }
@@ -750,7 +750,7 @@ sub RequestUpdate {
 
 ############################################################    Charts
 
-sub HTML {
+sub chart_html_bar {
     my $name        = shift;
     my $width       = shift;
     my $hash        = GetHash($name);
@@ -776,7 +776,7 @@ CSS_STYLE
     $as_html .= qq[<p><a href="./fhem?detail=$name">$name</a>];
     $as_html .= sprintf
         q{<p>%s %s %s</p>},
-        $Translations{'HTMLChart'}{'data_start'}{$language},
+        $Translations{'chart_html_bar'}{'data_start'}{$language},
         $Translations{'general'}{'at'}{$language},
         ::ReadingsVal( $name, 'rainDataStart', $Translations{'general'}{'unknown'}{$language} )
     ;

@@ -87,7 +87,7 @@ Buienradar provides several readings:
 Buienradar offers besides the usual view as device also the possibility to visualize the data as charts in different formats.
 * An HTML version that is displayed in the detail view by default and can be viewed with 
     
-        { FHEM::Buienradar::HTML("buienradar device name")}
+        { FHEM::Buienradar::chart_html_bar("buienradar device name")}
 
     can be retrieved.
     

@@ -87,7 +87,7 @@ Aktuell liefert Buienradar folgende Readings:
 Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, die Daten als Charts in verschiedenen Formaten zu visualisieren.
 * Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit 
         
-        { FHEM::Buienradar::HTML("name des buienradar device")}
+        { FHEM::Buienradar::chart_html_bar``("name des buienradar device")}
         
     abgerufen werden.
 * Ein von Google Charts generiertes Diagramm im <abbr>PNG</abbr>-Format, welcher mit
