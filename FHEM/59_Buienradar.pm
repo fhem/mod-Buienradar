@@ -26,6 +26,8 @@ Readonly our $DEBUGGING_MIN_VERBOSE => 4;
 Readonly our $default_region        => q{de};
 Readonly our $default_bar_character => q{=};
 Readonly our $default_language      => q{en};
+Readonly our $DEFAULT_LATITUDE      => 51.0;
+Readonly our $DEFAULT_LONGITUDE     => 7.0;
 
 ############################################################    Translations
 Readonly my %Translations => (
@@ -228,14 +230,19 @@ sub Define {
     my $longitude;
     my $language = get_global_language();
 
-    if ( ( $arguments_length == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
+    Readonly my $ARGUMENT_LENGTH_WITHOUT_LOC    => 2;
+    Readonly my $ARGUMENT_LENGHT_WITH_LOC       => 4;
+    Readonly my $ARGUMENT_POSITION_LATITUDE     => 2;
+    Readonly my $ARGUMENT_POSITION_LONGITUDE    => 3;
+
+    if ( $arguments_length == $ARGUMENT_LENGTH_WITHOUT_LOC )
     {
-        $latitude  = ::AttrVal( 'global', 'latitude',  51.0 );
-        $longitude = ::AttrVal( 'global', 'longitude', 7.0 );
+        $latitude  = ::AttrVal( 'global', 'latitude',  $DEFAULT_LATITUDE );
+        $longitude = ::AttrVal( 'global', 'longitude', $DEFAULT_LONGITUDE );
     }
-    elsif ( $arguments_length == 4 ) {
-        $latitude  = $arguments[2];
-        $longitude = $arguments[3];
+    elsif ( $arguments_length == $ARGUMENT_LENGHT_WITH_LOC ) {
+        $latitude  = $arguments[$ARGUMENT_POSITION_LATITUDE];
+        $longitude = $arguments[$ARGUMENT_POSITION_LONGITUDE];
     }
     else {
         return handle_error($name, q{Syntax: define <name> Buienradar [<latitude> <longitude>]})
