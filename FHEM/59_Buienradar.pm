@@ -444,27 +444,33 @@ sub timediff2str {
     return unless defined wantarray;
     return unless defined $s;
 
+    Readonly $SECONDS_IN_MINUTE => 60;
+    Readonly $MINUTES_IN_HOUR   => 60;
+    Readonly $HOURS_IN_DAY      => 24;
+
     return (
         wantarray
             ?   (0,0,0,$s)
             : sprintf '%02d Sekunden', $s
-    ) if $s < 60;
+    ) if $s < $SECONDS_IN_MINUTE;
 
-    my $m = $s / 60; $s = $s % 60;
+    my $m = $s / $SECONDS_IN_MINUTE; $s = $s % $SECONDS_IN_MINUTE;
+
     return (
         wantarray
             ?   (0, 0, POSIX::floor($m), POSIX::floor($s))
             :   sprintf '%02d Minuten, %02d Sekunden', $m, $s
-    ) if $m < 60;
+    ) if $m < $MINUTES_IN_HOUR;
 
-    my $h = $m /  60; $m %= 60;
+    my $h = $m /  $MINUTES_IN_HOUR; $m %= $MINUTES_IN_HOUR;
+
     return (
         wantarray
             ?   (0, POSIX::floor($h), POSIX::floor($m), POSIX::floor($s))
             :   sprintf '%02d Stunden, %02d Minuten, %02d Sekunden', $h, $m, $s
-    ) if $h < 24;
+    ) if $h < $HOURS_IN_DAY;
 
-    my $d = $h / 24; $h %= 24;
+    my $d = $h / $HOURS_IN_DAY; $h %= $HOURS_IN_DAY;
     return (
         wantarray
             ?   ( POSIX::floor($d), POSIX::floor($h), POSIX::floor($m), POSIX::floor($s))
