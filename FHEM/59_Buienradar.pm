@@ -754,7 +754,7 @@ sub HTML {
     my $name        = shift;
     my $width       = shift;
     my $hash        = GetHash($name);
-    my @values      = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
+    my @values      = split /:/xms, ::ReadingsVal($name, 'rainData', '0:0');
     my $language    = GetLanguage();
 
     my $as_html = <<'CSS_STYLE';
