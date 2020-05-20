@@ -576,7 +576,10 @@ sub ParseHttpResponse {
 
             if ($param->{'code'} eq '404') {
                 my $response_body;
-                $response_body = eval { $response_body = from_json($data) } unless @errors;
+
+                if (!@errors) {
+                    $response_body = eval { $response_body = from_json($data) };
+                }
 
                 if ($EVAL_ERROR) {
                     Debugging($name, q{Response body}, Dumper($response_body));
