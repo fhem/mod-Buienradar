@@ -566,11 +566,11 @@ sub ParseHttpResponse {
         my $error;
 
         if(defined $param->{'code'} && $param->{'code'} ne '200') {
-            $error = sprintf(
+            $error = sprintf
                 'Pulling %s returns HTTP status code %d instead of 200.',
                 $hash->{URL},
                 $param->{'code'}
-            );
+            ;
 
             Debugging($name, qq[HTTP Response code is: $param->{'code'}]);
 
