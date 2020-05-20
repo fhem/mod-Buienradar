@@ -891,7 +891,7 @@ sub LogProxy {
     my %data = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
     return (
-        join '\n', map
+        join qq{\n}, map
         {
             join q{ },
                 (
