@@ -67,7 +67,7 @@ Readonly my %Translations => (
             'en' => 'Precipitation',
         },
     },
-    'Attr'    => {
+    'handle_attributes'    => {
         'interval'      => {
             'de' => 'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
             'en' => 'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
@@ -175,7 +175,7 @@ sub Initialize {
     $hash->{UndefFn}     = \&FHEM::Buienradar::Undefine;
     $hash->{GetFn}       = \&FHEM::Buienradar::Get;
     $hash->{SetFn}       = \&FHEM::Buienradar::Set;
-    $hash->{AttrFn}      = \&FHEM::Buienradar::Attr;
+    $hash->{AttrFn}      = \&FHEM::Buienradar::handle_attributes;
     $hash->{FW_detailFn} = \&FHEM::Buienradar::Detail;
     $hash->{AttrList}    = join(q{ },
         (
@@ -337,7 +337,7 @@ sub Get {
     return;
 }
 
-sub Attr {
+sub handle_attributes {
     my $command         = shift;
     my $name            = shift;
     my $attribute_name  = shift;
@@ -386,7 +386,7 @@ sub Attr {
         }
 
         when ('region') {
-            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
+            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'handle_attributes'}{'region'}{$language}}])
                 if ( $command eq q{set} && !List::Util::any { $_ eq $attribute_value } qw{ de nl });
 
             for ($command) {
@@ -404,7 +404,7 @@ sub Attr {
         }
 
         when ('interval') {
-            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
+            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'handle_attributes'}{'interval'}{$language}}])
                 if($command eq q{set} && !List::Util::any { $_ eq $attribute_value } qw{ 10 60 120 180 240 300 });
 
             for ($command) {
@@ -424,7 +424,7 @@ sub Attr {
         when (q{default_chart}) {
             for ($command) {
                 when (q{set}) {
-                    return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'default_chart'}{$language}}])
+                    return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'handle_attributes'}{'default_chart'}{$language}}])
                         if(!List::Util::any { $_ eq $attribute_value } qw{ none HTMLChart GChart TextChart });
                 }
                 when (q{del}) {
