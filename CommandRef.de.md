@@ -98,7 +98,7 @@ Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, 
     
 * Für <abbr>FTUI</abbr> werden die Daten im LogProxy-Format bereitgestellt:
 
-        { FHEM::Buienradar::LogProxy("name des buienradar device")}
+        { FHEM::Buienradar::logproxy_wrapper("name des buienradar device")}
         
 * Für eine reine Text-Ausgabe der Daten als Graph, kann
 

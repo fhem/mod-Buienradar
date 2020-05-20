@@ -877,12 +877,12 @@ sub GetGChartDataSet {
     return qq{['$k', $v]}
 }
 
-sub LogProxy {
+sub logproxy_wrapper {
     my $name = shift;
     my $hash = GetHash($name);
 
     if (!$hash->{'.SERIALIZED'}) {
-        Error($name, q{Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data});
+        Error($name, q{Can't return serizalized data for FHEM::Buienradar::logproxy_wrapper. Using dummy data});
 
         # return dummy data
         return (0, 0, 0);

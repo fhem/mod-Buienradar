@@ -99,7 +99,7 @@ Buienradar offers besides the usual view as device also the possibility to visua
     
 * <abbr>FTUI</abbr> is supported by the  LogProxy format:
 
-        { FHEM::Buienradar::LogProxy("buienradar device name")}
+        { FHEM::Buienradar::logproxy_wrapper("buienradar device name")}
         
 * A plain text representation can be displayed with
 
