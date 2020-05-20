@@ -774,11 +774,12 @@ sub HTML {
 CSS_STYLE
 
     $as_html .= qq[<p><a href="./fhem?detail=$name">$name</a>];
-    $as_html .= sprintf(q{<p>%s %s %s</p>},
+    $as_html .= sprintf
+        q{<p>%s %s %s</p>},
         $Translations{'HTMLChart'}{'data_start'}{$language},
         $Translations{'general'}{'at'}{$language},
         ::ReadingsVal( $name, 'rainDataStart', $Translations{'general'}{'unknown'}{$language} )
-    );
+    ;
     my $factor =
       ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
 
