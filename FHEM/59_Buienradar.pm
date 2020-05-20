@@ -267,7 +267,7 @@ sub Define {
     ::CommandAttr(undef, qq[$name interval $FHEM::Buienradar::DEFAULT_INTERVAL])
         unless (::AttrVal($name, 'interval', undef));
 
-    Timer($hash);
+    update_timer($hash);
 
     return;
 }
@@ -275,7 +275,7 @@ sub Define {
 sub Undefine {
     my $hash    = shift;
     my $arg     = shift;
-    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
+    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::update_timer );
     return;
 }
 
@@ -363,7 +363,7 @@ sub Attr {
                         if $attribute_value !~ /^(?: on | off | 0 | 1 )$/x;
 
                     if ($attribute_value =~ /(?: on | 1 )/x) {
-                        ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::Timer );
+                        ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::update_timer );
                         Disable($name);
                         $hash->{NEXTUPDATE} = undef;
                         $hash->{STATE} = 'inactive';
@@ -372,14 +372,14 @@ sub Attr {
 
                     if ($attribute_value =~ /(?: off | 0 )/x) {
                         Enable($name);
-                        Timer($hash);
+                        update_timer($hash);
                         return;
                     }
                 }
 
                 when ('del') {
                     Enable($name);
-                    Timer($hash);
+                    update_timer($hash);
                 }
             }
         }
@@ -416,7 +416,7 @@ sub Attr {
                 }
             }
 
-            Timer($hash);
+            update_timer($hash);
             return;
         }
 
@@ -532,17 +532,17 @@ sub Error {
 
 ############################################################    Request handling
 
-sub Timer {
+sub update_timer {
     my ($hash) = shift;
     my $nextupdate = 0;
 
-    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
+    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::update_timer );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
     $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
     request_data_update($hash);
 
-    ::InternalTimer( $nextupdate, \&FHEM::Buienradar::Timer, $hash );
+    ::InternalTimer( $nextupdate, \&FHEM::Buienradar::update_timer, $hash );
 
     return 1;
 }
