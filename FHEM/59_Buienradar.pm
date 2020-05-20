@@ -264,8 +264,9 @@ sub Define {
     ::CommandAttr(undef, qq[$name region nl])
         unless (::AttrVal($name, 'region', undef));
 
-    ::CommandAttr(undef, qq[$name interval $FHEM::Buienradar::DEFAULT_INTERVAL])
-        unless (::AttrVal($name, 'interval', undef));
+    if (!::AttrVal($name, 'interval', undef)) {
+        ::CommandAttr(undef, qq[$name interval $FHEM::Buienradar::DEFAULT_INTERVAL]);
+    }
 
     update_timer($hash);
 
