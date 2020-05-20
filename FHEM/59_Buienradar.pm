@@ -629,7 +629,7 @@ sub ParseHttpResponse {
             my $rainNow             = undef;
             my $rainData            = join(q{:}, @precip);
             my $rainAmount          = $precip[0];
-            my $isRaining           = undef;
+            my $is_raining          = undef;
             my $intervals_with_rain = scalar map { $_ > 0 ? $_ : () } @precip;
             $hash->{'.RainStart'}   = q{unknown};
             my $precip_length       = scalar @precip;
@@ -639,26 +639,26 @@ sub ParseHttpResponse {
                 my $start           = $forecast_start + $precip_index * 5 * ONE_MINUTE;
                 my $end             = $start + 5 * ONE_MINUTE;
                 my $precip          = $precip[$precip_index];
-                $isRaining          = undef;                            # reset
+                $is_raining          = undef;                            # reset
 
                 # set a flag if it's raining
                 if ($precip > 0) {
-                    $isRaining = 1;
+                    $is_raining = 1;
                 }
 
                 # there is precipitation and start is not yet set
-                if (not $rainStart and $isRaining) {
+                if (not $rainStart and $is_raining) {
                     $rainStart  = $start;
                     $hash->{'.RainStart'} = $rainStart;
                 }
 
                 # It's raining again, so we have to reset rainEnd for a new chance
-                if ($isRaining and $rainEnd) {
+                if ($is_raining and $rainEnd) {
                     $rainEnd    = undef;
                 }
 
                 # It's not longer raining, so set rainEnd (again)
-                if ($rainStart and not $isRaining and not $rainEnd) {
+                if ($rainStart and not $is_raining and not $rainEnd) {
                     $rainEnd    = $start;
                 }
 
