@@ -800,7 +800,7 @@ sub GChart {
     my $hash = GetHash($name);
     my $language = GetLanguage();
 
-    unless ($hash->{'.SERIALIZED'}) {
+    if (!$hash->{'.SERIALIZED'}) {
         Error($name, q{Can't return serizalized data for FHEM::Buienradar::GChart.});
 
         # return dummy data
