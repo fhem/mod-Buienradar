@@ -1029,13 +1029,16 @@ sub chart_text_show_bar {
     my $bar_character = shift;
     my %stored_data   = %{ Storable::thaw($data) };
 
+    # todo I need to recapture this
+    Readonly my $BAR_CHAR_FACTOR    => 10;
+
     my ( $time, $precip, $bar ) = (
         POSIX::strftime( '%H:%M', localtime $stored_data{$_}{'start'} ),
         sprintf( '% 7.3f', $stored_data{$_}{'precipitation'} ),
         (
             ( $stored_data{$_}{'precipitation'} < $MAX_TEXT_BAR_LENGTH )
                 ? $bar_character x
-                POSIX::lround( abs $stored_data{$_}{'precipitation'} * 10 )
+                POSIX::lround( abs $stored_data{$_}{'precipitation'} * $BAR_CHAR_FACTOR )
                 : ( $bar_character x $MAX_TEXT_BAR_LENGTH ) . q{>}
         ),
     );
