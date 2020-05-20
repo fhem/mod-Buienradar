@@ -547,7 +547,7 @@ sub Timer {
     return 1;
 }
 
-sub ParseHttpResponse {
+sub parse_http_repsonse {
     my $param               = shift;
     my $err                 = shift;
     my $data                = shift;
@@ -747,7 +747,7 @@ sub request_data_update {
         timeout  => 10,
         hash     => $hash,
         method   => 'GET',
-        callback => \&ParseHttpResponse
+        callback => \&parse_http_repsonse
     };
 
     ::HttpUtils_NonblockingGet($param);
