@@ -559,7 +559,7 @@ sub ParseHttpResponse {
 
     if ( $err ne q{} ) {
         ::readingsSingleUpdate($hash, 'state', qq[Error: $err =>$data], 1);
-        ResetResult($hash);
+        reset_request_result($hash);
     }
     elsif ( $data ne q{} ) {
         my $forecast_data;
@@ -587,7 +587,7 @@ sub ParseHttpResponse {
             Error($name, qq{$error});
             Debugging($name, Dumper($param));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
-            ResetResult($hash);
+            reset_request_result($hash);
             return;
         }
 
@@ -599,7 +599,7 @@ sub ParseHttpResponse {
             Error($name, qq{$error});
             Debugging($name, join(q{}, map { qq{[$name] $_} } Dumper($data)));
             ::readingsSingleUpdate($hash, q{state}, $error, 1);
-            ResetResult($hash);
+            reset_request_result($hash);
             return;
         }
 
@@ -608,7 +608,7 @@ sub ParseHttpResponse {
             Error($name, qq{$error});
             Debugging($name, join(q{}, map { qq{[$name] $_} } Dumper($data)));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
-            ResetResult($hash);
+            reset_request_result($hash);
             return;
         }
 
@@ -700,7 +700,7 @@ sub ParseHttpResponse {
     return;
 }
 
-sub ResetResult {
+sub reset_request_result {
     my $hash = shift;
 
     $hash->{'.SERIALIZED'} = undef;
