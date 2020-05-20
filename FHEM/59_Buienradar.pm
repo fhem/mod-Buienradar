@@ -816,11 +816,11 @@ sub GChart {
     # create data for the GChart
     my $hAxis   = $Translations{'GChart'}{'hAxis'}{$language};
     my $vAxis   = $Translations{'GChart'}{'vAxis'}{$language};
-    my $title   = sprintf(
+    my $title   = sprintf
         $Translations{'GChart'}{'title'}{$language},
         $hash->{LATITUDE},
         $hash->{LONGITUDE}
-    );
+    ;
     my $legend  = $Translations{'GChart'}{'legend'}{$language};
     Debugging($name, qq{Legend langauge is: $language});
     Debugging($name, qq{Legend is: $legend});
