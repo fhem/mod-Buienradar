@@ -632,8 +632,9 @@ sub ParseHttpResponse {
             my $isRaining           = undef;
             my $intervalsWithRain   = scalar map { $_ > 0 ? $_ : () } @precip;
             $hash->{'.RainStart'}   = q{unknown};
+            my $precip_length       = scalar @precip;
 
-            for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
+            for my $precip_index (0..$precip_length) {
 
                 my $start           = $forecast_start + $precip_index * 5 * ONE_MINUTE;
                 my $end             = $start + 5 * ONE_MINUTE;
