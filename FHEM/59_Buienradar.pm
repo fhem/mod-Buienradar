@@ -364,7 +364,7 @@ sub Attr {
 
                     if ($attribute_value =~ /(?: on | 1 )/x) {
                         ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::update_timer );
-                        Disable($name);
+                        disable_device($name);
                         $hash->{NEXTUPDATE} = undef;
                         $hash->{STATE} = 'inactive';
                         return;
@@ -491,7 +491,7 @@ to access device details. Should be fixed if possible!
 
 =cut
 
-sub Disable {
+sub disable_device {
     my $name = shift;
     $::attr{$name}{'disable'} = 1;
     return;
