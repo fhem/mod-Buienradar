@@ -603,7 +603,7 @@ sub ParseHttpResponse {
             return;
         }
 
-        unless ($forecast_data->{'success'}) {
+        if (!$forecast_data->{'success'}) {
             $error = q{Got JSON from buienradar.nl, but had some troubles delivering meaningful data!};
             Error($name, qq{$error});
             Debugging($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
