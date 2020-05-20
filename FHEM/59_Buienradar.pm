@@ -13,7 +13,7 @@ use POSIX;
 use Data::Dumper;
 use English qw( -no_match_vars );
 use Storable;
-use GPUtils qw(GP_Import GP_Export);
+use GPUtils;
 use experimental qw( switch );
 use 5.0101;                          # we do not want perl be older than from 2007, so > 5.10.1
 use Readonly;
@@ -89,7 +89,7 @@ Readonly my %TRANSLATIONS => (
 my @errors;
 my $global_hash;
 
-GP_Export(
+GPUtils::GP_Export(
     qw(
         Initialize
     )
