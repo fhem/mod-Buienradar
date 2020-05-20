@@ -319,7 +319,11 @@ sub Get {
         # @todo I18N
         when ('startsIn') {
             my $begin = $hash->{'.RainStart'};
-            return q[No data available] unless $begin;
+
+            if (!$begin ) {
+                return q[No data available];
+            }
+
             return q[It is raining] if $begin == 0;
 
             my $time_diff_in_seconds = $begin - time;
