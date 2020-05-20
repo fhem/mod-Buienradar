@@ -285,7 +285,9 @@ sub Set {
     my $opt  = shift;
     my @args = shift;
 
-    return qq['set $name' needs at least one argument] unless ( defined($opt) );
+    if (!defined $opt) {
+        return return qq{'set $name' needs at least one argument};
+    }
 
     for ($opt) {
         when (q{refresh}) {
