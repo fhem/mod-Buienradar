@@ -591,7 +591,9 @@ sub ParseHttpResponse {
             return;
         }
 
-        $forecast_data = eval { $forecast_data = from_json($data) } unless @errors;
+        if (!@errors) {
+            $forecast_data = eval { $forecast_data = from_json($data) };
+        }
 
         if ($EVAL_ERROR) {
             $error = qq{Can't evaluate JSON from $hash->{URL}: $EVAL_ERROR};
