@@ -627,7 +627,7 @@ sub ParseHttpResponse {
             my $dataEnd             = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
             my $forecast_start      = $dataStart;
             my $rainNow             = undef;
-            my $rainData            = join(q{:}, @precip);
+            my $rainData            = join q{:}, @precip;
             my $rain_amount         = $precip[0];
             my $is_raining          = undef;
             my $intervals_with_rain = scalar map { $_ > 0 ? $_ : () } @precip;
