@@ -308,7 +308,9 @@ sub Get {
     my $opt  = shift;
     my @args = shift;
 
-    return qq['get $name' needs at least one argument] unless ( defined($opt) );
+    if (!defined $opt) {
+        return qq['get $name' needs at least one argument];
+    }
 
     for ($opt)
     {
