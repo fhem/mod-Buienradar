@@ -808,10 +808,10 @@ sub GChart {
     }
 
     # read & parse stored data
-    my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
+    my %stored_data = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
     my $data = join ', ', map {
-        chart_gchart_get_dataset($storedData{$_}{'start'}, $storedData{$_}{'precipitation'});
-    } sort keys %storedData;
+        chart_gchart_get_dataset($stored_data{$_}{'start'}, $stored_data{$_}{'precipitation'});
+    } sort keys %stored_data;
 
     # create data for the GChart
     my $legend_time_axis   = $Translations{'GChart'}{'legend_time_axis'}{$language};
