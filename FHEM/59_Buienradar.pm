@@ -30,7 +30,7 @@ Readonly our $DEFAULT_LATITUDE      => 51.0;
 Readonly our $DEFAULT_LONGITUDE     => 7.0;
 
 ############################################################    Translations
-Readonly my %Translations => (
+Readonly my %TRANSLATIONS => (
     'general' => {
         'unknown' => {
             'de' => q{unbekannt},
@@ -339,7 +339,7 @@ sub handle_attributes {
         }
 
         when ('region') {
-            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'handle_attributes'}{'region'}{$language}}])
+            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'region'}{$language}}])
                 if ( $command eq q{set} && !List::Util::any { $_ eq $attribute_value } qw{ de nl });
 
             for ($command) {
@@ -357,7 +357,7 @@ sub handle_attributes {
         }
 
         when ('interval') {
-            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'handle_attributes'}{'interval'}{$language}}])
+            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'interval'}{$language}}])
                 if($command eq q{set} && !List::Util::any { $_ eq $attribute_value } qw{ 10 60 120 180 240 300 });
 
             for ($command) {
@@ -377,7 +377,7 @@ sub handle_attributes {
         when (q{default_chart}) {
             for ($command) {
                 when (q{set}) {
-                    return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'handle_attributes'}{'default_chart'}{$language}}])
+                    return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'default_chart'}{$language}}])
                         if(!List::Util::any { $_ eq $attribute_value } qw{ none HTMLChart GChart TextChart });
                 }
                 when (q{del}) {
@@ -748,9 +748,9 @@ CSS_STYLE
     $as_html .= qq[<p><a href="./fhem?detail=$name">$name</a>];
     $as_html .= sprintf
         q{<p>%s %s %s</p>},
-        $Translations{'chart_html_bar'}{'data_start'}{$language},
-        $Translations{'general'}{'at'}{$language},
-        ::ReadingsVal( $name, 'rainDataStart', $Translations{'general'}{'unknown'}{$language} )
+        $TRANSLATIONS{'chart_html_bar'}{'data_start'}{$language},
+        $TRANSLATIONS{'general'}{'at'}{$language},
+        ::ReadingsVal( $name, 'rainDataStart', $TRANSLATIONS{'general'}{'unknown'}{$language} )
     ;
     my $factor =
       ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
@@ -787,14 +787,14 @@ sub chart_gchart {
     } sort keys %stored_data;
 
     # create data for the GChart
-    my $legend_time_axis   = $Translations{'chart_gchart'}{'legend_time_axis'}{$language};
-    my $legend_volume_axis = $Translations{'chart_gchart'}{'legend_volume_axis'}{$language};
+    my $legend_time_axis   = $TRANSLATIONS{'chart_gchart'}{'legend_time_axis'}{$language};
+    my $legend_volume_axis = $TRANSLATIONS{'chart_gchart'}{'legend_volume_axis'}{$language};
     my $title   = sprintf
-        $Translations{'chart_gchart'}{'title'}{$language},
+        $TRANSLATIONS{'chart_gchart'}{'title'}{$language},
         $hash->{LATITUDE},
         $hash->{LONGITUDE}
     ;
-    my $legend  = $Translations{'chart_gchart'}{'legend'}{$language};
+    my $legend  = $TRANSLATIONS{'chart_gchart'}{'legend'}{$language};
     debug_message($name, qq{Legend langauge is: $language});
     debug_message($name, qq{Legend is: $legend});
 
