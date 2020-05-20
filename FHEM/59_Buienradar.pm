@@ -579,7 +579,7 @@ sub ParseHttpResponse {
                 $response_body = eval { $response_body = from_json($data) } unless @errors;
 
                 unless ($@) {
-                    Debugging($name, qq{Repsonse body}, Dumper($response_body));
+                    Debugging($name, q{Response body}, Dumper($response_body));
                     $error = qq[Location is not in coverage for region '$hash->{REGION}'];
                 }
             }
