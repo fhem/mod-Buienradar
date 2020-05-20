@@ -173,7 +173,7 @@ sub Initialize {
 
     my $hash = shift;
 
-    $hash->{DefFn}       = \&FHEM::Buienradar::Define;
+    $hash->{DefFn}       = \&FHEM::Buienradar::handle_define;
     $hash->{UndefFn}     = \&FHEM::Buienradar::handle_undefine;
     $hash->{GetFn}       = \&FHEM::Buienradar::handle_get;
     $hash->{SetFn}       = \&FHEM::Buienradar::handle_set;
@@ -215,7 +215,7 @@ sub Detail {
     return;
 }
 
-sub Define {
+sub handle_define {
 
     my $hash        = shift;
     my $def         = shift;
