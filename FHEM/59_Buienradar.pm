@@ -238,7 +238,7 @@ sub Define {
         $longitude = $arguments[3];
     }
     else {
-        return Error($name, q{Syntax: define <name> Buienradar [<latitude> <longitude>]})
+        return handle_error($name, q{Syntax: define <name> Buienradar [<latitude> <longitude>]})
     }
 
     ::readingsSingleUpdate($hash, 'state', 'Initialized', 1);
@@ -385,7 +385,7 @@ sub Attr {
         }
 
         when ('region') {
-            return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
+            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
                 if $attribute_value !~ /^(?: de | nl )$/x and $command eq 'set';
 
             for ($command) {
@@ -403,7 +403,7 @@ sub Attr {
         }
 
         when ('interval') {
-            return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
+            return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
                 if $attribute_value !~ /^(?: 10 | 60 | 120 | 180 | 240 | 300 )$/x and $command eq 'set';
 
             for ($command) {
@@ -423,7 +423,7 @@ sub Attr {
         when (q{default_chart}) {
             for ($command) {
                 when (q{set}) {
-                    return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'default_chart'}{$language}}])
+                    return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'default_chart'}{$language}}])
                         if not grep {$attribute_value} qw{ none HTMLChart GChart TextChart };
                 }
                 when (q{del}) {
@@ -524,7 +524,7 @@ sub Debugging {
     return;
 }
 
-sub Error {
+sub handle_error {
     my $device_name = shift;
     my $message = shift || q{Something bad happened. Unknown error!};
     return qq{[$device_name] Error: $message};
@@ -587,7 +587,7 @@ sub parse_http_response {
                 }
             }
 
-            Error($name, qq{$error});
+            handle_error($name, qq{$error});
             Debugging($name, Dumper($param));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             reset_request_result($hash);
@@ -600,7 +600,7 @@ sub parse_http_response {
 
         if ($EVAL_ERROR) {
             $error = qq{Can't evaluate JSON from $hash->{URL}: $EVAL_ERROR};
-            Error($name, qq{$error});
+            handle_error($name, qq{$error});
             Debugging($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
             ::readingsSingleUpdate($hash, q{state}, $error, 1);
             reset_request_result($hash);
@@ -609,7 +609,7 @@ sub parse_http_response {
 
         if (!$forecast_data->{'success'}) {
             $error = q{Got JSON from buienradar.nl, but had some troubles delivering meaningful data!};
-            Error($name, qq{$error});
+            handle_error($name, qq{$error});
             Debugging($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             reset_request_result($hash);
@@ -810,7 +810,7 @@ sub chart_gchart {
     my $language = GetLanguage();
 
     if (!$hash->{'.SERIALIZED'}) {
-        Error($name, q{Can't return serizalized data for FHEM::Buienradar::chart_gchart.});
+        handle_error($name, q{Can't return serizalized data for FHEM::Buienradar::chart_gchart.});
 
         # return dummy data
         return;
@@ -891,7 +891,7 @@ sub logproxy_wrapper {
     my $hash = GetHash($name);
 
     if (!$hash->{'.SERIALIZED'}) {
-        Error($name, q{Can't return serizalized data for FHEM::Buienradar::logproxy_wrapper. Using dummy data});
+        handle_error($name, q{Can't return serizalized data for FHEM::Buienradar::logproxy_wrapper. Using dummy data});
 
         # return dummy data
         return (0, 0, 0);
@@ -919,7 +919,7 @@ sub chart_textbar {
     my $hash = GetHash($name);
 
     if (!$hash->{'.SERIALIZED'}) {
-        Error($name, q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
+        handle_error($name, q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
         # return dummy data
         return;
     }
