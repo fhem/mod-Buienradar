@@ -842,6 +842,8 @@ sub chart_html_bar {
     my @values   = split /:/xms, ::ReadingsVal( $name, 'rainData', '0:0' );
     my $language = get_global_language();
 
+    Readonly my $HTML_MAX_SIZE_PX => 700;
+
     my $as_html = <<'CSS_STYLE';
 <style>
 
@@ -866,7 +868,7 @@ CSS_STYLE
         ::ReadingsVal( $name, 'rainDataStart',
             $TRANSLATIONS{'general'}{'unknown'}{$language} );
     my $factor =
-        ( $width ? $width : 700 ) /
+        ( $width ? $width : $HTML_MAX_SIZE_PX ) /
             ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
 
     $as_html .= q[<div class='htmlchart'>];
