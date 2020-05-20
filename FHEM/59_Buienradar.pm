@@ -953,8 +953,7 @@ sub chart_gchart_get_dataset {
 
     my ( $k, $v ) = (
         POSIX::strftime( '%H:%M', localtime $start ),
-        sprintf '%.3f',
-            $precipitation
+        sprintf '%.3f', $precipitation,
     );
 
     return qq{['$k', $v]};
