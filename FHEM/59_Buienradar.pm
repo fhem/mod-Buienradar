@@ -445,6 +445,9 @@ sub timediff2str {
         return;
     }
 
+    Readonly my $SECONDS_IN_MINUTE => 60;
+    Readonly my $MINUTES_IN_HOUR   => 60;
+    Readonly my $HOURS_IN_DAY      => 24;
 
     return (
         wantarray
