@@ -32,6 +32,7 @@ Readonly our $DEFAULT_TEXT_BAR_CHAR => q{=};
 Readonly our $DEFAULT_LANGUAGE      => q{en};
 Readonly our $DEFAULT_LATITUDE      => 51.0;
 Readonly our $DEFAULT_LONGITUDE     => 7.0;
+Readonly our $MAX_TEXT_BAR_LENGTH    => 50;
 
 ############################################################    Translations
 Readonly my %TRANSLATIONS => (
@@ -1031,10 +1032,10 @@ sub chart_text_show_bar {
         POSIX::strftime( '%H:%M', localtime $stored_data{$_}{'start'} ),
         sprintf( '% 7.3f', $stored_data{$_}{'precipitation'} ),
         (
-            ( $stored_data{$_}{'precipitation'} < 50 )
+            ( $stored_data{$_}{'precipitation'} < $MAX_TEXT_BAR_LENGTH )
                 ? $bar_character x
                 POSIX::lround( abs $stored_data{$_}{'precipitation'} * 10 )
-                : ( $bar_character x 50 ) . q{>}
+                : ( $bar_character x $MAX_TEXT_BAR_LENGTH ) . q{>}
         ),
     );
 
