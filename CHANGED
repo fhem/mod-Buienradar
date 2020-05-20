@@ -16,6 +16,3 @@
 2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
 2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
 2020-05-06 - #129 added vagrant machine for integration tests
-2020-05-03 - #121 fixed update procedure
-2020-05-03 - #121 bump to v3.0.7
-2020-05-03 - #120 #127 update GH actions
