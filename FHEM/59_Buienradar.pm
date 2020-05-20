@@ -439,10 +439,11 @@ sub Attr {
 
 ############################################################    helper subroutines
 sub timediff2str {
-    my $s = shift;
+    my $s = shift // return;
 
-    return unless defined wantarray;
-    return unless defined $s;
+    if (!defined wantarray) {
+        return;
+    }
 
 
     return (
