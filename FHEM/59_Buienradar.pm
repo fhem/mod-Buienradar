@@ -371,14 +371,14 @@ sub Attr {
                     }
 
                     if ($attribute_value =~ /(?: off | 0 )/x) {
-                        Enable($name);
+                        enable_device($name);
                         update_timer($hash);
                         return;
                     }
                 }
 
                 when ('del') {
-                    Enable($name);
+                    enable_device($name);
                     update_timer($hash);
                 }
             }
@@ -503,7 +503,7 @@ Accesses $::defs{$device}{disable}. This is just a kludge for the non-existen FH
 Should be fixed if possible!
 
 =cut
-sub Enable {
+sub enable_device {
     my $name = shift;
     $::attr{$name}{'disable'} = 0;
     return;
