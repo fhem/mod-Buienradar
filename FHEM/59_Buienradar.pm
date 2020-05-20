@@ -424,7 +424,7 @@ sub Attr {
             for ($command) {
                 when (q{set}) {
                     return handle_error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'default_chart'}{$language}}])
-                        if not grep {$attribute_value} qw{ none HTMLChart GChart TextChart };
+                        if(!List::Util::any { $_ eq $attribute_value } qw{ none HTMLChart GChart TextChart });
                 }
                 when (q{del}) {
                     return;
