@@ -345,7 +345,7 @@ sub Attr {
     my $hash            = GetHash($name);
     my $language        = GetLanguage();
 
-    Debugging($name, Dumper({
+    debug_message($name, Dumper({
         command     =>  $command,
         device      =>  $name,
         attribute   =>  $attribute_name,
@@ -514,7 +514,7 @@ sub GetLanguage {
     return lc ::AttrVal(q{global}, 'language', 'en')
 }
 
-sub Debugging {
+sub debug_message {
     local $OFS = qq{\n};
     my $device_name = shift;
     if (
@@ -575,7 +575,7 @@ sub parse_http_response {
                 $param->{'code'}
             ;
 
-            Debugging($name, qq[HTTP Response code is: $param->{'code'}]);
+            debug_message($name, qq[HTTP Response code is: $param->{'code'}]);
 
             if ($param->{'code'} eq '404') {
                 my $response_body;
@@ -585,13 +585,13 @@ sub parse_http_response {
                 }
 
                 if ($EVAL_ERROR) {
-                    Debugging($name, q{Response body}, Dumper($response_body));
+                    debug_message($name, q{Response body}, Dumper($response_body));
                     $error = qq[Location is not in coverage for region '$hash->{REGION}'];
                 }
             }
 
             handle_error($name, qq{$error});
-            Debugging($name, Dumper($param));
+            debug_message($name, Dumper($param));
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             reset_request_result($hash);
             return;
@@ -604,7 +604,7 @@ sub parse_http_response {
         if ($EVAL_ERROR) {
             $error = qq{Can't evaluate JSON from $hash->{URL}: $EVAL_ERROR};
             handle_error($name, qq{$error});
-            Debugging($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
+            debug_message($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
             ::readingsSingleUpdate($hash, q{state}, $error, 1);
             reset_request_result($hash);
             return;
@@ -613,7 +613,7 @@ sub parse_http_response {
         if (!$forecast_data->{'success'}) {
             $error = q{Got JSON from buienradar.nl, but had some troubles delivering meaningful data!};
             handle_error($name, qq{$error});
-            Debugging($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
+            debug_message($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
             ::readingsSingleUpdate($hash, 'state', $error, 1);
             reset_request_result($hash);
             return;
@@ -625,7 +625,7 @@ sub parse_http_response {
             @precip = @{$forecast_data->{'precip'}}
         }
 
-        Debugging($name, q{Received data: } . Dumper(@{$forecast_data->{'precip'}}));
+        debug_message($name, q{Received data: } . Dumper(@{$forecast_data->{'precip'}}));
 
         if (scalar @precip > 0) {
             my $data_lametric       = join q{,}, map {$_ * 1000} @precip[0..11];
@@ -684,7 +684,7 @@ sub parse_http_response {
                 };
             }
 
-            Debugging($name, Dumper(%precipitation_forecast));
+            debug_message($name, Dumper(%precipitation_forecast));
 
             $hash->{'.SERIALIZED'} = Storable::freeze(\%precipitation_forecast);
 
@@ -754,7 +754,7 @@ sub request_data_update {
     };
 
     ::HttpUtils_NonblockingGet($param);
-    Debugging($name, q{Data update requested});
+    debug_message($name, q{Data update requested});
 
     return;
 }
@@ -834,8 +834,8 @@ sub chart_gchart {
         $hash->{LONGITUDE}
     ;
     my $legend  = $Translations{'chart_gchart'}{'legend'}{$language};
-    Debugging($name, qq{Legend langauge is: $language});
-    Debugging($name, qq{Legend is: $legend});
+    debug_message($name, qq{Legend langauge is: $language});
+    debug_message($name, qq{Legend is: $legend});
 
     return <<"CHART"
 <div id='chart_${name}'; style='width:100%; height:100%'></div>
