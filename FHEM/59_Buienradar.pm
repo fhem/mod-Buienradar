@@ -678,7 +678,7 @@ sub ParseHttpResponse {
             $hash->{'.SERIALIZED'} = Storable::freeze(\%precipitation_forecast);
 
             ::readingsBeginUpdate($hash);
-            ::readingsBulkUpdate( $hash, 'state', (($rainNow) ? sprintf '%.3f', $rainNow) : 'unknown');
+            ::readingsBulkUpdate( $hash, 'state', (($rainNow) ? sprintf '%.3f', $rainNow : 'unknown');
             ::readingsBulkUpdate( $hash, 'rainTotal', sprintf '%.3f', $rainTotal);
             ::readingsBulkUpdate( $hash, 'rainAmount', sprintf '%.3f', $rainAmount);
             ::readingsBulkUpdate( $hash, 'rainNow', (($rainNow) ? sprintf( '%.3f', $rainNow) : 'unknown'));
