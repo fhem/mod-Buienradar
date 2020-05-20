@@ -49,7 +49,7 @@ Readonly my %Translations => (
             'en' => q{Data start},
         }
     },
-    'GChart' => {
+    'chart_gchart' => {
         'legend_time_axis'  => {
             'de' => 'Uhrzeit',
             'en' => 'Time',
@@ -204,7 +204,7 @@ sub Detail {
     if (::ReadingsVal($name, 'rainData', 'unknown') ne q{unknown}) {
         for (::AttrVal($name, q{default_chart}, q{none})) {
             when (q{HTMLChart}) { return HTML($name) }
-            when (q{GChart}) { return GChart($name) }
+            when (q{GChart}) { return chart_gchart($name) }
             when (q{TextChart}) { return q[<pre>] . chart_textbar($name, q{#}) . q[</pre>] }
             default { return q{} }
         }
@@ -795,13 +795,13 @@ CSS_STYLE
     return ($as_html);
 }
 
-sub GChart {
+sub chart_gchart {
     my $name = shift;
     my $hash = GetHash($name);
     my $language = GetLanguage();
 
     if (!$hash->{'.SERIALIZED'}) {
-        Error($name, q{Can't return serizalized data for FHEM::Buienradar::GChart.});
+        Error($name, q{Can't return serizalized data for FHEM::Buienradar::chart_gchart.});
 
         # return dummy data
         return;
@@ -814,14 +814,14 @@ sub GChart {
     } sort keys %stored_data;
 
     # create data for the GChart
-    my $legend_time_axis   = $Translations{'GChart'}{'legend_time_axis'}{$language};
-    my $legend_volume_axis = $Translations{'GChart'}{'legend_volume_axis'}{$language};
+    my $legend_time_axis   = $Translations{'chart_gchart'}{'legend_time_axis'}{$language};
+    my $legend_volume_axis = $Translations{'chart_gchart'}{'legend_volume_axis'}{$language};
     my $title   = sprintf
-        $Translations{'GChart'}{'title'}{$language},
+        $Translations{'chart_gchart'}{'title'}{$language},
         $hash->{LATITUDE},
         $hash->{LONGITUDE}
     ;
-    my $legend  = $Translations{'GChart'}{'legend'}{$language};
+    my $legend  = $Translations{'chart_gchart'}{'legend'}{$language};
     Debugging($name, qq{Legend langauge is: $language});
     Debugging($name, qq{Legend is: $legend});
 

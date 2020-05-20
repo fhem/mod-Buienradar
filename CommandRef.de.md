@@ -92,7 +92,7 @@ Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, 
     abgerufen werden.
 * Ein von Google Charts generiertes Diagramm im <abbr>PNG</abbr>-Format, welcher mit
 
-        { FHEM::Buienradar::GChart("name des buienradar device")}
+        { FHEM::Buienradar::chart_gchart("name des buienradar device")}
         
     abgerufen werden kann. **Achtung!** Dazu werden Daten an Google übertragen!
     
