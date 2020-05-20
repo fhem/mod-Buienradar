@@ -174,7 +174,7 @@ sub Initialize {
     $hash->{DefFn}       = \&FHEM::Buienradar::Define;
     $hash->{UndefFn}     = \&FHEM::Buienradar::Undefine;
     $hash->{GetFn}       = \&FHEM::Buienradar::handle_get;
-    $hash->{SetFn}       = \&FHEM::Buienradar::Set;
+    $hash->{SetFn}       = \&FHEM::Buienradar::handle_set;
     $hash->{AttrFn}      = \&FHEM::Buienradar::handle_attributes;
     $hash->{FW_detailFn} = \&FHEM::Buienradar::Detail;
     $hash->{AttrList}    = join(q{ },
@@ -279,7 +279,7 @@ sub Undefine {
     return;
 }
 
-sub Set {
+sub handle_set {
     my $hash = shift;
     my $name = shift;
     my $opt  = shift;
