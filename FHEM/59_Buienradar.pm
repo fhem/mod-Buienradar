@@ -322,8 +322,8 @@ sub Get {
             return q[No data available] unless $begin;
             return q[It is raining] if $begin == 0;
 
-            my $timeDiffSec = $begin - time;
-            return scalar timediff2str($timeDiffSec);
+            my $time_diff_in_seconds = $begin - time;
+            return scalar timediff2str($time_diff_in_seconds);
         }
 
         when ('rainDuration') {
