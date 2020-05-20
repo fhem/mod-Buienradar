@@ -630,7 +630,7 @@ sub ParseHttpResponse {
             my $rainData            = join(q{:}, @precip);
             my $rainAmount          = $precip[0];
             my $isRaining           = undef;
-            my $intervalsWithRain   = scalar map { $_ > 0 ? $_ : () } @precip;
+            my $intervals_with_rain = scalar map { $_ > 0 ? $_ : () } @precip;
             $hash->{'.RainStart'}   = q{unknown};
             my $precip_length       = scalar @precip;
 
@@ -690,10 +690,10 @@ sub ParseHttpResponse {
             ::readingsBulkUpdate( $hash, 'rainBegin', (($rainStart) ? POSIX::strftime '%R', localtime $rainStart : 'unknown'));
             ::readingsBulkUpdate( $hash, 'rainEnd', (($rainEnd) ? POSIX::strftime '%R', localtime $rainEnd : 'unknown'));
             ::readingsBulkUpdate( $hash, 'rainData', $rainData);
-            ::readingsBulkUpdate( $hash, 'rainDuration', $intervalsWithRain * 5);
-            ::readingsBulkUpdate( $hash, 'rainDurationIntervals', $intervalsWithRain);
-            ::readingsBulkUpdate( $hash, 'rainDurationPercent', ($intervalsWithRain / scalar @precip) * 100);
-            ::readingsBulkUpdate( $hash, 'rainDurationTime', sprintf '%02d:%02d',(( $intervalsWithRain * 5 / 60), $intervalsWithRain * 5 % 60));
+            ::readingsBulkUpdate( $hash, 'rainDuration', $intervals_with_rain * 5);
+            ::readingsBulkUpdate( $hash, 'rainDurationIntervals', $intervals_with_rain);
+            ::readingsBulkUpdate( $hash, 'rainDurationPercent', ($intervals_with_rain / scalar @precip) * 100);
+            ::readingsBulkUpdate( $hash, 'rainDurationTime', sprintf '%02d:%02d',(( $intervals_with_rain * 5 / 60), $intervals_with_rain * 5 % 60));
             ::readingsEndUpdate( $hash, 1 );
         }
     }
