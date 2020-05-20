@@ -613,7 +613,10 @@ sub ParseHttpResponse {
         }
 
         my @precip;
-        @precip = @{$forecast_data->{'precip'}} unless @errors;
+
+        if (!@errors) {
+            @precip = @{$forecast_data->{'precip'}}
+        }
 
         Debugging($name, q{Received data: } . Dumper(@{$forecast_data->{'precip'}}));
 
