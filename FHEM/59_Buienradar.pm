@@ -19,7 +19,7 @@ use English qw( -no_match_vars );
 use Storable;
 use GPUtils;
 use experimental qw( switch );
-use 5.0101;    # we do not want perl be older than from 2007, so > 5.10.1
+use 5.0139;    # we do not want perl be older than from 2007, so > 5.13.9
 use Readonly;
 use FHEM::Meta;
 

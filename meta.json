@@ -58,7 +58,7 @@
         "runtime": {
             "requires": {
                 "FHEM": 5.00918799,
-                "perl": 5.10,
+                "perl": 5.0139,
                 "Meta": 0,
                 "JSON::MaybeXS": 0,
                 "Readonly": 0
