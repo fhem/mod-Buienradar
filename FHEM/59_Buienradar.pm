@@ -195,7 +195,7 @@ sub Detail {
     my $name        = shift;
     my $room        = shift;
     my $pageHash    = shift;
-    my $hash        = GetHash($name);
+    my $hash        = get_device_definition($name);
 
     return if ( !defined( $hash->{URL} ) );
 
@@ -342,7 +342,7 @@ sub Attr {
     my $name            = shift;
     my $attribute_name  = shift;
     my $attribute_value = shift;
-    my $hash            = GetHash($name);
+    my $hash            = get_device_definition($name);
     my $language        = get_global_language();
 
     debug_message($name, Dumper({
@@ -478,7 +478,7 @@ Accesses $::defs. This is just a kludge for the non-existen FHEM API to access d
 Should be fixed if possible!
 =cut
 
-sub GetHash {
+sub get_device_definition {
 
     my $name = shift;
     return $::defs{$name};
@@ -764,7 +764,7 @@ sub request_data_update {
 sub chart_html_bar {
     my $name        = shift;
     my $width       = shift;
-    my $hash        = GetHash($name);
+    my $hash        = get_device_definition($name);
     my @values      = split /:/xms, ::ReadingsVal($name, 'rainData', '0:0');
     my $language    = get_global_language();
 
@@ -809,7 +809,7 @@ CSS_STYLE
 
 sub chart_gchart {
     my $name = shift;
-    my $hash = GetHash($name);
+    my $hash = get_device_definition($name);
     my $language = get_global_language();
 
     if (!$hash->{'.SERIALIZED'}) {
@@ -891,7 +891,7 @@ sub chart_gchart_get_dataset {
 
 sub logproxy_wrapper {
     my $name = shift;
-    my $hash = GetHash($name);
+    my $hash = get_device_definition($name);
 
     if (!$hash->{'.SERIALIZED'}) {
         handle_error($name, q{Can't return serizalized data for FHEM::Buienradar::logproxy_wrapper. Using dummy data});
@@ -919,7 +919,7 @@ sub logproxy_wrapper {
 sub chart_textbar {
     my $name = shift;
     my $bar_character = shift || $default_bar_character;
-    my $hash = GetHash($name);
+    my $hash = get_device_definition($name);
 
     if (!$hash->{'.SERIALIZED'}) {
         handle_error($name, q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
