@@ -844,6 +844,7 @@ sub chart_html_bar {
     my $language = get_global_language();
 
     Readonly my $HTML_MAX_SIZE_PX => 700;
+    Readonly my $HTML_MIN_SIZE_PX => 30;
 
     my $as_html = <<'CSS_STYLE';
 <style>
@@ -876,7 +877,7 @@ CSS_STYLE
     foreach my $bar_value (@values) {
         $as_html .= sprintf
             q{<div style='width: %dpx'>%.3f</div>},
-            ( int( $bar_value * $factor ) + 30 ),
+            ( int( $bar_value * $factor ) + $HTML_MIN_SIZE_PX ),
             $bar_value;
     }
 
