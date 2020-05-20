@@ -891,14 +891,14 @@ sub LogProxy {
     my %data = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
 
     return (
-        join('\n', map {
-            join(
-                q{ }, (
+        join '\n', map
+        {
+            join q{ },
+                (
                     POSIX::strftime('%F_%T', localtime $data{$_}{'start'}),
                     sprintf '%.3f', $data{$_}{'precipitation'}
                 )
-            )
-        } keys %data),
+        } keys %data,
         0,
         ::ReadingsVal($name, 'rainMax', 0)
     );
