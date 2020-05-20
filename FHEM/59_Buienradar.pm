@@ -594,10 +594,9 @@ sub ParseHttpResponse {
         $forecast_data = eval { $forecast_data = from_json($data) } unless @errors;
 
         if ($@) {
-
             $error = qq{Can't evaluate JSON from $hash->{URL}: $@};
             Error($name, qq{$error});
-            Debugging($name, join(q{}, map { qq{[$name] $_} } Dumper($data)));
+            Debugging($name, join q{}, map { qq{[$name] $_} } Dumper($data) );
             ::readingsSingleUpdate($hash, q{state}, $error, 1);
             reset_request_result($hash);
             return;
