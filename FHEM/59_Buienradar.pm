@@ -196,7 +196,7 @@ sub Detail {
     my $FW_wname    = shift;
     my $name        = shift;
     my $room        = shift;
-    my $pageHash    = shift;
+    my $page_definition    = shift;
     my $hash        = get_device_definition($name);
 
     return if ( !defined( $hash->{URL} ) );
