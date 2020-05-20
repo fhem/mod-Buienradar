@@ -881,7 +881,7 @@ sub LogProxy {
     my $name = shift;
     my $hash = GetHash($name);
 
-    unless ($hash->{'.SERIALIZED'}) {
+    if (!$hash->{'.SERIALIZED'}) {
         Error($name, q{Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data});
 
         # return dummy data
