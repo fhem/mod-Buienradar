@@ -784,11 +784,11 @@ CSS_STYLE
 
     $as_html .= q[<div class='htmlchart'>];
     foreach my $bar_value (@values) {
-        $as_html .= sprintf(
+        $as_html .= sprintf
             q{<div style='width: %dpx'>%.3f</div>},
             ( int( $bar_value * $factor ) + 30 ),
             $bar_value
-        );
+        ;
     }
 
     $as_html .= q[</div>];
