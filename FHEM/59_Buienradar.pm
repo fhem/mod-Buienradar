@@ -678,21 +678,21 @@ sub ParseHttpResponse {
             $hash->{'.SERIALIZED'} = Storable::freeze(\%precipitation_forecast);
 
             ::readingsBeginUpdate($hash);
-            ::readingsBulkUpdate( $hash, 'state', (($rainNow) ? sprintf( '%.3f', $rainNow) : 'unknown'));
-            ::readingsBulkUpdate( $hash, 'rainTotal', sprintf( '%.3f', $rainTotal) );
-            ::readingsBulkUpdate( $hash, 'rainAmount', sprintf( '%.3f', $rainAmount) );
+            ::readingsBulkUpdate( $hash, 'state', (($rainNow) ? sprintf '%.3f', $rainNow) : 'unknown');
+            ::readingsBulkUpdate( $hash, 'rainTotal', sprintf '%.3f', $rainTotal);
+            ::readingsBulkUpdate( $hash, 'rainAmount', sprintf '%.3f', $rainAmount);
             ::readingsBulkUpdate( $hash, 'rainNow', (($rainNow) ? sprintf( '%.3f', $rainNow) : 'unknown'));
             ::readingsBulkUpdate( $hash, 'rainLaMetric', $rainLaMetric );
             ::readingsBulkUpdate( $hash, 'rainDataStart', POSIX::strftime '%R', localtime $dataStart);
             ::readingsBulkUpdate( $hash, 'rainDataEnd', POSIX::strftime '%R', localtime $dataEnd );
-            ::readingsBulkUpdate( $hash, 'rainMax', sprintf( '%.3f', $rainMax ) );
+            ::readingsBulkUpdate( $hash, 'rainMax', sprintf '%.3f', $rainMax ) ;
             ::readingsBulkUpdate( $hash, 'rainBegin', (($rainStart) ? POSIX::strftime '%R', localtime $rainStart : 'unknown'));
             ::readingsBulkUpdate( $hash, 'rainEnd', (($rainEnd) ? POSIX::strftime '%R', localtime $rainEnd : 'unknown'));
             ::readingsBulkUpdate( $hash, 'rainData', $rainData);
             ::readingsBulkUpdate( $hash, 'rainDuration', $intervalsWithRain * 5);
             ::readingsBulkUpdate( $hash, 'rainDurationIntervals', $intervalsWithRain);
             ::readingsBulkUpdate( $hash, 'rainDurationPercent', ($intervalsWithRain / scalar @precip) * 100);
-            ::readingsBulkUpdate( $hash, 'rainDurationTime', sprintf('%02d:%02d',(( $intervalsWithRain * 5 / 60), $intervalsWithRain * 5 % 60)));
+            ::readingsBulkUpdate( $hash, 'rainDurationTime', sprintf '%02d:%02d',(( $intervalsWithRain * 5 / 60), $intervalsWithRain * 5 % 60));
             ::readingsEndUpdate( $hash, 1 );
         }
     }
