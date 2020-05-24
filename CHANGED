@@ -1,20 +1,12 @@
+Release 3.0.8
 2020-05-24 - Fixed controls file
 2020-05-20 - Merge branch 'release/3.0' into development/3.0.8
-2020-05-20 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
-2020-05-20 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
-2020-05-20 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
-2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
 2020-05-19 - #149 `$debugging_min_verbose` → `$DEBUGGING_MIN_VERBOSE`
 2020-05-19 - #148 $default_interval → $DEFAULT_INTERVAL
-2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
 2020-05-19 - #146 use -no_match_vars for English
 2020-05-19 - #145 $version → $VERSION
 2020-05-19 - #144 added missing POD sections, moved LICENSE below
-2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
-2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
 2020-05-19 - #138 fixed an issue with /deployment: FHEM did not start due missing fhem.cfg, apache did not start because of missing ssl certs
 2020-05-19 - #142 added NCoC
 2020-05-19 - #141 #134 added requirements / recommendations to the CRef and meta.json
-2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
-2020-05-19 - Merge remote-tracking branch 'origin/development/3.0.8' into development/3.0.8
 2020-05-06 - #129 added vagrant machine for integration tests
