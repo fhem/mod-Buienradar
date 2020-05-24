@@ -254,10 +254,6 @@ sub handle_set {
             request_data_update($hash);
             return q{};
         }
-
-        default {
-            return qq{Unknown argument $opt, choose one of refresh:noArg'};
-        }
     }
 
     return qq{Unknown argument $opt, choose one of refresh:noArg};
