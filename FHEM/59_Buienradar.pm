@@ -319,11 +319,10 @@ sub handle_get {
                 return qq{Queried time $queried_time is below any meaningful date.}                                         # todo I18N
             }
 
-            # check in the stored data, if there is an interval, matching the timestamp and precipitation > 0
-            # my $stored_data =  %{  ) };
-
-            my $amount;
-            find_precipitation_interval_by_timestamp($queried_time, Storable::thaw( $hash->{'.SERIALIZED'}));
+            my $amount = find_precipitation_interval_by_timestamp(
+                $queried_time,
+                Storable::thaw( $hash->{'.SERIALIZED'})
+            );
 
             if (!$amount) {
                 return qq[Kein interval mit niederschlag gefunden];                                                         # todo I18N
@@ -351,6 +350,7 @@ sub handle_attributes {
     my $hash            = get_device_definition($name);
     my $language        = get_global_language();
 
+=for comment
     debug_message(
         $name,
         Dumper(
@@ -362,6 +362,8 @@ sub handle_attributes {
             }
         )
     );
+
+=cut
 
     for ($attribute_name) {
 
@@ -583,26 +585,19 @@ sub handle_error {
 sub find_precipitation_interval_by_timestamp {
     my ($timestamp, $data_ref) = @_;
 
-    debug_message('test', Dumper($data_ref));
-
-    for my $interval (keys %{$data_ref}) {
-        debug_message('find_precip', qq{Interval: $interval});
+    for my $interval (sort {$a <=> $b} keys %{$data_ref}) {
 
         # skip if the timestamp is earlier then the index, because that's also the start timestamp
-        next if $timestamp < $interval;
-
-        debug_message('find_preic', qq{Interval $interval not skipped, because $timestamp > $interval});
+        next if ($timestamp < $interval);
 
         # make the next statement more readable
         my $start   = $data_ref->{$interval}{start};
         my $end     = $data_ref->{$interval}{end};
         my $amount  = $data_ref->{$interval}{precipitation};
 
-        debug_message('find_precip: found!', Dumper($data_ref->{interval}));
-
         # if between $start and $end, and it's raining
         if ($timestamp ~~ [$start..$end] && $amount > 0) {
-            return $amount;
+            return $data_ref->{$interval}{precipitation};
         }
     }
 
@@ -713,8 +708,8 @@ sub parse_http_response {
             @precip = @{ $forecast_data->{'precip'} };
         }
 
-        debug_message( $name,
-            q{Received data: } . Dumper( @{ $forecast_data->{'precip'} } ) );
+        #debug_message( $name,
+        #    q{Received data: } . Dumper( @{ $forecast_data->{'precip'} } ) );
 
         if ( scalar @precip > 0 ) {
             my $data_lametric = join q{,}, map { $_ * $LAMETRIC_MULTIPILIER } @precip[ 0 .. $LAMETRIC_MAX_VALUES-1 ];
@@ -773,7 +768,7 @@ sub parse_http_response {
                 };
             }
 
-            debug_message( $name, Dumper(%precipitation_forecast) );
+            # debug_message( $name, Dumper(%precipitation_forecast) );
 
             $hash->{'.SERIALIZED'} =
                 Storable::freeze( \%precipitation_forecast );
@@ -898,7 +893,7 @@ sub request_data_update {
     };
 
     ::HttpUtils_NonblockingGet($param);
-    debug_message( $name, q{Data update requested} );
+    # debug_message( $name, q{Data update requested} );
 
     return;
 }
@@ -985,8 +980,8 @@ sub chart_gchart {
         $hash->{LATITUDE},
         $hash->{LONGITUDE};
     my $legend = $TRANSLATIONS{'chart_gchart'}{'legend'}{$language};
-    debug_message( $name, qq{Legend langauge is: $language} );
-    debug_message( $name, qq{Legend is: $legend} );
+    #debug_message( $name, qq{Legend langauge is: $language} );
+    #debug_message( $name, qq{Legend is: $legend} );
 
     return <<"CHART";
 <div id='chart_${name}'; style='width:100%; height:100%'></div>
