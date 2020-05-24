@@ -1,42 +1,13 @@
-=pod
-
- This is free and unencumbered software released into the public domain.
-
-  59_Buienradar.pm
-       2018 lubeda
-       2019 ff. Christoph Morrison, <fhem@christoph-jeschke.de>
-
- Anyone is free to copy, modify, publish, use, compile, sell, or
- distribute this software, either in source code form or as a compiled
- binary, for any purpose, commercial or non-commercial, and by any
- means.
-
- In jurisdictions that recognize copyright laws, the author or authors
- of this software dedicate any and all copyright interest in the
- software to the public domain. We make this dedication for the benefit
- of the public at large and to the detriment of our heirs and
- successors. We intend this dedication to be an overt act of
- relinquishment in perpetuity of all present and future rights to this
- software under copyright law.
-
- THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
- EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
- IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
- OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
- ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
- OTHER DEALINGS IN THE SOFTWARE.
-
-  For more information, please refer to <http://unlicense.org/>
-
- See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
-
-=cut
-
-# @todo
-# ATM, it's not possible to comply to this Perl::Critic rule, because
-# the current state of the FHEM API does require this bogus XX_Name.pm convention
-package FHEM::Buienradar;   ## no critic (RequireFilenameMatchesPackage)
+## no critic (RequireFilenameMatchesPackage, CodeLayout::RequireTidyCode, Documentation::PodSpelling)
+# #   JFTR:
+#
+#   ATM, it's not possible to comply to this Perl::Critic rule, because
+#   the current state of the FHEM API does require this bogus XX_Name.pm convention
+#
+#   Disabled spell checkers
+#
+#   Perl::Tidy sucks 🗿
+package FHEM::Buienradar;
 
 use strict;
 use warnings;
@@ -46,31 +17,27 @@ use List::Util;
 use Time::Seconds;
 use POSIX;
 use Data::Dumper;
-use English;
+use English qw( -no_match_vars );
 use Storable;
-use GPUtils qw(GP_Import GP_Export);
+use GPUtils;
 use experimental qw( switch );
-use 5.0101;                          # we do not want perl be older than from 2007, so > 5.10.1
+use 5.0139;    # we do not want perl be older than from 2007, so > 5.13.9
 use Readonly;
+use FHEM::Meta;
 
-=pod
+############################################################    Default values
+Readonly our $VERSION               => q{3.0.8};
+Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
+Readonly our $DEBUGGING_MIN_VERBOSE => 4;
+Readonly our $DEFAULT_REGION        => q{de};
+Readonly our $DEFAULT_TEXT_BAR_CHAR => q{=};
+Readonly our $DEFAULT_LANGUAGE      => q{en};
+Readonly our $DEFAULT_LATITUDE      => 51.0;
+Readonly our $DEFAULT_LONGITUDE     => 7.0;
+Readonly our $MAX_TEXT_BAR_LENGTH    => 50;
 
-    Settings
-
-=cut
-Readonly our $version               => '3.0.7';
-Readonly our $default_interval      => ONE_MINUTE * 2;
-Readonly our $debugging_min_verbose => 4;
-Readonly our $default_region        => q{de};
-Readonly our $default_bar_character => q{=};
-Readonly our $default_language      => q{en};
-
-=pod
-
-    Translations
-
-=cut
-Readonly my %Translations => (
+############################################################    Translations
+Readonly my %TRANSLATIONS => (
     'general' => {
         'unknown' => {
             'de' => q{unbekannt},
@@ -81,8 +48,8 @@ Readonly my %Translations => (
             'en' => q{at},
         }
     },
-    'HTMLChart' => {
-        'title'      => {
+    'chart_html_bar' => {
+        'title' => {
             'de' => q{Niederschlagsdiagramm},
             'en' => q{Precipitation chart}
         },
@@ -91,16 +58,16 @@ Readonly my %Translations => (
             'en' => q{Data start},
         }
     },
-    'GChart' => {
-        'hAxis'  => {
+    'chart_gchart' => {
+        'legend_time_axis' => {
             'de' => 'Uhrzeit',
             'en' => 'Time',
         },
-        'vAxis'  => {
+        'legend_volume_axis' => {
             'de' => 'mm/h',
             'en' => 'mm/h',
         },
-        'title'  => {
+        'title' => {
             'de' => 'Niederschlagsvorhersage für %s, %s',
             'en' => 'Precipitation forecast for %s, %s',
         },
@@ -109,121 +76,55 @@ Readonly my %Translations => (
             'en' => 'Precipitation',
         },
     },
-    'Attr'    => {
-        'interval'      => {
-            'de' => 'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
-            'en' => 'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
+    'handle_attributes' => {
+        'interval' => {
+            'de' =>
+                'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
+            'en' =>
+                'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
         },
-        'region'        => {
-            'de' => q{ist kein valider Wert für die Region. Einzig 'de' oder 'nl' werden unterstützt!},
-            'en' => q{is no valid value for region. Only 'de' or 'nl' are allowed!},
+        'region' => {
+            'de' =>
+                q{ist kein valider Wert für die Region. Einzig 'de' oder 'nl' werden unterstützt!},
+            'en' =>
+                q{is no valid value for region. Only 'de' or 'nl' are allowed!},
         },
         'default_chart' => {
-            'de' => q{ist kein valider Wert für den Standard-Graphen. Valide Werte sind none, GChart,TextChart oder HTMLChart},
-            'en' => q{is not a valid value for the default chart. Valid values are none, GChart,TextChart or HTMLChart},
+            'de' =>
+                q{ist kein valider Wert für den Standard-Graphen. Valide Werte sind none, GChart,TextChart oder HTMLChart},
+            'en' =>
+                q{is not a valid value for the default chart. Valid values are none, GChart,TextChart or HTMLChart},
         },
     },
 );
 
-=pod
-
-    Global variables
-
-=cut
+############################################################    Global variables
 my @errors;
 my $global_hash;
 
-GP_Export(
+GPUtils::GP_Export(
     qw(
         Initialize
     )
 );
 
-# try to use JSON::MaybeXS wrapper
-#   for chance of better performance + open code
-my $eval_return;
-
-$eval_return = eval {
-    require JSON::MaybeXS;
-    import JSON::MaybeXS qw( decode_json encode_json );
-    1;
-};
-
-if (!$eval_return) {
-    local $@ = undef;
-
-    # try to use JSON wrapper
-    #   for chance of better performance
-    $eval_return = eval {
-
-        # JSON preference order
-        local $ENV{PERL_JSON_BACKEND} =
-            q{Cpanel::JSON::XS,JSON::XS,JSON::PP,JSON::backportPP}
-            unless ( defined( $ENV{PERL_JSON_BACKEND} ) );
-
-        require JSON;
-        import JSON qw( decode_json encode_json );
-        1;
-    };
-
-    if (!$eval_return) {
-        local $@ = undef;
-
-        # In rare cases, Cpanel::JSON::XS may
-        #   be installed but JSON|JSON::MaybeXS not ...
-        $eval_return = eval {
-            require Cpanel::JSON::XS;
-            import Cpanel::JSON::XS qw(decode_json encode_json);
-            1;
-        };
-
-        if (!$eval_return) {
-            local $@ = undef;
-
-            # In rare cases, JSON::XS may
-            #   be installed but JSON not ...
-            $eval_return = eval {
-                require JSON::XS;
-                import JSON::XS qw(decode_json encode_json);
-                1;
-            };
-
-            if (!$eval_return) {
-                local $@ = undef;
-
-                # Fallback to built-in JSON which SHOULD
-                #   be available since 5.014 ...
-                $eval_return = eval {
-                    require JSON::PP;
-                    import JSON::PP qw(decode_json encode_json);
-                    1;
-                };
-
-                if (!$eval_return) {
-                    local $@ = undef;
-
-                    # Fallback to JSON::backportPP in really rare cases
-                    require JSON::backportPP;
-                    import JSON::backportPP qw(decode_json encode_json);
-                    1;
-                }
-            }
-        }
-    }
-}
-
-#####################################
+############################################################    FHEM API related
+#   JFTR:
+#       ATM the FHEM API does need an Initialize() subroutine, so this is mandatory
+#
+## no critic (NamingConventions::Capitalization)
 sub Initialize {
 
     my $hash = shift;
 
-    $hash->{DefFn}       = \&FHEM::Buienradar::Define;
-    $hash->{UndefFn}     = \&FHEM::Buienradar::Undefine;
-    $hash->{GetFn}       = \&FHEM::Buienradar::Get;
-    $hash->{SetFn}       = \&FHEM::Buienradar::Set;
-    $hash->{AttrFn}      = \&FHEM::Buienradar::Attr;
-    $hash->{FW_detailFn} = \&FHEM::Buienradar::Detail;
-    $hash->{AttrList}    = join(q{ },
+    $hash->{DefFn}       = \&FHEM::Buienradar::handle_define;
+    $hash->{UndefFn}     = \&FHEM::Buienradar::handle_undefine;
+    $hash->{GetFn}       = \&FHEM::Buienradar::handle_get;
+    $hash->{SetFn}       = \&FHEM::Buienradar::handle_set;
+    $hash->{AttrFn}      = \&FHEM::Buienradar::handle_attributes;
+    $hash->{FW_detailFn} = \&FHEM::Buienradar::handle_fhemweb_details;
+    $hash->{AttrList}    = join(
+        q{ },
         (
             'disabled:on,off',
             'region:nl,de',
@@ -231,27 +132,30 @@ sub Initialize {
             'default_chart:none,HTMLChart,GChart,TextChart'
         )
     ) . qq[ $::readingFnAttributes ];
-    $hash->{REGION} = $default_region;
+    $hash->{REGION} = $DEFAULT_REGION;
 
-    return;
+    return FHEM::Meta::InitMod( __FILE__, $hash );
 }
+## use critic
 
-sub Detail {
-    my $FW_wname    = shift;
-    my $name        = shift;
-    my $room        = shift;
-    my $pageHash    = shift;
-    my $hash        = GetHash($name);
+sub handle_fhemweb_details {
+    my $fhemweb_name    = shift;
+    my $name            = shift;
+    my $room            = shift;
+    my $page_definition = shift;
+    my $hash            = get_device_definition($name);
 
     return if ( !defined( $hash->{URL} ) );
 
     # @todo error in the second return: missing target attribute
     # @todo I18N
-    if (::ReadingsVal($name, 'rainData', 'unknown') ne q{unknown}) {
-        for (::AttrVal($name, q{default_chart}, q{none})) {
-            when (q{HTMLChart}) { return HTML($name) }
-            when (q{GChart}) { return GChart($name) }
-            when (q{TextChart}) { return q[<pre>] . TextChart($name, q{#}) . q[</pre>] }
+    if ( ::ReadingsVal( $name, 'rainData', 'unknown' ) ne q{unknown} ) {
+        for ( ::AttrVal( $name, q{default_chart}, q{none} ) ) {
+            when (q{HTMLChart}) { return chart_html_bar($name) }
+            when (q{GChart})    { return chart_gchart($name) }
+            when (q{TextChart}) {
+                return q[<pre>] . chart_textbar( $name, q{#} ) . q[</pre>]
+            }
             default { return q{} }
         }
     }
@@ -259,226 +163,215 @@ sub Detail {
     return;
 }
 
-#####################################
-sub Undefine {
-    my $hash    = shift;
-    my $arg     = shift;
-    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
+sub handle_define {
+
+    my $hash = shift;
+    my $def  = shift;
+    $global_hash = $hash;
+
+    if ( !FHEM::Meta::SetInternals($hash) ) {
+        return $EVAL_ERROR;
+    }
+
+    my @arguments        = split m{ \s+ }xms, $def;
+    my $name             = $arguments[0];
+    my $arguments_length = scalar @arguments;
+    my $latitude;
+    my $longitude;
+    my $language = get_global_language();
+
+    Readonly my $ARGUMENT_LENGTH_WITHOUT_LOC => 2;
+    Readonly my $ARGUMENT_LENGHT_WITH_LOC    => 4;
+    Readonly my $ARGUMENT_POSITION_LATITUDE  => 2;
+    Readonly my $ARGUMENT_POSITION_LONGITUDE => 3;
+
+    # todo: Refactor to for()
+    if ( $arguments_length == $ARGUMENT_LENGTH_WITHOUT_LOC ) {
+        $latitude  = ::AttrVal( 'global', 'latitude',  $DEFAULT_LATITUDE );
+        $longitude = ::AttrVal( 'global', 'longitude', $DEFAULT_LONGITUDE );
+    }
+    elsif ( $arguments_length == $ARGUMENT_LENGHT_WITH_LOC ) {
+        $latitude  = $arguments[$ARGUMENT_POSITION_LATITUDE];
+        $longitude = $arguments[$ARGUMENT_POSITION_LONGITUDE];
+    }
+    else {
+        return handle_error( $name,
+            q{Syntax: define <name> Buienradar [<latitude> <longitude>]} );
+    }
+
+    ::readingsSingleUpdate( $hash, 'state', 'Initialized', 1 );
+
+    $hash->{NAME}      = $name;
+    $hash->{VERSION}   = $VERSION;
+    $hash->{INTERVAL}  = $DEFAULT_INTERVAL;
+    $hash->{LATITUDE}  = $latitude;
+    $hash->{LONGITUDE} = $longitude;
+    $hash->{URL}       = undef;
+
+    # get language for language dependend legend
+
+    ::readingsBeginUpdate($hash);
+    ::readingsBulkUpdate( $hash, 'rainNow',       'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainDataStart', 'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainBegin',     'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainEnd',       'unknown' );
+    ::readingsEndUpdate( $hash, 1 );
+
+    # set default region nl
+    if ( !::AttrVal( $name, 'region', undef ) ) {
+        ::CommandAttr( undef, qq[$name region nl] );
+    }
+
+    if ( !::AttrVal( $name, 'interval', undef ) ) {
+        ::CommandAttr( undef,
+            qq[$name interval $FHEM::Buienradar::DEFAULT_INTERVAL] );
+    }
+
+    update_timer($hash);
+
     return;
 }
 
-=pod
-
-    Create a human readable representation for a given time t, like x minutes, y seconds, but only
-    with the necessary pieces.
-
-    Respects your wishes regarding scalar / list context, e.g.
-
-    # list context
-    say Dumper(timediff2str(10000))
-        $VAR1 = '1';
-        $VAR2 = '3';
-        $VAR3 = '46';
-        $VAR4 = '40';
-
-    # scalar context
-    say Dumper(scalar timediff2str(100000));
-        $VAR1 = '1 Tage, 03 Stunden, 46 Minuten, 40 Sekunden';
-
-=cut
-sub timediff2str {
-    my $s = shift;
-
-    return unless defined wantarray;
-    return unless defined $s;
-
-    return (
-        wantarray
-            ?   (0,0,0,$s)
-            : sprintf '%02d Sekunden', $s
-    ) if $s < 60;
-
-    my $m = $s / 60; $s = $s % 60;
-    return (
-        wantarray
-            ?   (0, 0, POSIX::floor($m), POSIX::floor($s))
-            :   sprintf '%02d Minuten, %02d Sekunden', $m, $s
-    ) if $m < 60;
-
-    my $h = $m /  60; $m %= 60;
-    return (
-        wantarray
-            ?   (0, POSIX::floor($h), POSIX::floor($m), POSIX::floor($s))
-            :   sprintf '%02d Stunden, %02d Minuten, %02d Sekunden', $h, $m, $s
-    ) if $h < 24;
-
-    my $d = $h / 24; $h %= 24;
-    return (
-        wantarray
-            ?   ( POSIX::floor($d), POSIX::floor($h), POSIX::floor($m), POSIX::floor($s))
-            :   sprintf '%d Tage, %02d Stunden, %02d Minuten, %02d Sekunden', $d, $h, $m, $s
-    );
-}
-
-## no critic (ProhibitPackageVars)
-=pod
-
-@todo
-Accesses $::defs. This is just a kludge for the non-existen FHEM API to access device details
-Should be fixed if possible!
-
-=cut
-sub GetHash {
-
-    my $name = shift;
-    return $::defs{$name};
-}
-
-=pod
-
-@todo
-Accesses $::defs{$device}{disable}. This is just a kludge for the non-existen FHEM API to access device details
-Should be fixed if possible!
-
-=cut
-sub Disable {
-    my $name = shift;
-    $::attr{$name}{'disable'} = 1;
+sub handle_undefine {
+    my $hash = shift;
+    my $arg  = shift;
+    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::update_timer );
     return;
 }
 
-=pod
-
-@todo
-Accesses $::defs{$device}{disable}. This is just a kludge for the non-existen FHEM API to access device details
-Should be fixed if possible!
-
-=cut
-sub Enable {
-    my $name = shift;
-    $::attr{$name}{'disable'} = 0;
-    return;
-}
-## use critic
-
-=pod
-
-    Get the value of the global language setting
-
-=cut
-sub GetLanguage {
-    return lc ::AttrVal(q{global}, 'language', 'en')
-}
-
-###################################
-sub Set {
+sub handle_set {
     my $hash = shift;
     my $name = shift;
     my $opt  = shift;
     my @args = shift;
 
-    return qq['set $name' needs at least one argument] unless ( defined($opt) );
+    if ( !defined $opt ) {
+        return return qq{'set $name' needs at least one argument};
+    }
 
     for ($opt) {
         when (q{refresh}) {
-            RequestUpdate($hash);
+            request_data_update($hash);
             return q{};
         }
 
         default {
-            return 'Unknown argument $opt, choose one of refresh:noArg';
+            return qq{Unknown argument $opt, choose one of refresh:noArg'};
         }
     }
 
     return qq{Unknown argument $opt, choose one of refresh:noArg};
 }
 
-sub Get {
+sub handle_get {
 
     my $hash = shift;
     my $name = shift;
     my $opt  = shift;
     my @args = shift;
 
-    return qq['get $name' needs at least one argument] unless ( defined($opt) );
+    if ( !defined $opt ) {
+        return qq['get $name' needs at least one argument];
+    }
 
-    for ($opt)
-    {
+    for ($opt) {
         when ('version') {
-            return $version;
+            return $VERSION;
         }
 
         # @todo I18N
         when ('startsIn') {
             my $begin = $hash->{'.RainStart'};
-            return q[No data available] unless $begin;
+
+            if ( !$begin ) {
+                return q[No data available];
+            }
+
             return q[It is raining] if $begin == 0;
 
-            my $timeDiffSec = $begin - time;
-            return scalar timediff2str($timeDiffSec);
+            my $time_diff_in_seconds = $begin - time;
+            return scalar timediff2str($time_diff_in_seconds);
         }
 
         when ('rainDuration') {
-            return ::ReadingsVal($name, 'rainDuration', 'unknown');
+            return ::ReadingsVal( $name, 'rainDuration', 'unknown' );
         }
 
         default {
-            return qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
+            return
+                qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
         }
     }
     return;
 }
 
-sub Attr {
+sub handle_attributes {
     my $command         = shift;
     my $name            = shift;
     my $attribute_name  = shift;
     my $attribute_value = shift;
-    my $hash            = GetHash($name);
-    my $language        = GetLanguage();
-    
-    Debugging($name, Dumper({
-        command     =>  $command,
-        device      =>  $name,
-        attribute   =>  $attribute_name,
-        value       =>  $attribute_value
-    }));
+    my $hash            = get_device_definition($name);
+    my $language        = get_global_language();
+
+    debug_message(
+        $name,
+        Dumper(
+            {
+                command   => $command,
+                device    => $name,
+                attribute => $attribute_name,
+                value     => $attribute_value
+            }
+        )
+    );
 
     for ($attribute_name) {
+
         # JFTR: disabled will also set disable to be compatible to FHEM::IsDisabled()
         #       This is a ugly hack, with some side-effects like you can set disabled, disable will be automatically
         #       set, you can delete disable but disabled will still be set.
         when ('disabled') {
             for ($command) {
                 when ('set') {
-                    return qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
-                        if $attribute_value !~ /^(?: on | off | 0 | 1 )$/x;
 
-                    if ($attribute_value =~ /(?: on | 1 )/x) {
-                        ::RemoveInternalTimer( $hash,\&FHEM::Buienradar::Timer );
-                        Disable($name);
+                    # todo: this is double checked
+                    return
+                        qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
+                        if ( List::Util::any { $_ eq $attribute_value }
+                            qw{ on off 0 1 } );
+
+                    if ( List::Util::any { $_ eq $attribute_value } qw{ on 1 } )
+                    {
+                        ::RemoveInternalTimer( $hash,
+                            \&FHEM::Buienradar::update_timer );
+                        disable_device($name);
                         $hash->{NEXTUPDATE} = undef;
-                        $hash->{STATE} = 'inactive';
+                        $hash->{STATE}      = 'inactive';
                         return;
                     }
 
-                    if ($attribute_value =~ /(?: off | 0 )/x) {
-                        Enable($name);
-                        Timer($hash);
+                    if ( List::Util::any { $_ eq $attribute_value }
+                        qw{ off 0 } )
+                    {
+                        enable_device($name);
+                        update_timer($hash);
                         return;
                     }
                 }
 
                 when ('del') {
-                    Enable($name);
-                    Timer($hash);
+                    enable_device($name);
+                    update_timer($hash);
                 }
             }
         }
 
         when ('region') {
-            return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'region'}{$language}}])
-                if $attribute_value !~ /^(?: de | nl )$/x and $command eq 'set';
+            return handle_error( $name,
+                qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'region'}{$language}}]
+            )
+                if ( $command eq q{set}
+                    && !List::Util::any { $_ eq $attribute_value } qw{ de nl } );
 
             for ($command) {
                 when ('set') {
@@ -490,13 +383,17 @@ sub Attr {
                 }
             }
 
-            RequestUpdate($hash);
+            request_data_update($hash);
             return;
         }
 
         when ('interval') {
-            return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'interval'}{$language}}])
-                if $attribute_value !~ /^(?: 10 | 60 | 120 | 180 | 240 | 300 )$/x and $command eq 'set';
+            return handle_error( $name,
+                qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'interval'}{$language}}]
+            )
+                if ( $command eq q{set}
+                    && !List::Util::any { $_ eq $attribute_value }
+                    qw{ 10 60 120 180 240 300 } );
 
             for ($command) {
                 when ('set') {
@@ -504,19 +401,22 @@ sub Attr {
                 }
 
                 when ('del') {
-                    $hash->{INTERVAL} = $default_interval;
+                    $hash->{INTERVAL} = $DEFAULT_INTERVAL;
                 }
             }
 
-            Timer($hash);
+            update_timer($hash);
             return;
         }
 
         when (q{default_chart}) {
             for ($command) {
                 when (q{set}) {
-                    return Error($name, qq[${attribute_value} ${FHEM::Buienradar::Translations{'Attr'}{'default_chart'}{$language}}])
-                        if not grep {$attribute_value} qw{ none HTMLChart GChart TextChart };
+                    return handle_error( $name,
+                        qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'default_chart'}{$language}}]
+                    )
+                        if ( !List::Util::any { $_ eq $attribute_value }
+                            qw{ none HTMLChart GChart TextChart } );
                 }
                 when (q{del}) {
                     return;
@@ -529,112 +429,424 @@ sub Attr {
     return;
 }
 
-#####################################
-sub Define {
+############################################################    helper subroutines
+sub timediff2str {
+    my $s = shift // return;
 
-    my $hash        = shift;
-    my $def         = shift;
-    $global_hash    = $hash;
+    if ( !defined wantarray ) {
+        return;
+    }
 
-    my @arguments = split( '[ \t][ \t]*', $def );
-    my $name = $arguments[0];
-    my $arguments_length = scalar @arguments;
-    my $latitude;
-    my $longitude;
-    my $language = GetLanguage();
+    Readonly my $SECONDS_IN_MINUTE => 60;
+    Readonly my $MINUTES_IN_HOUR   => 60;
+    Readonly my $HOURS_IN_DAY      => 24;
 
-    if ( ( $arguments_length == 2 ) && ( ::AttrVal( 'global', 'latitude', -255 ) != -255 ) )
+    return (
+        wantarray
+            ? ( 0, 0, 0, $s )
+            : sprintf '%02d Sekunden', $s
+    ) if $s < $SECONDS_IN_MINUTE;
+
+    my $m = $s / $SECONDS_IN_MINUTE;
+    $s = $s % $SECONDS_IN_MINUTE;
+
+    return (
+        wantarray
+            ? ( 0, 0, POSIX::floor($m), POSIX::floor($s) )
+            : sprintf '%02d Minuten, %02d Sekunden',
+            $m, $s
+    ) if $m < $MINUTES_IN_HOUR;
+
+    my $h = $m / $MINUTES_IN_HOUR;
+    $m %= $MINUTES_IN_HOUR;
+
+    return (
+        wantarray
+            ? ( 0, POSIX::floor($h), POSIX::floor($m), POSIX::floor($s) )
+            : sprintf '%02d Stunden, %02d Minuten, %02d Sekunden',
+            $h, $m, $s )
+        if $h < $HOURS_IN_DAY;
+
+    my $d = $h / $HOURS_IN_DAY;
+    $h %= $HOURS_IN_DAY;
+    return (
+        wantarray
+            ? (
+            POSIX::floor($d), POSIX::floor($h),
+            POSIX::floor($m), POSIX::floor($s)
+        )
+            : sprintf '%d Tage, %02d Stunden, %02d Minuten, %02d Sekunden',
+            $d, $h, $m, $s
+    );
+}
+
+## no critic (ProhibitPackageVars)
+
+=for todo
+Accesses $::defs. This is just a kludge for the non-existent FHEM API to access device details
+Should be fixed if possible!
+=cut
+
+sub get_device_definition {
+
+    my $name = shift;
+    return $::defs{$name};
+}
+
+=for todo
+
+Accesses $::defs{$device}{disable}. This is just a kludge for the non-existent FHEM API
+to access device details. Should be fixed if possible!
+
+=cut
+
+sub disable_device {
+    my $name = shift;
+    $::attr{$name}{'disable'} = 1;
+    return;
+}
+
+=for todo
+
+Accesses $::defs{$device}{disable}. This is just a kludge for the non-existent FHEM API to access device details
+Should be fixed if possible!
+
+=cut
+
+sub enable_device {
+    my $name = shift;
+    $::attr{$name}{'disable'} = 0;
+    return;
+}
+## use critic
+
+sub get_global_language {
+    return lc ::AttrVal( q{global}, 'language', $DEFAULT_LANGUAGE );
+}
+
+sub debug_message {
+    local $OFS = qq{\n};
+    my $device_name = shift;
+    if ( int( ::AttrVal( q{global}, q{verbose}, 0 ) ) >= $DEBUGGING_MIN_VERBOSE
+        or int( ::AttrVal( $device_name, q{debug}, 0 ) ) == 1 )
     {
-        $latitude  = ::AttrVal( 'global', 'latitude',  51.0 );
-        $longitude = ::AttrVal( 'global', 'longitude', 7.0 );
+        ::Debug( join $OFS, ( qq{[$device_name]}, qq{@_} ) );
     }
-    elsif ( $arguments_length == 4 ) {
-        $latitude  = $arguments[2];
-        $longitude = $arguments[3];
-    }
-    else {
-        return Error($name, q{Syntax: define <name> Buienradar [<latitude> <longitude>]})
-    }
-
-    ::readingsSingleUpdate($hash, 'state', 'Initialized', 1);
-
-
-    $hash->{NAME}       = $name;
-    $hash->{VERSION}    = $version;
-    $hash->{INTERVAL}   = $default_interval;
-    $hash->{LATITUDE}   = $latitude;
-    $hash->{LONGITUDE}  = $longitude;
-    $hash->{URL}        = undef;
-    # get language for language dependend legend
-
-
-    ::readingsBeginUpdate($hash);
-        ::readingsBulkUpdate( $hash, 'rainNow', 'unknown' );
-        ::readingsBulkUpdate( $hash, 'rainDataStart', 'unknown');
-        ::readingsBulkUpdate( $hash, 'rainBegin', 'unknown');
-        ::readingsBulkUpdate( $hash, 'rainEnd', 'unknown');
-    ::readingsEndUpdate( $hash, 1 );
-
-    # set default region nl
-    ::CommandAttr(undef, qq[$name region nl])
-        unless (::AttrVal($name, 'region', undef));
-
-    ::CommandAttr(undef, qq[$name interval $FHEM::Buienradar::default_interval])
-        unless (::AttrVal($name, 'interval', undef));
-
-    Timer($hash);
 
     return;
 }
 
-sub Timer {
+sub handle_error {
+    my $device_name = shift;
+    my $message     = shift || q{Something bad happened. Unknown error!};
+    return qq{[$device_name] Error: $message};
+}
+
+############################################################    Request handling
+
+sub update_timer {
     my ($hash) = shift;
     my $nextupdate = 0;
 
-    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::Timer );
+    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::update_timer );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
     $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
-    RequestUpdate($hash);
+    request_data_update($hash);
 
-    ::InternalTimer( $nextupdate, \&FHEM::Buienradar::Timer, $hash );
+    ::InternalTimer( $nextupdate, \&FHEM::Buienradar::update_timer, $hash );
 
     return 1;
 }
 
-sub RequestUpdate {
-    my ($hash)  = shift;
-    my $region  = $hash->{REGION};
-    my $name    = $hash->{NAME};
+sub parse_http_response {
+    my $param = shift;
+    my $err   = shift;
+    my $data  = shift;
+    my $hash  = $param->{hash};
+    my $name  = $hash->{NAME};
+    $hash->{'.RainStart'} = undef;
+
+    Readonly my $INTERVAL_LENGTH_MINUTES    => 5;
+    Readonly my $INTERVAL_LENGHT_SECONDS    => $INTERVAL_LENGTH_MINUTES * ONE_MINUTE;
+    # todo: secondary usage!
+    Readonly my $MINUTES_IN_HOUR            => 60;
+    Readonly my $TOTAL_PERCENTAGE           => 100;
+    Readonly my $LAMETRIC_MULTIPILIER       => 1000;
+    Readonly my $LAMETRIC_MAX_VALUES        => 12;
+
+    my %precipitation_forecast;
+
+    if ( $err ne q{} ) {
+        ::readingsSingleUpdate( $hash, 'state', qq[Error: $err =>$data], 1 );
+        reset_request_result($hash);
+    }
+    elsif ( $data ne q{} ) {
+        my $forecast_data;
+        my $error;
+
+        if ( defined $param->{'code'} && $param->{'code'} ne '200' ) {
+            $error = sprintf
+                'Pulling %s returns HTTP status code %d instead of 200.',
+                $hash->{URL},
+                $param->{'code'};
+
+            debug_message( $name, qq[HTTP Response code is: $param->{'code'}] );
+
+            if ( $param->{'code'} eq '404' ) {
+                my $response_body;
+
+                if ( !@errors ) {
+                    $response_body = eval { $response_body = from_json($data) };
+                }
+
+                if ($EVAL_ERROR) {
+                    debug_message( $name, q{Response body},
+                        Dumper($response_body) );
+                    $error =
+                        qq[Location is not in coverage for region '$hash->{REGION}'];
+                }
+            }
+
+            handle_error( $name, qq{$error} );
+            debug_message( $name, Dumper($param) );
+            ::readingsSingleUpdate( $hash, 'state', $error, 1 );
+            reset_request_result($hash);
+            return;
+        }
+
+        if ( !@errors ) {
+            $forecast_data = eval { $forecast_data = from_json($data) };
+        }
+
+        if ($EVAL_ERROR) {
+            $error = qq{Can't evaluate JSON from $hash->{URL}: $EVAL_ERROR};
+            handle_error( $name, qq{$error} );
+            debug_message( $name, join q{},
+                map { qq{[$name] $_} } Dumper($data) );
+            ::readingsSingleUpdate( $hash, q{state}, $error, 1 );
+            reset_request_result($hash);
+            return;
+        }
+
+        if ( !$forecast_data->{'success'} ) {
+            $error =
+                q{Got JSON from buienradar.nl, but had some troubles delivering meaningful data!};
+            handle_error( $name, qq{$error} );
+            debug_message( $name, join q{},
+                map { qq{[$name] $_} } Dumper($data) );
+            ::readingsSingleUpdate( $hash, 'state', $error, 1 );
+            reset_request_result($hash);
+            return;
+        }
+
+        my @precip;
+
+        if ( !@errors ) {
+            @precip = @{ $forecast_data->{'precip'} };
+        }
+
+        debug_message( $name,
+            q{Received data: } . Dumper( @{ $forecast_data->{'precip'} } ) );
+
+        if ( scalar @precip > 0 ) {
+            my $data_lametric = join q{,}, map { $_ * $LAMETRIC_MULTIPILIER } @precip[ 0 .. $LAMETRIC_MAX_VALUES-1 ];
+            my $rain_total    = List::Util::sum @precip;
+            my $rain_max      = List::Util::max @precip;
+            my $rain_start    = undef;
+            my $rain_end      = undef;
+            my $data_start    = $forecast_data->{start};
+            my $data_end = $data_start + ( scalar @precip ) * $INTERVAL_LENGHT_SECONDS;
+            my $forecast_start      = $data_start;
+            my $rain_now            = undef;
+            my $rain_data           = join q{:}, @precip;
+            my $rain_amount         = $precip[0];
+            my $is_raining          = undef;
+            my $intervals_with_rain = scalar map { $_ > 0 ? $_ : () } @precip;
+            $hash->{'.RainStart'} = q{unknown};
+            my $precip_length = scalar @precip;
+
+            for my $precip_index ( 0 .. $precip_length ) {
+
+                my $start  = $forecast_start + $precip_index * $INTERVAL_LENGHT_SECONDS;
+                my $end    = $start +  $INTERVAL_LENGHT_SECONDS;
+                my $precip = $precip[$precip_index];
+                $is_raining = undef;    # reset
+
+                # set a flag if it's raining
+                if ( $precip > 0 ) {
+                    $is_raining = 1;
+                }
+
+                # there is precipitation and start is not yet set
+                if ( not $rain_start and $is_raining ) {
+                    $rain_start = $start;
+                    $hash->{'.RainStart'} = $rain_start;
+                }
+
+                # It's raining again, so we have to reset rainEnd for a new chance
+                if ( $is_raining and $rain_end ) {
+                    $rain_end = undef;
+                }
+
+                # It's not longer raining, so set rainEnd (again)
+                if ( $rain_start and not $is_raining and not $rain_end ) {
+                    $rain_end = $start;
+                }
+
+                if ( time() ~~ [ $start .. $end ] ) {
+                    $rain_now = $precip;
+                    $hash->{'.RainStart'} = 0;
+                }
+
+                $precipitation_forecast{$start} = {
+                    'start'         => $start,
+                    'end'           => $end,
+                    'precipitation' => $precip,
+                };
+            }
+
+            debug_message( $name, Dumper(%precipitation_forecast) );
+
+            $hash->{'.SERIALIZED'} =
+                Storable::freeze( \%precipitation_forecast );
+
+            ::readingsBeginUpdate($hash);
+            ::readingsBulkUpdate(
+                $hash, 'state',
+                $rain_now
+                    ? sprintf '%.3f',
+                    $rain_now
+                    : 'unknown'
+            );
+            ::readingsBulkUpdate( $hash, 'rainTotal', sprintf '%.3f',
+                $rain_total );
+            ::readingsBulkUpdate( $hash, 'rainAmount', sprintf '%.3f',
+                $rain_amount );
+            ::readingsBulkUpdate(
+                $hash, 'rainNow',
+                $rain_now
+                    ? sprintf '%.3f',
+                    $rain_now
+                    : 'unknown'
+            );
+            ::readingsBulkUpdate( $hash, 'rainLaMetric', $data_lametric );
+            ::readingsBulkUpdate(
+                $hash, 'rainDataStart',
+                POSIX::strftime '%R',
+                    localtime $data_start
+            );
+            ::readingsBulkUpdate(
+                $hash, 'rainDataEnd',
+                POSIX::strftime '%R',
+                    localtime $data_end
+            );
+            ::readingsBulkUpdate( $hash, 'rainMax', sprintf '%.3f', $rain_max );
+            ::readingsBulkUpdate(
+                $hash,
+                'rainBegin',
+                (
+                    ($rain_start)
+                        ? POSIX::strftime '%R',
+                        localtime $rain_start
+                        : 'unknown'
+                )
+            );
+            ::readingsBulkUpdate(
+                $hash,
+                'rainEnd',
+                (
+                    ($rain_end)
+                        ? POSIX::strftime '%R',
+                        localtime $rain_end
+                        : 'unknown'
+                )
+            );
+            ::readingsBulkUpdate( $hash, 'rainData', $rain_data );
+            ::readingsBulkUpdate( $hash, 'rainDuration',
+                $intervals_with_rain * $INTERVAL_LENGTH_MINUTES );
+            ::readingsBulkUpdate( $hash, 'rainDurationIntervals',
+                $intervals_with_rain );
+            ::readingsBulkUpdate( $hash, 'rainDurationPercent',
+                ( $intervals_with_rain / scalar @precip ) * $TOTAL_PERCENTAGE );
+            ::readingsBulkUpdate(
+                $hash,
+                'rainDurationTime',
+                sprintf '%02d:%02d',
+                    (
+                        ( $intervals_with_rain * $INTERVAL_LENGTH_MINUTES / $MINUTES_IN_HOUR ),
+                        $intervals_with_rain * $INTERVAL_LENGTH_MINUTES % $MINUTES_IN_HOUR
+                    )
+            );
+            ::readingsEndUpdate( $hash, 1 );
+        }
+    }
+
+    return;
+}
+
+sub reset_request_result {
+    my $hash = shift;
+
+    $hash->{'.SERIALIZED'} = undef;
+
+    ::readingsBeginUpdate($hash);
+    ::readingsBulkUpdate( $hash, 'rainTotal',     'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainAmount',    'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainNow',       'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainLaMetric',  'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainDataStart', 'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainDataEnd',   'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainMax',       'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainBegin',     'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainEnd',       'unknown' );
+    ::readingsBulkUpdate( $hash, 'rainData',      'unknown' );
+    ::readingsEndUpdate( $hash, 1 );
+
+    return;
+}
+
+sub request_data_update {
+    my ($hash) = shift;
+    my $region = $hash->{REGION};
+    my $name   = $hash->{NAME};
 
     # @todo candidate for refactoring to sprintf
     $hash->{URL} =
-      ::AttrVal( $name, 'BaseUrl', 'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php' )
-        . '?lat='       . $hash->{LATITUDE}
-        . '&lon='       . $hash->{LONGITUDE}
-        . '&region='    . $region
-        . '&unit='      . 'mm/u';
+        ::AttrVal( $name, 'BaseUrl',
+            'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php' )
+            . '?lat='
+            . $hash->{LATITUDE} . '&lon='
+            . $hash->{LONGITUDE}
+            . '&region='
+            . $region
+            . '&unit=' . 'mm/u';
 
     my $param = {
         url      => $hash->{URL},
         timeout  => 10,
         hash     => $hash,
         method   => 'GET',
-        callback => \&ParseHttpResponse
+        callback => \&parse_http_response
     };
 
     ::HttpUtils_NonblockingGet($param);
-    Debugging($name, q{Data update requested});
+    debug_message( $name, q{Data update requested} );
 
     return;
 }
 
-sub HTML {
-    my $name        = shift;
-    my $width       = shift;
-    my $hash        = GetHash($name);
-    my @values      = split /:/x, ::ReadingsVal($name, 'rainData', '0:0');
-    my $language    = GetLanguage();
+############################################################    Charts
+
+sub chart_html_bar {
+    my $name     = shift;
+    my $width    = shift;
+    my $hash     = get_device_definition($name);
+    my @values   = split /:/xms, ::ReadingsVal( $name, 'rainData', '0:0' );
+    my $language = get_global_language();
+
+    Readonly my $HTML_MAX_SIZE_PX => 700;
+    Readonly my $HTML_MIN_SIZE_PX => 30;
 
     my $as_html = <<'CSS_STYLE';
 <style>
@@ -647,89 +859,69 @@ sub HTML {
   margin: 1px;
   color: white;
 }
- 
+
 </style>
 <div class='buienradar'>
 CSS_STYLE
 
     $as_html .= qq[<p><a href="./fhem?detail=$name">$name</a>];
-    $as_html .= sprintf(q{<p>%s %s %s</p>},
-        $Translations{'HTMLChart'}{'data_start'}{$language},
-        $Translations{'general'}{'at'}{$language},
-        ::ReadingsVal( $name, 'rainDataStart', $Translations{'general'}{'unknown'}{$language} )
-    );
+    $as_html .= sprintf
+        q{<p>%s %s %s</p>},
+        $TRANSLATIONS{'chart_html_bar'}{'data_start'}{$language},
+        $TRANSLATIONS{'general'}{'at'}{$language},
+        ::ReadingsVal( $name, 'rainDataStart',
+            $TRANSLATIONS{'general'}{'unknown'}{$language} );
     my $factor =
-      ( $width ? $width : 700 ) / ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
+        ( $width ? $width : $HTML_MAX_SIZE_PX ) /
+            ( 1 + ::ReadingsVal( $name, 'rainMax', q{0} ) );
 
     $as_html .= q[<div class='htmlchart'>];
     foreach my $bar_value (@values) {
-        $as_html .= sprintf(
+        $as_html .= sprintf
             q{<div style='width: %dpx'>%.3f</div>},
-            ( int( $bar_value * $factor ) + 30 ),
-            $bar_value
-        );
+            ( int( $bar_value * $factor ) + $HTML_MIN_SIZE_PX ),
+            $bar_value;
     }
 
     $as_html .= q[</div>];
     return ($as_html);
 }
 
-=pod
+sub chart_gchart {
+    my $name     = shift;
+    my $hash     = get_device_definition($name);
+    my $language = get_global_language();
 
-=cut
-sub GetGChartDataSet {
-    my $start = shift;
-    my $precipitation = shift;
-
-    my ($k, $v) = (
-        POSIX::strftime('%H:%M', localtime $start),
-        sprintf('%.3f', $precipitation)
-    );
-
-    return qq{['$k', $v]}
-}
-
-=over 1
-
-=item C<FHEM::Buienradar::GChart>
-
-=back
-
-C<FHEM::Buienradar::GChart> returns the precipitation data from buienradar.nl as PNG, renderd by Google Charts as
-a PNG data.
-
-=cut
-sub GChart {
-    my $name = shift;
-    my $hash = GetHash($name);
-    my $language = GetLanguage();
-
-    unless ($hash->{'.SERIALIZED'}) {
-        Error($name, q{Can't return serizalized data for FHEM::Buienradar::GChart.});
+    if ( !$hash->{'.SERIALIZED'} ) {
+        handle_error( $name,
+            q{Can't return serizalized data for FHEM::Buienradar::chart_gchart.}
+        );
 
         # return dummy data
         return;
     }
 
     # read & parse stored data
-    my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
-    my $data = join ', ', map {
-        GetGChartDataSet($storedData{$_}{'start'}, $storedData{$_}{'precipitation'});
-    } sort keys %storedData;
+    my %stored_data = %{ Storable::thaw( $hash->{'.SERIALIZED'} ) };
+    my $data        = join ', ', map {
+        chart_gchart_get_dataset( $stored_data{$_}{'start'},
+            $stored_data{$_}{'precipitation'} );
+    } sort keys %stored_data;
 
     # create data for the GChart
-    my $hAxis   = $Translations{'GChart'}{'hAxis'}{$language};
-    my $vAxis   = $Translations{'GChart'}{'vAxis'}{$language};
-    my $title   = sprintf(
-        $Translations{'GChart'}{'title'}{$language},
+    my $legend_time_axis =
+        $TRANSLATIONS{'chart_gchart'}{'legend_time_axis'}{$language};
+    my $legend_volume_axis =
+        $TRANSLATIONS{'chart_gchart'}{'legend_volume_axis'}{$language};
+    my $title = sprintf
+        $TRANSLATIONS{'chart_gchart'}{'title'}{$language},
         $hash->{LATITUDE},
-        $hash->{LONGITUDE}
-    );
-    my $legend  = $Translations{'GChart'}{'legend'}{$language};
-    Debugging($name, qq{Legend langauge is: $language});
-    Debugging($name, qq{Legend is: $legend});
+        $hash->{LONGITUDE};
+    my $legend = $TRANSLATIONS{'chart_gchart'}{'legend'}{$language};
+    debug_message( $name, qq{Legend langauge is: $language} );
+    debug_message( $name, qq{Legend is: $legend} );
 
-    return <<"CHART"
+    return <<"CHART";
 <div id='chart_${name}'; style='width:100%; height:100%'></div>
 <script type='text/javascript' src='https://www.gstatic.com/charts/loader.js'></script>
 <script type='text/javascript'>
@@ -745,7 +937,7 @@ sub GChart {
         var options = {
             title: '${title}',
             hAxis: {
-                title: '${hAxis}',
+                title: '${legend_time_axis}',
                 slantedText:true,
                 slantedTextAngle: 45,
                 textStyle: {
@@ -753,7 +945,7 @@ sub GChart {
             },
             vAxis: {
                 minValue: 0,
-                title: '${vAxis}'
+                title: '${legend_volume_axis}'
             }
         };
 
@@ -769,18 +961,286 @@ sub GChart {
 CHART
 }
 
+sub chart_gchart_get_dataset {
+    my $start         = shift;
+    my $precipitation = shift;
+
+    my ( $k, $v ) = (
+        POSIX::strftime( '%H:%M', localtime $start ),
+        sprintf '%.3f', $precipitation,
+    );
+
+    return qq{['$k', $v]};
+}
+
+sub logproxy_wrapper {
+    my $name = shift;
+    my $hash = get_device_definition($name);
+
+    if ( !$hash->{'.SERIALIZED'} ) {
+        handle_error( $name,
+            q{Can't return serizalized data for FHEM::Buienradar::logproxy_wrapper. Using dummy data}
+        );
+
+        # return dummy data
+        return ( 0, 0, 0 );
+    }
+
+    my %data = %{ Storable::thaw( $hash->{'.SERIALIZED'} ) };
+
+    return (
+        join qq{\n},
+            map {
+                join q{ },
+                    (
+                        POSIX::strftime( '%F_%T', localtime $data{$_}{'start'} ),
+                        sprintf '%.3f',
+                            $data{$_}{'precipitation'}
+                    )
+            } keys %data,
+                0,
+                ::ReadingsVal( $name, 'rainMax', 0 )
+    );
+}
+
+sub chart_textbar {
+    my $name          = shift;
+    my $bar_character = shift || $DEFAULT_TEXT_BAR_CHAR;
+    my $hash          = get_device_definition($name);
+
+    if ( !$hash->{'.SERIALIZED'} ) {
+        handle_error( $name,
+            q{Can't return serizalized data for FHEM::Buienradar::TextChart.} );
+
+        # return dummy data
+        return;
+    }
+
+    my %stored_data = %{ Storable::thaw( $hash->{'.SERIALIZED'} ) };
+
+    my $data = join qq{\n}, map {
+        join ' | ',
+            chart_text_show_bar( $hash->{q{.SERIALIZED}}, $bar_character );
+    } sort keys %stored_data;
+
+    return $data;
+}
+
+sub chart_text_show_bar {
+    my $data          = shift;
+    my $bar_character = shift;
+    my %stored_data   = %{ Storable::thaw($data) };
+
+    # todo I need to recapture this
+    Readonly my $BAR_CHAR_FACTOR    => 10;
+
+    my ( $time, $precip, $bar ) = (
+        POSIX::strftime( '%H:%M', localtime $stored_data{$_}{'start'} ),
+        sprintf( '% 7.3f', $stored_data{$_}{'precipitation'} ),
+        (
+            ( $stored_data{$_}{'precipitation'} < $MAX_TEXT_BAR_LENGTH )
+                ? $bar_character x
+                POSIX::lround( abs $stored_data{$_}{'precipitation'} * $BAR_CHAR_FACTOR )
+                : ( $bar_character x $MAX_TEXT_BAR_LENGTH ) . q{>}
+        ),
+    );
+
+    return ( $time, $precip, $bar );
+}
+
+1;
+
+__END__
+
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+    FHEM::Buienradar - Support for Buienradar.nl precipitation data
+
+=head1 VERSION
+
+    3.0.8
+
+=head1 SYNOPSIS
+
+    See POD section below
+
+=head1 DESCRIPTION
+
+    See POD section below
+
+=head1 SUBROUTINES/METHODS
+
 =over 1
 
-=item C<FHEM::Buienradar::LogProxy>
+=item timediff2str($seconds)
 
-C<FHEM::Buienradar::LogProxy> returns FHEM log look-alike data from the current data for using it with
-FTUI. It returns a list containing three elements:
+Create a human readable representation for a given time t, like x minutes, y seconds, but only
+with the necessary pieces.
+
+Respects your wishes regarding scalar / list context, e.g.
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item *  C<$seconds> - time to handle in seconds
 
 =back
 
-=over 1
+=item Return values
 
-=item Log look-alike data, like
+=over 3
+
+=item * If called in list context: a list containing four elements
+
+    # list context
+    say Dumper(timediff2str(10000))
+    > $VAR1 = '1';
+    > $VAR2 = '3';
+    > $VAR3 = '46';
+    > $VAR4 = '40';
+
+=item * If called in scalar context: a formatted string
+
+    say Dumper(scalar timediff2str(100000));
+    > $VAR1 = '1 Tage, 03 Stunden, 46 Minuten, 40 Sekunden';
+
+=back
+
+=back
+
+=item chart_textbar($device_name)
+
+Returns the precipitation data as textual chart representation
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item * C<$device_name> - name of the Buienradar device, getting the data from
+
+=back
+
+=item Return values
+
+=over 3
+
+=item * Text chart as a plain text string
+
+=begin text
+
+    8:25  |   0.000 |
+    18:30 |   0.000 |
+    18:35 |   0.000 |
+    18:40 |   0.000 |
+    18:45 |   0.000 |
+    18:50 |   0.000 |
+    18:55 |   0.000 |
+    19:00 |   0.000 |
+    19:05 |   0.000 |
+    19:10 |   0.000 |
+    19:15 |   0.060 | #
+    19:20 |   0.370 | ####
+    19:25 |   0.650 | #######
+    19:30 |   0.490 | #####
+    19:35 |   0.220 | ##
+    19:40 |   0.110 | #
+    19:45 |   0.290 | ###
+    19:50 |   0.560 | ######
+    19:55 |   0.700 | #######
+    20:00 |   0.320 | ###
+    20:05 |   0.560 | ######
+    20:10 |   0.870 | #########
+    20:15 |   0.810 | ########
+    20:20 |   1.910 | ###################
+    20:25 |   1.070 | ###########
+
+=end text
+
+=back
+
+=back
+
+=item chart_html_bar($device_name, $max_width)
+
+Get precipitation data as HTML bar chart
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item * C<$device_name> - name of the Buienradar device, getting the data from
+
+=item * C<$width> - Maximum width in px for the HTML bars
+
+=back
+
+=item Return values
+
+=over 3
+
+=item * Chart as HTML as single string
+
+=back
+
+=back
+
+=item chart_gchart($device_name)
+
+Get precipitation data as Google Chart
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item * C<$device_name> - name of the Buienradar device, getting the data from
+
+=back
+
+=item Return values
+
+Log look-alike data, like
+
+=over 3
+
+=item   * The generated HTML source code
+
+=back
+
+=back
+
+=item logproxy_wrapper($device_name)
+
+Returns FHEM log look-alike data from the current data for using it with
+FTUI.
+
+=over 2
+
+=item Parameters
+
+=over 3
+
+=item * C<$device_name> - name of the Buienradar device, getting the data from
+
+=back
+
+=item Return values
+
+=over 3
+
+=item   * LogProxy compatible data
 
 =begin text
 
@@ -797,336 +1257,77 @@ FTUI. It returns a list containing three elements:
 
 =end text
 
-=item Fixed value of 0
+=item   * Fixed value of 0
 
-=item Maximal amount of rain in a 5 minute interval
+=item   * Maximal amount of rain in a 5 minute interval
 
 =back
 
-=cut
-sub LogProxy {
-    my $name = shift;
-    my $hash = GetHash($name);
+=back
 
-    unless ($hash->{'.SERIALIZED'}) {
-        Error($name, q{Can't return serizalized data for FHEM::Buienradar::LogProxy. Using dummy data});
+=back
 
-        # return dummy data
-        return (0, 0, 0);
-    }
+=head1 DIAGNOSTICS
 
-    my %data = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
+=head1 AUTHOR
 
-    return (
-        join('\n', map {
-            join(
-                q{ }, (
-                    POSIX::strftime('%F_%T', localtime $data{$_}{'start'}),
-                    sprintf('%.3f', $data{$_}{'precipitation'})
-                )
-            )
-        } keys %data),
-        0,
-        ::ReadingsVal($name, 'rainMax', 0)
-    );
-}
+    Christoph Morrison, <fhem@christoph-jeschke.de>
+    <https://github.com/christoph-morrison>
 
-=pod
+=head1 CONTRIBUTORS
+
+    lubeda <https://github.com/lubeda>
+
+=head1 DEPENDENCIES
 
 =over 1
 
-=item C<FHEM::Buienradar::TextChart>
+=item * Perl 5.13.9
 
-C<FHEM::Buienradar::TextChart> returns the precipitation data as textual chart representation
+=item * Readonly <https://metacpan.org/pod/Readonly>
 
-=back
-
-=over 1
-
-=item Example
-
-=begin text
-
-8:25 |   0.000 |
-18:30 |   0.000 |
-18:35 |   0.000 |
-18:40 |   0.000 |
-18:45 |   0.000 |
-18:50 |   0.000 |
-18:55 |   0.000 |
-19:00 |   0.000 |
-19:05 |   0.000 |
-19:10 |   0.000 |
-19:15 |   0.060 | #
-19:20 |   0.370 | ####
-19:25 |   0.650 | #######
-19:30 |   0.490 | #####
-19:35 |   0.220 | ##
-19:40 |   0.110 | #
-19:45 |   0.290 | ###
-19:50 |   0.560 | ######
-19:55 |   0.700 | #######
-20:00 |   0.320 | ###
-20:05 |   0.560 | ######
-20:10 |   0.870 | #########
-20:15 |   0.810 | ########
-20:20 |   1.910 | ###################
-20:25 |   1.070 | ###########
-
-=end text
-
-=item Fixed value of 0
-
-=item Maximal amount of rain in a 5 minute interval
+=item * JSON::MaybeXS <https://metacpan.org/pod/JSON::MaybeXS>
 
 =back
-=cut
-sub TextChart {
-    my $name = shift;
-    my $bar_character = shift || $default_bar_character;
-    my $hash = GetHash($name);
 
-    unless ($hash->{'.SERIALIZED'}) {
-        Error($name, q{Can't return serizalized data for FHEM::Buienradar::TextChart.});
-        # return dummy data
-        return
-    }
+=head1 INCOMPATIBILITIES
 
-    my %storedData = %{ Storable::thaw($hash->{'.SERIALIZED'}) };
+=head1 CONFIGURATION AND ENVIRONMENT
 
-    my $data = join qq{\n}, map {
-        join ' | ', ShowTextChartBar($hash->{q{.SERIALIZED}}, $bar_character);
-    } sort keys %storedData;
+=head1 BUGS AND LIMITATIONS
 
-    return $data;
-}
+    Please report bugs here: <https://github.com/fhem/mod-Buienradar/issues>
 
-=pod
+=head1 LICENSE AND COPYRIGHT
 
-    Build the char bar for the text chart
+    SPDX Identifier: Unlicense
 
-=cut
-sub ShowTextChartBar {
-    my $data            = shift;
-    my $bar_character   = shift;
-    my %storedData      = %{ Storable::thaw($data) };
+    This is free and unencumbered software released into the public domain.
 
-    my ($time, $precip, $bar) = (
-        POSIX::strftime('%H:%M', localtime $storedData{$_}{'start'}),
-        sprintf('% 7.3f', $storedData{$_}{'precipitation'}),
-        (
-            ($storedData{$_}{'precipitation'} < 50)
-                ? $bar_character x  POSIX::lround(abs($storedData{$_}{'precipitation'} * 10))
-                : ($bar_character x  50) . q{>}
-        ),
-    );
+    Anyone is free to copy, modify, publish, use, compile, sell, or
+    distribute this software, either in source code form or as a compiled
+    binary, for any purpose, commercial or non-commercial, and by any
+    means.
 
-    return ($time, $precip, $bar);
-}
+    In jurisdictions that recognize copyright laws, the author or authors
+    of this software dedicate any and all copyright interest in the
+    software to the public domain. We make this dedication for the benefit
+    of the public at large and to the detriment of our heirs and
+    successors. We intend this dedication to be an overt act of
+    relinquishment in perpetuity of all present and future rights to this
+    software under copyright law.
 
-## no critic (ProhibitExcessComplexity)
-=pod
+    THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS BE LIABLE FOR ANY CLAIM, DAMAGES OR
+    OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+    ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
 
-    @todo
-    Must be refactored
+    For more information, please refer to <http://unlicense.org/>
 
-=cut
-sub ParseHttpResponse {
-    my $param               = shift;
-    my $err                 = shift;
-    my $data                = shift;
-    my $hash                = $param->{hash};
-    my $name                = $hash->{NAME};
-    $hash->{'.RainStart'}   = undef;
-
-    my %precipitation_forecast;
-
-    if ( $err ne q{} ) {
-        ::readingsSingleUpdate($hash, 'state', qq[Error: $err =>$data], 1);
-        ResetResult($hash);
-    }
-    elsif ( $data ne q{} ) {
-        my $forecast_data;
-        my $error;
-
-        if(defined $param->{'code'} && $param->{'code'} ne '200') {
-            $error = sprintf(
-                'Pulling %s returns HTTP status code %d instead of 200.',
-                $hash->{URL},
-                $param->{'code'}
-            );
-
-            Debugging($name, qq[HTTP Response code is: $param->{'code'}]);
-
-            if ($param->{'code'} eq '404') {
-                my $response_body;
-                $response_body = eval { $response_body = from_json($data) } unless @errors;
-
-                unless ($@) {
-                    Debugging($name, qq{Repsonse body}, Dumper($response_body));
-                    $error = qq[Location is not in coverage for region '$hash->{REGION}'];
-                }
-            }
-
-            Error($name, qq{$error});
-            Debugging($name, Dumper($param));
-            ::readingsSingleUpdate($hash, 'state', $error, 1);
-            ResetResult($hash);
-            return;
-        }
-
-        $forecast_data = eval { $forecast_data = from_json($data) } unless @errors;
-
-        if ($@) {
-
-            $error = qq{Can't evaluate JSON from $hash->{URL}: $@};
-            Error($name, qq{$error});
-            Debugging($name, join(q{}, map { qq{[$name] $_} } Dumper($data)));
-            ::readingsSingleUpdate($hash, q{state}, $error, 1);
-            ResetResult($hash);
-            return;
-        }
-
-        unless ($forecast_data->{'success'}) {
-            $error = q{Got JSON from buienradar.nl, but had some troubles delivering meaningful data!};
-            Error($name, qq{$error});
-            Debugging($name, join(q{}, map { qq{[$name] $_} } Dumper($data)));
-            ::readingsSingleUpdate($hash, 'state', $error, 1);
-            ResetResult($hash);
-            return;
-        }
-
-        my @precip;
-        @precip = @{$forecast_data->{'precip'}} unless @errors;
-
-        Debugging($name, q{Received data: } . Dumper(@{$forecast_data->{'precip'}}));
-
-        if (scalar @precip > 0) {
-            my $rainLaMetric        = join(q{,}, map {$_ * 1000} @precip[0..11]);
-            my $rainTotal           = List::Util::sum @precip;
-            my $rainMax             = List::Util::max @precip;
-            my $rainStart           = undef;
-            my $rainEnd             = undef;
-            my $dataStart           = $forecast_data->{start};
-            my $dataEnd             = $dataStart + (scalar @precip) * 5 * ONE_MINUTE;
-            my $forecast_start      = $dataStart;
-            my $rainNow             = undef;
-            my $rainData            = join(q{:}, @precip);
-            my $rainAmount          = $precip[0];
-            my $isRaining           = undef;
-            my $intervalsWithRain   = scalar map { $_ > 0 ? $_ : () } @precip;
-            $hash->{'.RainStart'}   = q{unknown};
-
-            for (my $precip_index = 0; $precip_index < scalar @precip; $precip_index++) {
-
-                my $start           = $forecast_start + $precip_index * 5 * ONE_MINUTE;
-                my $end             = $start + 5 * ONE_MINUTE;
-                my $precip          = $precip[$precip_index];
-                $isRaining          = undef;                            # reset
-
-                # set a flag if it's raining
-                if ($precip > 0) {
-                    $isRaining = 1;
-                }
-
-                # there is precipitation and start is not yet set
-                if (not $rainStart and $isRaining) {
-                    $rainStart  = $start;
-                    $hash->{'.RainStart'} = $rainStart;
-                }
-
-                # It's raining again, so we have to reset rainEnd for a new chance
-                if ($isRaining and $rainEnd) {
-                    $rainEnd    = undef;
-                }
-
-                # It's not longer raining, so set rainEnd (again)
-                if ($rainStart and not $isRaining and not $rainEnd) {
-                    $rainEnd    = $start;
-                }
-
-                if (time() ~~ [$start..$end]) {
-                    $rainNow    = $precip;
-                    $hash->{'.RainStart'} = 0;
-                }
-
-                $precipitation_forecast{$start} = {
-                    'start'         => $start,
-                    'end'           => $end,
-                    'precipitation' => $precip,
-                };
-            }
-
-            Debugging($name, Dumper(%precipitation_forecast));
-
-            $hash->{'.SERIALIZED'} = Storable::freeze(\%precipitation_forecast);
-
-            ::readingsBeginUpdate($hash);
-                ::readingsBulkUpdate( $hash, 'state', (($rainNow) ? sprintf( '%.3f', $rainNow) : 'unknown'));
-                ::readingsBulkUpdate( $hash, 'rainTotal', sprintf( '%.3f', $rainTotal) );
-                ::readingsBulkUpdate( $hash, 'rainAmount', sprintf( '%.3f', $rainAmount) );
-                ::readingsBulkUpdate( $hash, 'rainNow', (($rainNow) ? sprintf( '%.3f', $rainNow) : 'unknown'));
-                ::readingsBulkUpdate( $hash, 'rainLaMetric', $rainLaMetric );
-                ::readingsBulkUpdate( $hash, 'rainDataStart', POSIX::strftime '%R', localtime $dataStart);
-                ::readingsBulkUpdate( $hash, 'rainDataEnd', POSIX::strftime '%R', localtime $dataEnd );
-                ::readingsBulkUpdate( $hash, 'rainMax', sprintf( '%.3f', $rainMax ) );
-                ::readingsBulkUpdate( $hash, 'rainBegin', (($rainStart) ? POSIX::strftime '%R', localtime $rainStart : 'unknown'));
-                ::readingsBulkUpdate( $hash, 'rainEnd', (($rainEnd) ? POSIX::strftime '%R', localtime $rainEnd : 'unknown'));
-                ::readingsBulkUpdate( $hash, 'rainData', $rainData);
-                ::readingsBulkUpdate( $hash, 'rainDuration', $intervalsWithRain * 5);
-                ::readingsBulkUpdate( $hash, 'rainDurationIntervals', $intervalsWithRain);
-                ::readingsBulkUpdate( $hash, 'rainDurationPercent', ($intervalsWithRain / scalar @precip) * 100);
-                ::readingsBulkUpdate( $hash, 'rainDurationTime', sprintf('%02d:%02d',(( $intervalsWithRain * 5 / 60), $intervalsWithRain * 5 % 60)));
-            ::readingsEndUpdate( $hash, 1 );
-        }
-    }
-
-    return;
-}
-## use critic
-
-sub ResetResult {
-    my $hash = shift;
-
-    $hash->{'.SERIALIZED'} = undef;
-
-    ::readingsBeginUpdate($hash);
-        ::readingsBulkUpdate( $hash, 'rainTotal', 'unknown' );
-        ::readingsBulkUpdate( $hash, 'rainAmount', 'unknown' );
-        ::readingsBulkUpdate( $hash, 'rainNow', 'unknown' );
-        ::readingsBulkUpdate( $hash, 'rainLaMetric', 'unknown' );
-        ::readingsBulkUpdate( $hash, 'rainDataStart', 'unknown');
-        ::readingsBulkUpdate( $hash, 'rainDataEnd', 'unknown' );
-        ::readingsBulkUpdate( $hash, 'rainMax', 'unknown' );
-        ::readingsBulkUpdate( $hash, 'rainBegin', 'unknown');
-        ::readingsBulkUpdate( $hash, 'rainEnd', 'unknown');
-        ::readingsBulkUpdate( $hash, 'rainData', 'unknown');
-    ::readingsEndUpdate( $hash, 1 );
-
-    return;
-}
-
-sub Debugging {
-    local $OFS = qq{\n};
-    my $device_name = shift;
-    ::Debug(join($OFS, (qq{[$device_name]}, qq{@_}))) if (
-        int(::AttrVal(q{global}, q{verbose}, 0)) >= $debugging_min_verbose
-        or  int(::AttrVal($device_name, q{debug}, 0)) == 1
-    );
-    return;
-}
-
-sub Error {
-    my $device_name = shift;
-    my $message = shift || q{Something bad happened. Unknown error!};
-    return qq{[$device_name] Error: $message};
-}
-
-1;
-
-=pod
-
-=encoding utf8
+    See also https://www.buienradar.nl/overbuienradar/gratis-weerdata
 
 =over 1
 
@@ -1386,7 +1587,7 @@ abgerufen werden.</code></pre>
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "3.0.6",
+    "version": "3.0.8",
     "author": [
         "Christoph Morrison <post@christoph-jeschke.de>"
     ],
@@ -1430,13 +1631,14 @@ abgerufen werden.</code></pre>
                 "FHEM": 5.00918799,
                 "perl": 5.10,
                 "Meta": 0,
-                "JSON": 0
+                "JSON::MaybeXS": 0,
+                "Readonly": 0
             },
             "recommends": {
-            
+                "Cpanel::JSON::XS": 0
             },
             "suggests": {
-            
+
             }
         }
     }
