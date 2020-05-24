@@ -28,7 +28,7 @@ use FHEM::Meta;
 ############################################################    Default values
 Readonly our $VERSION               => q{3.0.8};
 Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
-Readonly our $DEBUGGING_MIN_VERBOSE => 4;
+Readonly our $DEBUGGING_MIN_VERBOSE => 2;
 Readonly our $DEFAULT_REGION        => q{de};
 Readonly our $DEFAULT_TEXT_BAR_CHAR => q{=};
 Readonly our $DEFAULT_LANGUAGE      => q{en};
@@ -666,15 +666,15 @@ sub parse_http_response {
             $hash->{'.RainStart'} = q{unknown};
             my $precip_length = scalar @precip;
 
-            for my $precip_index ( 0 .. $precip_length ) {
+            for my $precip_index ( 0 .. $precip_length-1 ) {
 
                 my $start  = $forecast_start + $precip_index * $INTERVAL_LENGHT_SECONDS;
                 my $end    = $start +  $INTERVAL_LENGHT_SECONDS;
-                my $precip = $precip[$precip_index];
+                my $precipitation_amount = $precip[$precip_index];
                 $is_raining = undef;    # reset
 
                 # set a flag if it's raining
-                if ( $precip > 0 ) {
+                if ( $precipitation_amount > 0 ) {
                     $is_raining = 1;
                 }
 
@@ -695,14 +695,14 @@ sub parse_http_response {
                 }
 
                 if ( time() ~~ [ $start .. $end ] ) {
-                    $rain_now = $precip;
+                    $rain_now = $precipitation_amount;
                     $hash->{'.RainStart'} = 0;
                 }
 
                 $precipitation_forecast{$start} = {
                     'start'         => $start,
                     'end'           => $end,
-                    'precipitation' => $precip,
+                    'precipitation' => $precipitation_amount,
                 };
             }
 
