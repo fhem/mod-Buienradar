@@ -1,3 +1,4 @@
+#!/bin/bash
 #!/usr/bin/env bash
 
 module_file="FHEM/59_Buienradar.pm"
@@ -8,7 +9,7 @@ commandref_en_source="CommandRef.en.md"
 
 meta_source="meta.json"
 
-controls_file="controls_Buienradar.txt"
+controls_file="$1"
 
 changed_file="CHANGED"
 
@@ -37,7 +38,7 @@ substitute() {
     sed -i -ne "/^=begin html$/ {p; r .${commandref_en_source}.html" -e ":a; n; /^=end html$/ {p; b}; ba}; p" ${module_file}
 
     # insert meta data
-    sed -i -ne "/^=for :application\/json;q=META.json 59_Buienradar.pm$/ {p; r ${meta_source}" -e ":a; n; /^=end :application\/json;q=META.json$/ {p; b}; ba}; p" ${module_file}
+    sed -i -ne "/^=for :application\/json;q=META.json $(basename $module_file)}$/ {p; r ${meta_source}" -e ":a; n; /^=end :application\/json;q=META.json$/ {p; b}; ba}; p" ${module_file}
 
     # add created files
     git add FHEM/*.pm
@@ -45,27 +46,4 @@ substitute() {
     git add meta.json
 }
 
-create_controlfile() {
-    rm ${controls_file}
-    find -type f \( -path './FHEM/*' -o -path './www/*' \) -print0 | while IFS= read -r -d '' f;
-    do
-        echo "DEL ${f}" >> ${controls_file}
-        out="UPD "$(stat -c %y  $f | cut -d. -f1 | awk '{printf "%s_%s",$1,$2}')" "$(stat -c %s $f)" ${f}"
-        echo ${out//.\//} >> ${controls_file}
-    done
-
-    git add ${controls_file}
-}
-
-update_changed() {
-    rm ${changed_file}
-    echo "Last Buienradar updates ($(date +%d.%m.%Y))" > "${changed_file}"
-    # echo "" >> ${changed_file}
-    git log -5 HEAD --pretty="  %h %ad %s" --date=format:"%d.%m.%Y %H:%M" FHEM/  >> ${changed_file}
-
-    git add CHANGED
-}
-
 substitute
-create_controlfile
-update_changed

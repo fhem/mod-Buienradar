@@ -4,6 +4,16 @@
 Das Buienradar-Modul bindet die Niederschlagsvorhersagedaten der freien <abbr title="Application Program Interface">API</abbr> 
 von [Buienradar.nl](https://www.buienradar.nl) an.
 
+Buienradar benötigt folgende CPAN-Module <abbr>bzw.</abbr> Versionen:
+
+* Perl ≥ 5.13.9
+* [Readonly](https://metacpan.org/pod/Readonly)
+* [JSON::MaybeXS](https://metacpan.org/pod/JSON::MaybeXS)
+
+Empfohlen wird:
+
+* [Cpanel::JSON::XS](https://metacpan.org/pod/Cpanel::JSON::XS)
+
 <span id="Buienradardefine"></span>
 ### Define
     define <devicename> Buienradar [latitude] [longitude]
@@ -77,26 +87,26 @@ Aktuell liefert Buienradar folgende Readings:
 Buienradar bietet neben der üblichen Ansicht als Device auch die Möglichkeit, die Daten als Charts in verschiedenen Formaten zu visualisieren.
 * Eine HTML-Version die in der Detailansicht standardmäßig eingeblendet wird und mit 
         
-        { FHEM::Buienradar::HTML("name des buienradar device")}
+        { FHEM::Buienradar::chart_html_bar``("name des buienradar device")}
         
     abgerufen werden.
 * Ein von Google Charts generiertes Diagramm im <abbr>PNG</abbr>-Format, welcher mit
 
-        { FHEM::Buienradar::GChart("name des buienradar device")}
+        { FHEM::Buienradar::chart_gchart("name des buienradar device")}
         
     abgerufen werden kann. **Achtung!** Dazu werden Daten an Google übertragen!
     
 * Für <abbr>FTUI</abbr> werden die Daten im LogProxy-Format bereitgestellt:
 
-        { FHEM::Buienradar::LogProxy("name des buienradar device")}
+        { FHEM::Buienradar::logproxy_wrapper("name des buienradar device")}
         
 * Für eine reine Text-Ausgabe der Daten als Graph, kann
 
-        { FHEM::Buienradar::TextChart(q{name des buienradar device}, q{verwendetes zeichen})}
+        { FHEM::Buienradar::chart_textbar(q{name des buienradar device}, q{verwendetes zeichen})}
         
     verwendet werden. Das `verwendete zeichen` ist optional und mit `=` vorbelegt. Ausgegeben wird beispielsweise für den Aufruf
     
-        { FHEM::Buienradar::TextChart(q{buienradar_test}, q{#}) }
+        { FHEM::Buienradar::chart_textbar(q{buienradar_test}, q{#}) }
         
      für jeden Datensatz eine Zeile im Muster
     
