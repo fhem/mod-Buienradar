@@ -1,11 +1,6 @@
-2020-05-24 - Merge pull request #302 from fhem/development/3.0.8
-
-Fixed controls file
 2020-05-24 - Bump to v3.0.8
-2020-05-24 - Merge branch 'release/3.0' into development/3.0.8
 Release 3.0.8
 2020-05-24 - Fixed controls file
-2020-05-20 - Merge branch 'release/3.0' into development/3.0.8
 2020-05-19 - #149 `$debugging_min_verbose` → `$DEBUGGING_MIN_VERBOSE`
 2020-05-19 - #148 $default_interval → $DEFAULT_INTERVAL
 2020-05-19 - #146 use -no_match_vars for English
