@@ -337,7 +337,7 @@ sub handle_attributes {
                     # todo: this is double checked
                     return
                         qq[${attribute_value} is not a valid value for disabled. Only 'on' or 'off' are allowed!]
-                        if ( List::Util::any { $_ eq $attribute_value }
+                        if ( !List::Util::any { $_ eq $attribute_value }
                             qw{ on off 0 1 } );
 
                     if ( List::Util::any { $_ eq $attribute_value } qw{ on 1 } )
