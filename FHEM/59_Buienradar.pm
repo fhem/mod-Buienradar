@@ -293,6 +293,48 @@ sub handle_get {
             return ::ReadingsVal( $name, 'rainDuration', 'unknown' );
         }
 
+        when (q{will-it-rain}) {
+            # check if there was an argument given, stored meaninglessly in an array
+            my $queried_time = $args[0]
+                // return qq{Argument does not contain a value, so there is no timestamp for querying.}; #todo I18N
+
+            my $check_queried_time_re = qr{
+                ^(?<modifier>[\+\-]?)       # an optional, literal plus or minus sign, store in $+{modifier} if found
+                (?<time>\d+)$               # timestamp, consisting only of digits, store in $+{time} if found
+            }xms;                           # ignore whitespaces, multi-line, dot matches whitespaces
+
+            if ($queried_time =~ $check_queried_time_re ) {
+                $queried_time = $+{time};
+
+                if ($+{modifier}) {
+                    $queried_time = ($+{modifier} eq q{+})
+                        ?  time() + $+{time}                    # add the time to the current when the modifier was +
+                        :  time() - $+{time} ;                  # or substract if the modifier was -
+                }
+            } else {
+                return qq{$queried_time looks bogus};                                                                       #todo I18N
+            }
+
+            if ($queried_time < 0) {
+                return qq{Queried time $queried_time is below any meaningful date.}                                         # todo I18N
+            }
+
+            # check in the stored data, if there is an interval, matching the timestamp and precipitation > 0
+            # my $stored_data =  %{  ) };
+
+            my $amount;
+            find_precipitation_interval_by_timestamp($queried_time, Storable::thaw( $hash->{'.SERIALIZED'}));
+
+            if (!$amount) {
+                return qq[Kein interval mit niederschlag gefunden];                                                         # todo I18N
+            }
+
+            return Dumper({
+                'queried_time'  => $queried_time,
+                'amount'        => $amount,
+            });
+        }
+
         default {
             return
                 qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg will-it-rain];
@@ -536,6 +578,35 @@ sub handle_error {
     my $device_name = shift;
     my $message     = shift || q{Something bad happened. Unknown error!};
     return qq{[$device_name] Error: $message};
+}
+
+sub find_precipitation_interval_by_timestamp {
+    my ($timestamp, $data_ref) = @_;
+
+    debug_message('test', Dumper($data_ref));
+
+    for my $interval (keys %{$data_ref}) {
+        debug_message('find_precip', qq{Interval: $interval});
+
+        # skip if the timestamp is earlier then the index, because that's also the start timestamp
+        next if $timestamp < $interval;
+
+        debug_message('find_preic', qq{Interval $interval not skipped, because $timestamp > $interval});
+
+        # make the next statement more readable
+        my $start   = $data_ref->{$interval}{start};
+        my $end     = $data_ref->{$interval}{end};
+        my $amount  = $data_ref->{$interval}{precipitation};
+
+        debug_message('find_precip: found!', Dumper($data_ref->{interval}));
+
+        # if between $start and $end, and it's raining
+        if ($timestamp ~~ [$start..$end] && $amount > 0) {
+            return $amount;
+        }
+    }
+
+    return 0;
 }
 
 ############################################################    Request handling
