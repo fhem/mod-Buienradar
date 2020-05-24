@@ -295,7 +295,7 @@ sub handle_get {
 
         default {
             return
-                qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg];
+                qq[Unknown argument $opt, choose one of version:noArg startsIn:noArg rainDuration:noArg will-it-rain];
         }
     }
     return;
