@@ -1,3 +1,7 @@
+2020-06-05 - Merge branch 'development/3.0' of https://github.com/fhem/mod-Buienradar into development/3.0
+
+* 'development/3.0' of https://github.com/fhem/mod-Buienradar:
+  Automatic updated controls and CHANGED
 2020-05-24 - Merge remote-tracking branch 'origin/development/3.0' into development/3.0
 2020-05-24 - #132 first draft for get will-it-rain $timestamp
 2020-05-24 - Merge remote-tracking branch 'origin/development/3.0' into development/3.0
