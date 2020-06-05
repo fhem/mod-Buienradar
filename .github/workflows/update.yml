@@ -28,6 +28,7 @@ jobs:
         uses: fhem/fhem-controls-actions@master
         with:
           filename: $CONTROLS_FILENAME
+          directory: source
       - name: git commit back
         run: |
           git config --global user.email "action@github.com"

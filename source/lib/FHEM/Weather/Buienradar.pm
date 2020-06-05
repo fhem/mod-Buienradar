@@ -7,7 +7,8 @@
 #   Disabled spell checkers
 #
 #   Perl::Tidy sucks 🗿
-package FHEM::Buienradar;
+package FHEM::Weather::Buienradar;
+############################################################    Pragmas
 
 use strict;
 use warnings;
@@ -38,18 +39,18 @@ Readonly our $MAX_TEXT_BAR_LENGTH    => 50;
 
 ############################################################    Translations
 Readonly my %TRANSLATIONS => (
-    'general' => {
+    'general'           => {
         'unknown' => {
             'de' => q{unbekannt},
             'en' => q{unknown},
         },
-        'at' => {
+        'at'      => {
             'de' => q{um},
             'en' => q{at},
         }
     },
-    'chart_html_bar' => {
-        'title' => {
+    'chart_html_bar'    => {
+        'title'      => {
             'de' => q{Niederschlagsdiagramm},
             'en' => q{Precipitation chart}
         },
@@ -58,8 +59,8 @@ Readonly my %TRANSLATIONS => (
             'en' => q{Data start},
         }
     },
-    'chart_gchart' => {
-        'legend_time_axis' => {
+    'chart_gchart'      => {
+        'legend_time_axis'   => {
             'de' => 'Uhrzeit',
             'en' => 'Time',
         },
@@ -67,23 +68,23 @@ Readonly my %TRANSLATIONS => (
             'de' => 'mm/h',
             'en' => 'mm/h',
         },
-        'title' => {
+        'title'              => {
             'de' => 'Niederschlagsvorhersage für %s, %s',
             'en' => 'Precipitation forecast for %s, %s',
         },
-        'legend' => {
+        'legend'             => {
             'de' => 'Niederschlag',
             'en' => 'Precipitation',
         },
     },
     'handle_attributes' => {
-        'interval' => {
+        'interval'      => {
             'de' =>
                 'ist kein valider Wert für den Intervall. Einzig 10, 60, 120, 180, 240 oder 300 sind erlaubt!',
             'en' =>
                 'is no valid value for interval. Only 10, 60, 120, 180, 240 or 300 are allowed!',
         },
-        'region' => {
+        'region'        => {
             'de' =>
                 q{ist kein valider Wert für die Region. Einzig 'de' oder 'nl' werden unterstützt!},
             'en' =>
@@ -94,6 +95,34 @@ Readonly my %TRANSLATIONS => (
                 q{ist kein valider Wert für den Standard-Graphen. Valide Werte sind none, GChart,TextChart oder HTMLChart},
             'en' =>
                 q{is not a valid value for the default chart. Valid values are none, GChart,TextChart or HTMLChart},
+        },
+    },
+    q{handle_get}       => {
+        q{will-it-rain} => {
+            q{quieried_time_check} => {
+                q{de} => q{Kein Zeitstempel übergeben. },
+                q{en} => q{Argument does not contain a value, so there is no timestamp for querying.},
+            },
+            q{qtime_is_bogus} => {
+                q{de}   => q{},
+                q{en}   => q{},
+            },
+            q{} => {
+                q{de}   => q{},
+                q{en}   => q{},
+            },
+            q{} => {
+                q{de}   => q{},
+                q{en}   => q{},
+            },
+            q{} => {
+                q{de}   => q{},
+                q{en}   => q{},
+            },
+            q{} => {
+                q{de}   => q{},
+                q{en}   => q{},
+            },
         },
     },
 );
@@ -265,6 +294,7 @@ sub handle_get {
     my $name = shift;
     my $opt  = shift;
     my @args = shift;
+    my $language = get_language($name);
 
     if ( !defined $opt ) {
         return qq['get $name' needs at least one argument];
@@ -296,7 +326,7 @@ sub handle_get {
         when (q{will-it-rain}) {
             # check if there was an argument given, stored meaninglessly in an array
             my $queried_time = $args[0]
-                // return qq{Argument does not contain a value, so there is no timestamp for querying.}; #todo I18N
+                //  return $TRANSLATIONS{handle_get}{q{will-it-rain}}{quieried_time_check}{$language};
 
             my $check_queried_time_re = qr{
                 ^(?<modifier>[\+\-]?)       # an optional, literal plus or minus sign, store in $+{modifier} if found
