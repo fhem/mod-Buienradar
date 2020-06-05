@@ -131,27 +131,16 @@ Readonly my %TRANSLATIONS => (
 my @errors;
 my $global_hash;
 
-GPUtils::GP_Export(
-    qw(
-        Initialize
-    )
-);
-
-############################################################    FHEM API related
-#   JFTR:
-#       ATM the FHEM API does need an Initialize() subroutine, so this is mandatory
-#
-## no critic (NamingConventions::Capitalization)
-sub Initialize {
+sub initialize_module {
 
     my $hash = shift;
 
-    $hash->{DefFn}       = \&FHEM::Buienradar::handle_define;
-    $hash->{UndefFn}     = \&FHEM::Buienradar::handle_undefine;
-    $hash->{GetFn}       = \&FHEM::Buienradar::handle_get;
-    $hash->{SetFn}       = \&FHEM::Buienradar::handle_set;
-    $hash->{AttrFn}      = \&FHEM::Buienradar::handle_attributes;
-    $hash->{FW_detailFn} = \&FHEM::Buienradar::handle_fhemweb_details;
+    $hash->{DefFn}       = \&handle_define;
+    $hash->{UndefFn}     = \&handle_undefine;
+    $hash->{GetFn}       = \&handle_get;
+    $hash->{SetFn}       = \&handle_set;
+    $hash->{AttrFn}      = \&handle_attributes;
+    $hash->{FW_detailFn} = \&handle_fhemweb_details;
     $hash->{AttrList}    = join(
         q{ },
         (
@@ -165,7 +154,6 @@ sub Initialize {
 
     return FHEM::Meta::InitMod( __FILE__, $hash );
 }
-## use critic
 
 sub handle_fhemweb_details {
     my $fhemweb_name    = shift;
@@ -253,7 +241,7 @@ sub handle_define {
 
     if ( !::AttrVal( $name, 'interval', undef ) ) {
         ::CommandAttr( undef,
-            qq[$name interval $FHEM::Buienradar::DEFAULT_INTERVAL] );
+            qq[$name interval $DEFAULT_INTERVAL] );
     }
 
     update_timer($hash);
@@ -264,7 +252,7 @@ sub handle_define {
 sub handle_undefine {
     my $hash = shift;
     my $arg  = shift;
-    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::update_timer );
+    ::RemoveInternalTimer( $hash, \&update_timer );
     return;
 }
 
@@ -294,7 +282,7 @@ sub handle_get {
     my $name = shift;
     my $opt  = shift;
     my @args = shift;
-    my $language = get_language($name);
+    my $language = get_global_language($name);
 
     if ( !defined $opt ) {
         return qq['get $name' needs at least one argument];
@@ -413,7 +401,7 @@ sub handle_attributes {
                     if ( List::Util::any { $_ eq $attribute_value } qw{ on 1 } )
                     {
                         ::RemoveInternalTimer( $hash,
-                            \&FHEM::Buienradar::update_timer );
+                            \&update_timer );
                         disable_device($name);
                         $hash->{NEXTUPDATE} = undef;
                         ::readingsSingleUpdate($hash, q{state}, q{inactive}, 0);
@@ -438,7 +426,7 @@ sub handle_attributes {
 
         when ('region') {
             return handle_error( $name,
-                qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'region'}{$language}}]
+                qq[${attribute_value} ${TRANSLATIONS{'handle_attributes'}{'region'}{$language}}]
             )
                 if ( $command eq q{set}
                     && !List::Util::any { $_ eq $attribute_value } qw{ de nl } );
@@ -459,7 +447,7 @@ sub handle_attributes {
 
         when ('interval') {
             return handle_error( $name,
-                qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'interval'}{$language}}]
+                qq[${attribute_value} ${TRANSLATIONS{'handle_attributes'}{'interval'}{$language}}]
             )
                 if ( $command eq q{set}
                     && !List::Util::any { $_ eq $attribute_value }
@@ -483,7 +471,7 @@ sub handle_attributes {
             for ($command) {
                 when (q{set}) {
                     return handle_error( $name,
-                        qq[${attribute_value} ${FHEM::Buienradar::TRANSLATIONS{'handle_attributes'}{'default_chart'}{$language}}]
+                        qq[${attribute_value} ${TRANSLATIONS{'handle_attributes'}{'default_chart'}{$language}}]
                     )
                         if ( !List::Util::any { $_ eq $attribute_value }
                             qw{ none HTMLChart GChart TextChart } );
@@ -640,13 +628,13 @@ sub update_timer {
     my ($hash) = shift;
     my $nextupdate = 0;
 
-    ::RemoveInternalTimer( $hash, \&FHEM::Buienradar::update_timer );
+    ::RemoveInternalTimer( $hash, \&update_timer );
 
     $nextupdate = int( time() + $hash->{INTERVAL} );
     $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
     request_data_update($hash);
 
-    ::InternalTimer( $nextupdate, \&FHEM::Buienradar::update_timer, $hash );
+    ::InternalTimer( $nextupdate, \&update_timer, $hash );
 
     return 1;
 }
@@ -986,7 +974,7 @@ sub chart_gchart {
 
     if ( !$hash->{'.SERIALIZED'} ) {
         handle_error( $name,
-            q{Can't return serizalized data for FHEM::Buienradar::chart_gchart.}
+            q{Can't return serizalized data for chart_gchart.}
         );
 
         # return dummy data
@@ -1071,7 +1059,7 @@ sub logproxy_wrapper {
 
     if ( !$hash->{'.SERIALIZED'} ) {
         handle_error( $name,
-            q{Can't return serizalized data for FHEM::Buienradar::logproxy_wrapper. Using dummy data}
+            q{Can't return serizalized data for logproxy_wrapper. Using dummy data}
         );
 
         # return dummy data
@@ -1102,7 +1090,7 @@ sub chart_textbar {
 
     if ( !$hash->{'.SERIALIZED'} ) {
         handle_error( $name,
-            q{Can't return serizalized data for FHEM::Buienradar::TextChart.} );
+            q{Can't return serizalized data for TextChart.} );
 
         # return dummy data
         return;

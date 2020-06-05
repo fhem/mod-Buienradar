@@ -8,7 +8,7 @@ use GPUtils;
 use English q{-no_match_vars};
 
 sub Buienradar_Initialize {
-    return FHEM::Weather::Buienradar::Initialize(@ARG);
+    return FHEM::Weather::Buienradar::initialize_module(@ARG);
 }
 
 1;
