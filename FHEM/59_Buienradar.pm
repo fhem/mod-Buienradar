@@ -386,7 +386,7 @@ sub handle_attributes {
                             \&FHEM::Buienradar::update_timer );
                         disable_device($name);
                         $hash->{NEXTUPDATE} = undef;
-                        $hash->{STATE}      = 'inactive';
+                        ::readingsSingleUpdate($hash, q{state}, q{inactive}, 0);
                         return;
                     }
 
