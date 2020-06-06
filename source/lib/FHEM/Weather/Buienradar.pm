@@ -197,10 +197,11 @@ sub handle_define {
     my $longitude;
     my $language = get_global_language();
 
-    Readonly my $ARGUMENT_LENGTH_WITHOUT_LOC => 2;
-    Readonly my $ARGUMENT_LENGHT_WITH_LOC    => 4;
-    Readonly my $ARGUMENT_POSITION_LATITUDE  => 2;
-    Readonly my $ARGUMENT_POSITION_LONGITUDE => 3;
+    Readonly my $ARGUMENT_LENGTH_WITHOUT_LOC    => 2;
+    Readonly my $ARGUMENT_LENGHT_WITH_LOC       => 4;
+    Readonly my $ARGUMENT_POSITION_LATITUDE     => 2;
+    Readonly my $ARGUMENT_POSITION_LONGITUDE    => 3;
+    Readonly my $ARGUMENT_DEFINE_START          => 2;
 
     # todo: Refactor to for()
     if ( $arguments_length == $ARGUMENT_LENGTH_WITHOUT_LOC ) {
@@ -218,14 +219,13 @@ sub handle_define {
 
     ::readingsSingleUpdate( $hash, 'state', 'Initialized', 1 );
 
-    $hash->{NAME}      = $name;
-    $hash->{VERSION}   = $VERSION;
-    $hash->{INTERVAL}  = $DEFAULT_INTERVAL;
-    $hash->{LATITUDE}  = $latitude;
-    $hash->{LONGITUDE} = $longitude;
-    $hash->{URL}       = undef;
-
-    # get language for language dependend legend
+    $hash->{NAME}       = $name;
+    $hash->{VERSION}    = $VERSION;
+    $hash->{INTERVAL}   = $DEFAULT_INTERVAL;
+    $hash->{LATITUDE}   = $latitude;
+    $hash->{LONGITUDE}  = $longitude;
+    $hash->{URL}        = undef;
+    $hash->{DEF}        = join q{ }, @arguments[$ARGUMENT_DEFINE_START .. $arguments_length - 1];
 
     ::readingsBeginUpdate($hash);
     ::readingsBulkUpdate( $hash, 'rainNow',       'unknown' );
