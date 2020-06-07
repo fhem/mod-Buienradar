@@ -27,9 +27,9 @@ function install_cfg {
 
 function install_modules {
     rm -rf /opt/fhem/FHEM/59_Buienradar.pm
-    ln -s /vagrant/source/FHEM/59_Buienradar.pm /opt/fhem/FHEM/59_Buienradar.pm
+    ln -s /vagrant/FHEM/59_Buienradar.pm /opt/fhem/FHEM/59_Buienradar.pm
     mkdir -p /opt/fhem/lib
-    ln -s /vagrant/source/lib/FHEM /opt/fhem/lib/
+    ln -s /vagrant/lib/FHEM /opt/fhem/lib/
 }
 
 function update_commandref {
@@ -48,7 +48,7 @@ function add_sudoers {
 }
 
 function perl_modules {
-    cpanm install App::cpanoutdated Perl::PrereqScanner::NotQuiteLite IO::Socket::INET6 Socket6 Cpanel::JSON::XS JSON::MaybeXS
+    cpanm install App::cpanoutdated Perl::PrereqScanner::NotQuiteLite IO::Socket::INET6 Socket6 Cpanel::JSON::XS JSON::MaybeXS Data::Dump::Color
 }
 
 perl_modules
