@@ -343,7 +343,7 @@ sub handle_get {
             );
 
             if (!$amount) {
-                return qq[Kein interval mit niederschlag gefunden];                                                         # todo I18N
+                return q[Kein interval mit Niederschlag gefunden];                                                         # todo I18N
             }
 
             return Dumper({
