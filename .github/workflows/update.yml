@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Update Environment
-        run: sudo apt-get install -y pandoc tidy
+        run: |
+          sudo apt-get install -y pandoc tidy cpanminus
+          cpanm --sudo Data::Dump::Color Readonly
       - name: Extract branch name
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
