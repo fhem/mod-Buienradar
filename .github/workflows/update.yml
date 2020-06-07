@@ -24,11 +24,10 @@ jobs:
           LOG=$(date +"%Y-%m-%d")
           LOG+=" - $(git log -1 --pretty=%B)"
           echo "$LOG" | cat - CHANGED > temp && mv temp CHANGED
-      - name: Update $CONTROLS_FILENAME
+      - name: Update controls file
         uses: fhem/fhem-controls-actions@master
-        with:
-          filename: $CONTROLS_FILENAME
-          directory: source/
+        run: |
+          perl build/create_controlfile -s lib -s FHEM -e .pm -p -v -c $CONTROLS_FILENAME
       - name: git commit back
         run: |
           git config --global user.email "action@github.com"
