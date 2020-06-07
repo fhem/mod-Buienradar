@@ -1138,7 +1138,7 @@ __END__
 
 =head1 NAME
 
-    FHEM::Buienradar - Support for Buienradar.nl precipitation data
+    FHEM::Weather::Buienradar - Support for Buienradar.nl precipitation data
 
 =head1 VERSION
 
