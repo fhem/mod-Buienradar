@@ -28,7 +28,7 @@ jobs:
           echo "$LOG" | cat - CHANGED > temp && mv temp CHANGED
       - name: Update controls file
         run: |
-          perl build/create_controlfile -s lib -s FHEM -e .pm -p -v -c $CONTROLS_FILENAME
+          perl build/create_controlfile -d lib -d FHEM -e .pm -p -v -c $CONTROLS_FILENAME
       - name: git commit back
         run: |
           git config --global user.email "action@github.com"
