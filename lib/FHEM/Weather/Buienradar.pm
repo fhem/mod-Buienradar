@@ -317,17 +317,18 @@ sub handle_get {
                 //  return $TRANSLATIONS{handle_get}{q{will-it-rain}}{quieried_time_check}{$language};
 
             my $check_queried_time_re = qr{
-                ^(?<modifier>[+-]?)         # an optional, literal plus or minus sign, store in $+{modifier} if found
-                (?<time>\d+)$               # timestamp, consisting only of digits, store in $+{time} if found
+                ^(?<modifier>[+-]?)         # an optional, literal plus or minus sign, store in $LAST_PAREN_MATCH{modifier} if found
+                (?<time>\d+)$               # timestamp, consisting only of digits, store in $LAST_PAREN_MATCH{time} if found
             }xms;                           # ignore whitespaces, multi-line, dot matches whitespaces
 
+            # $LAST_PAREN_MATCH is the English equivalent of $+
             if ($queried_time =~ $check_queried_time_re ) {
-                $queried_time = $+{time};
+                $queried_time = $LAST_PAREN_MATCH{time};
 
-                if ($+{modifier}) {
-                    $queried_time = ($+{modifier} eq q{+})
-                        ?  time() + $+{time}                    # add the time to the current when the modifier was +
-                        :  time() - $+{time} ;                  # or substract if the modifier was -
+                if ($LAST_PAREN_MATCH{modifier}) {
+                    $queried_time = ($LAST_PAREN_MATCH{modifier} eq q{+})
+                        ?  time() + $LAST_PAREN_MATCH{time}                    # add the time to the current when the modifier was +
+                        :  time() - $LAST_PAREN_MATCH{time} ;                  # or substract if the modifier was -
                 }
             } else {
                 return qq{$queried_time looks bogus};                                                                       #todo I18N
