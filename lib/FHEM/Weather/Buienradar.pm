@@ -317,7 +317,7 @@ sub handle_get {
                 //  return $TRANSLATIONS{handle_get}{q{will-it-rain}}{quieried_time_check}{$language};
 
             my $check_queried_time_re = qr{
-                ^(?<modifier>[\+\-]?)       # an optional, literal plus or minus sign, store in $+{modifier} if found
+                ^(?<modifier>[+-]?)         # an optional, literal plus or minus sign, store in $+{modifier} if found
                 (?<time>\d+)$               # timestamp, consisting only of digits, store in $+{time} if found
             }xms;                           # ignore whitespaces, multi-line, dot matches whitespaces
 
