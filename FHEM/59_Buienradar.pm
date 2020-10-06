@@ -256,7 +256,7 @@ sub handle_set {
         }
 
         default {
-            return qq{Unknown argument $opt, choose one of refresh:noArg'};
+            return qq{Unknown argument $opt, choose one of refresh:noArg};
         }
     }
 
