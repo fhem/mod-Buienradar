@@ -1,0 +1,384 @@
+#! perl
+use strict;
+use warnings FATAL => 'all';
+use diagnostics;
+use Fatal qw( open close);
+use English qw(-no_match_vars);
+use 5.010;
+use File::Find;
+use File::Basename;
+use List::Util;
+use Carp;
+use Data::Dump::Color q{dd};
+use Getopt::Long;
+use Readonly;
+use POSIX;
+use Pod::Usage;
+
+Readonly our $VERSION                   =>  q{0.0.1};
+Readonly our $DEBUG                     =>  $ENV{PERL5DEBUG} // 0;
+Readonly my $DEFAULT_CONTROLFILE        =>  q{controls.txt};
+Readonly my $DEFAULT_SEARCH_DIRS        =>  q{.};
+Readonly my $DEFAULT_FILE_SUFFIXES      =>  q{.pm};
+Readonly my $DEFAULT_FIXED_FILES        =>  qw{};
+Readonly my $DEFAULT_VERBOSITY          =>  0;
+Readonly my $DEFAULT_PRE_DELETE         =>  0;
+Readonly my $QUIET                      =>  0;
+Readonly my $POD_USAGE_HELP_VERBOSITY   =>  99;
+Readonly my $EXIT_CODES                 =>  {
+    q{success}          => 0,
+    q{unknown_options}  => 1,
+    q{no_files}         => 2,
+    q{unknown}          => 255,
+};
+
+# initialize the cli options with default values
+my %OPTIONS = (
+    q{controlfile}          =>  $DEFAULT_CONTROLFILE,
+    q{search_directories}   =>  $DEFAULT_SEARCH_DIRS,
+    q{file_suffixes}        =>  $DEFAULT_FILE_SUFFIXES,
+    q{fixed_files_list}     =>  $DEFAULT_FIXED_FILES,
+    q{pre_delete}           =>  $DEFAULT_PRE_DELETE,
+    q{verbose}              =>  $DEFAULT_VERBOSITY,
+    q{quiet}                =>  $QUIET,
+);
+
+sub help {
+    return pod2usage({
+        -sections   => q{NAME|USAGE|OPTIONS|VERSION|BUGS AND LIMITATIONS},
+        -exitval    => $EXIT_CODES->{success},
+        -verbose    => $POD_USAGE_HELP_VERBOSITY,
+    });
+}
+
+sub about {
+    return pod2usage({
+        -sections   => q{NAME|AUTHOR|VERSION|BUGS.AND.LIMITATIONS},
+        -exitval    => $EXIT_CODES->{success},
+        -verbose    => $POD_USAGE_HELP_VERBOSITY,
+    });
+}
+
+sub license {
+    return pod2usage({
+        -sections   =>  q{NAME|AUTHOR|LICENSE AND COPYRIGHT},
+        -exitval    => $EXIT_CODES->{success},
+        -verbose    => $POD_USAGE_HELP_VERBOSITY,
+    });
+}
+
+# print the @ARGV if debugging is enabled
+$DEBUG && dd q{Debugging is enabled};
+$DEBUG && dd __LINE__, q{ARGV:}, \@ARGV;
+
+GetOptions(
+    q{search-dirs|d=s@}     =>  \$OPTIONS{search_directories},
+    q{controlfile|c=s}      =>  \$OPTIONS{controlfile},
+    q{suffixes-list|e=s@}   =>  \$OPTIONS{file_suffixes},
+    q{fixed-files|f=s@}     =>  \$OPTIONS{fixed_files_list},
+    q{pre-delete|p!}        =>  \$OPTIONS{pre_delete},
+    q{verbose|v!}           =>  \$OPTIONS{verbose},
+    q{quiet|q!}             =>  \$OPTIONS{quiet},
+    q{help|h}               =>  \&help,
+    q{about|a}              =>  \&about,
+    q{license}              =>  \&license,
+) or pod2usage({
+    -exitval    => $EXIT_CODES->{unknown_options},
+    -sections   => q{NAME|DESCRIPTION|OPTIONS},
+    -verbose    => $POD_USAGE_HELP_VERBOSITY,
+});
+
+# print the %OPTIONS if debugging is active
+$DEBUG && dd __LINE__, q{Options set:}, \%OPTIONS;
+
+# if -q is set, -v is silenced
+if ($OPTIONS{quiet}) { $OPTIONS{verbose} = 0 };
+
+# here will be the found files stored
+my @found_files;
+
+sub add_files {
+    # skip if not a file
+    if (! -f) {
+        $OPTIONS{verbose} && carp(qq{$File::Find::name is not a file, ignoring});
+        return;
+    };
+
+    if (/^[.]/xms) {
+        $OPTIONS{verbose} && carp(qq{$File::Find::name starts with a dot});
+        return;
+    }
+
+    # get suffix and check against list of acceptable ones
+    my ($name, $path, $suffix) = fileparse($File::Find::name, qr{[.][^.]*}xms);
+    if (! List::Util::any {$suffix eq $_} @{$OPTIONS{file_suffixes}}) {
+        $OPTIONS{verbose} && carp(qq[${File::Find::name}'s suffix is not in the list of acceptable suffixes '@{$OPTIONS{file_suffixes}}', ignoring]);
+        return;
+    }
+
+    # add to the list of found files
+    $OPTIONS{verbose} && carp(qq[Adding $File::Find::name to the list of files for the update file]);
+    push @found_files, $File::Find::name;
+
+    return;
+}
+
+sub get_controlfile_statements {
+    my $parameters = shift;
+
+    my $files_for_update    = $parameters->{files_for_update}   // croak q{No files for update passed};
+    my $write_pre_deletes   = $parameters->{write_pre_delete}   // 0;
+    my $verbose             = $parameters->{verbose}            // 0;
+    my @lines_to_write;
+
+    # $files_for_update must be a array ref
+    croak q{No array ref passed for files to update} if (ref $files_for_update ne q{ARRAY});
+
+    Readonly my $STAT_MTIME_INDEX       => 9;
+    Readonly my $STAT_FILESIZE_INDEX    => 7;
+
+    for my $file_to_update (@{$files_for_update}) {
+        my @filestat = stat $file_to_update;
+
+        if(!@filestat) {
+            carp(qq[Could not stat $file_to_update]);
+            next;
+        }
+
+        # delete every file first before update if pre-delete or p is set
+        if ($write_pre_deletes) {
+            $verbose && carp qq{Create DEL statement for $file_to_update};
+            push @lines_to_write, qq{DEL $file_to_update};
+        }
+
+        $verbose && carp(qq{Create UPD statement for $file_to_update});
+
+        push @lines_to_write, sprintf
+            'UPD %s %d %s',
+            POSIX::strftime(q{%Y-%m-%d_%H:%M:%S}, localtime $filestat[$STAT_MTIME_INDEX]),
+            $filestat[$STAT_FILESIZE_INDEX],
+            $file_to_update,
+        ;
+    }
+
+    return \@lines_to_write;
+}
+
+# it here are any fixed files, add them by default to the found files
+$DEBUG && dd __LINE__, q{List of fixed files:}, $OPTIONS{fixed_files_list};
+
+if ($OPTIONS{fixed_files_list}) {
+    push @found_files, @{$OPTIONS{fixed_files_list}};
+}
+
+# add files from the search directory
+find(\&add_files, @{$OPTIONS{search_directories}});
+
+$DEBUG && dd __LINE__, q{Found files:}, \@found_files;
+
+# end here if nothing found
+if (!scalar @found_files) {
+    say q{No files found. Aborting.} or croak($EXIT_CODES->{unknown});
+    exit($EXIT_CODES->{no_files});
+}
+
+# get the lines for the updates file as array ref
+my $lines_to_write = get_controlfile_statements({
+    files_for_update    =>  \@found_files,
+    controlfile         =>  $OPTIONS{controlfile_path},
+    write_pre_delete    =>  $OPTIONS{pre_delete},
+    verbose             =>  $OPTIONS{verbose},
+});
+
+# show what we got if $DEBUG
+$DEBUG && dd [__LINE__, q{Lines to write:}, $lines_to_write];
+
+# warn if the controlfile already exists, can be silenced with not using -v or using -q
+if ($OPTIONS{verbose} && !$OPTIONS{quiet} && -e $OPTIONS{controlfile}) {
+    carp(qq{$OPTIONS{controlfile} does already exist. Will be overwritten});
+}
+
+open my $output_fh, q{>}, $OPTIONS{controlfile}
+    or croak qq{Can't open $OPTIONS{controlfile} for writing.};
+
+for my $line (@{$lines_to_write}) {
+    say {$output_fh} $line
+        or croak qq[Can't write to $OPTIONS{controlfile}];
+}
+
+close $output_fh
+    or croak qq[Couldn't close '$OPTIONS{controlfile}}': $OS_ERROR];
+
+exit($EXIT_CODES->{success});
+
+
+__END__
+
+=pod
+
+=encoding utf8
+
+=head1 NAME
+
+FHEM::App::create_controlfile
+
+=head1 DESCRIPTION
+
+Create a FHEM update compatible update file for single files or whole directories
+
+=head1 USAGE
+
+create_controlfile
+
+=over 1
+
+=item -d <F<search directory>> [-d <F<search directory>>, -d <F<search directory>>]
+
+=item -c <F<output control file>>
+
+=item -c <F<output file>>
+
+=item -e <file suffix>
+
+=back
+
+=head1 OPTIONS
+
+=over 1
+
+=item C<--search-dirs>, C<-d>  <F<directory>>
+
+    Search here for files to consider, can be applied multiple times, e.g. -d F<foo> -d F<bar>
+    Defaults to: .
+
+=item C<--controlfile>, C<-c> <F<output control file>>
+
+    Where to put the statements for FHEM update.
+    Defaults to: controls.txt
+
+=item C<--suffixes-list>, C<-e> <file suffix>
+
+    Whitelisted file suffixes, can applied multiple times, e.g. -e .foo -e .bar
+    Defaults to: .pm
+
+=item C<--fixed-files>, C<-f> <F<path to file>>
+
+     Files to consider mandatory, can applied multiple times, e.g. -f foo/bar -f baz
+     Defaults to: Empty
+
+=item C<--pre-delete>, C<-p>
+
+    If set, a DEL statement is issued before a UPD statement for every considered file
+    Defaults to: off
+
+=item C<--quiet>, C<-q>
+
+    Quiet mode
+
+=item C<-verbose>, C<-v>
+
+    Be more talky about what happens
+    Defaults to: off
+
+=item C<-help>, C<-h>
+
+    Help
+
+=item C<-about>, C<-a>
+
+    About this file: author, version, etc.
+
+=item C<--license>
+
+    License and Copyright
+
+=back
+
+=head1 REQUIRED ARGUMENTS
+
+None
+
+=head1 BUGS AND LIMITATIONS
+
+Please report bugs at L<https://p.knurd.net/fhem-app-control_file-bugs>
+
+Please enable the verbose mode with C<-v> and C<export PERL5DEBUG=1> before executing to
+get more detailed insights, i.e.
+
+C<PERL5DEBUG=1 create_controlfile -v [your parameters]>
+
+=head1 DEPENDENCIES
+
+Minimum Perl version is 5.10.
+
+The following modules are non core modules and need to be installed beforehand:
+
+=over 4
+
+=item - Readonly
+
+=item - Data::Dump::Color
+
+=back
+
+=head1 AUTHOR
+
+=over
+
+=item
+
+Christoph 'knurd' Morrison
+L<mailto:FHEM-App-create_controlfile@cm.knurd.net>
+L<https://p.knurd.net/fhem-app-control_file>
+
+=back
+
+=head1 LICENSE AND COPYRIGHT
+
+=begin :text
+
+GNU General Public License, Version 2
+
+SPDX-ID: L<GPL-2.0|https://p.knurd.org/spdx-gpl2.0>
+
+Copyright (C) 2020 Christoph 'knurd' Morrison
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+
+=end :text
+
+=head1 VERSION
+
+0.0.1
+
+=head1 EXIT STATUS
+
+=begin :text
+
+    0   Success
+    1   Unknown command line option passed
+    2   No files for generating the control file found
+  255   Unknown error
+
+=end :text
+
+=head1 DIAGNOSTICS
+
+=head1 CONFIGURATION
+
+=head1 INCOMPATIBILITIES
+
+=cut
+

@@ -16,9 +16,9 @@
     ],
     "release_status": "development",
     "license": "Unlicense",
-    "version": "3.0.8",
+    "version": "3.0.9",
     "author": [
-        "Christoph Morrison <post@christoph-jeschke.de>"
+        "Christoph 'knurd' Morrison <post@christoph-jeschke.de>"
     ],
     "resources": {
         "homepage": "https://github.com/fhem/mod-Buienradar/",

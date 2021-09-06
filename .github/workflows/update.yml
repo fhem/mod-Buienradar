@@ -10,7 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Update Environment
-        run: sudo apt-get install -y pandoc tidy
+        run: |
+          sudo apt-get install -y pandoc tidy cpanminus
+          cpanm --sudo Data::Dump::Color Readonly
       - name: Extract branch name
         run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: extract_branch
@@ -24,10 +26,9 @@ jobs:
           LOG=$(date +"%Y-%m-%d")
           LOG+=" - $(git log -1 --pretty=%B)"
           echo "$LOG" | cat - CHANGED > temp && mv temp CHANGED
-      - name: Update controls files
-        uses: fhem/fhem-controls-actions@master
-        with:
-          filename: $CONTROLS_FILENAME
+      - name: Update controls file
+        run: |
+          perl build/create_controlfile -d lib -d FHEM -e .pm -p -v -c $CONTROLS_FILENAME
       - name: git commit back
         run: |
           git config --global user.email "action@github.com"
