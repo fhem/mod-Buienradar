@@ -22,7 +22,7 @@ use English qw( -no_match_vars );
 use Storable;
 use GPUtils;
 use experimental qw( switch );
-use 5.0139;    # we do not want perl be older than from 2007, so > 5.13.9
+use 5.0260;    # we do not want perl be older than from 2007, so > 5.13.9
 use Readonly;
 use FHEM::Meta;
 
@@ -263,7 +263,7 @@ sub handle_set {
     my @args = shift;
 
     if ( !defined $opt ) {
-        return return qq{'set $name' needs at least one argument};
+        return qq{'set $name' needs at least one argument};
     }
 
     for ($opt) {
