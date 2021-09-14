@@ -1,3 +1,4 @@
+2021-09-14 - #324 fixed typo in $ARGUMENT_LENGHT_WITH_LOC
 2021-09-14 - #326 refactored request url build, workaround for #325, but not an adequate solution
 2021-09-06 - Merge branch 'release/3.0' into development/3.0
 2020-06-09 - Bump to v3.0.9
