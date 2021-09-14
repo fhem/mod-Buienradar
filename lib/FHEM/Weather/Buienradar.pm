@@ -892,16 +892,14 @@ sub request_data_update {
     my $region = $hash->{REGION};
     my $name   = $hash->{NAME};
 
-    # @todo candidate for refactoring to sprintf
-    $hash->{URL} =
-        ::AttrVal( $name, 'BaseUrl',
-            'https://cdn-secure.buienalarm.nl/api/3.4/forecast.php' )
-            . '?lat='
-            . $hash->{LATITUDE} . '&lon='
-            . $hash->{LONGITUDE}
-            . '&region='
-            . $region
-            . '&unit=' . 'mm/u';
+    $hash->{URL} =  ::AttrVal( $name, 'BaseUrl',
+        sprintf(
+            q(https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?lat=%s&lon=%s&region=%s&unit=mm/u),
+                $hash->{LATITUDE},
+                $hash->{LONGITUDE},
+                $region
+        )
+    );
 
     my $param = {
         url      => $hash->{URL},
