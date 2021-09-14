@@ -198,7 +198,7 @@ sub handle_define {
     my $language = get_global_language();
 
     Readonly my $ARGUMENT_LENGTH_WITHOUT_LOC    => 2;
-    Readonly my $ARGUMENT_LENGHT_WITH_LOC       => 4;
+    Readonly my $ARGUMENT_LENGTH_WITH_LOC       => 4;
     Readonly my $ARGUMENT_POSITION_LATITUDE     => 2;
     Readonly my $ARGUMENT_POSITION_LONGITUDE    => 3;
     Readonly my $ARGUMENT_DEFINE_START          => 2;
@@ -208,7 +208,7 @@ sub handle_define {
         $latitude  = ::AttrVal( 'global', 'latitude',  $DEFAULT_LATITUDE );
         $longitude = ::AttrVal( 'global', 'longitude', $DEFAULT_LONGITUDE );
     }
-    elsif ( $arguments_length == $ARGUMENT_LENGHT_WITH_LOC ) {
+    elsif ( $arguments_length == $ARGUMENT_LENGTH_WITH_LOC ) {
         $latitude  = $arguments[$ARGUMENT_POSITION_LATITUDE];
         $longitude = $arguments[$ARGUMENT_POSITION_LONGITUDE];
     }
