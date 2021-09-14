@@ -296,12 +296,15 @@ sub handle_get {
         # @todo I18N
         when ('startsIn') {
             my $begin = $hash->{'.RainStart'};
+            my $is_raining = (::ReadingsVal($name, q(rainNow), undef) eq q(unknown) ? 0 : 1);
 
             if ( !$begin ) {
                 return q[No data available];
             }
 
-            return q[It is raining] if $begin == 0;
+            if ($begin == 0 && $is_raining) {
+                return q[It is raining right now] ;
+            }
 
             my $time_diff_in_seconds = $begin - time;
             return scalar timediff2str($time_diff_in_seconds);
