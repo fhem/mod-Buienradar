@@ -650,7 +650,7 @@ sub parse_http_response {
     # todo: secondary usage!
     Readonly my $MINUTES_IN_HOUR            => 60;
     Readonly my $TOTAL_PERCENTAGE           => 100;
-    Readonly my $LAMETRIC_MULTIPILIER       => 1000;
+    Readonly my $LAMETRIC_MULTIPLIER        => 1000;
     Readonly my $LAMETRIC_MAX_VALUES        => 12;
 
     my %precipitation_forecast;
@@ -728,7 +728,7 @@ sub parse_http_response {
         #    q{Received data: } . Dumper( @{ $forecast_data->{'precip'} } ) );
 
         if ( scalar @precip > 0 ) {
-            my $data_lametric = join q{,}, map { $_ * $LAMETRIC_MULTIPILIER } @precip[ 0 .. $LAMETRIC_MAX_VALUES-1 ];
+            my $data_lametric = join q{,}, map { $_ * $LAMETRIC_MULTIPLIER } @precip[ 0 .. $LAMETRIC_MAX_VALUES-1 ];
             my $rain_total    = List::Util::sum @precip;
             my $rain_max      = List::Util::max @precip;
             my $rain_start    = undef;
