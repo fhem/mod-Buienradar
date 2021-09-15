@@ -195,7 +195,6 @@ sub handle_define {
     my $arguments_length = scalar @arguments;
     my $latitude;
     my $longitude;
-    my $language = get_global_language();
 
     Readonly my $ARGUMENT_LENGTH_WITHOUT_LOC    => 2;
     Readonly my $ARGUMENT_LENGTH_WITH_LOC       => 4;
