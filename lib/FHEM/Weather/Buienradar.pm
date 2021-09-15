@@ -16,7 +16,7 @@ use English qw( -no_match_vars );
 use Storable;
 use GPUtils;
 use experimental qw( switch );
-use 5.0260;    # we do not want perl be older than from 2007, so > 5.13.9
+use 5.0260;    # we use intended heredoc, introduced with 5.0.26
 use Readonly;
 use FHEM::Meta;
 
