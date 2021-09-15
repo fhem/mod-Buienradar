@@ -1,12 +1,6 @@
 ## no critic (RequireFilenameMatchesPackage, CodeLayout::RequireTidyCode, Documentation::PodSpelling)
-# #   JFTR:
-#
-#   ATM, it's not possible to comply to this Perl::Critic rule, because
-#   the current state of the FHEM API does require this bogus XX_Name.pm convention
-#
-#   Disabled spell checkers
-#
-#   Perl::Tidy sucks 🗿
+#  Disabled spell checkers
+
 package FHEM::Weather::Buienradar;
 ############################################################    Pragmas
 
