@@ -156,7 +156,6 @@ sub initialize_module {
 }
 
 sub handle_fhemweb_details {
-    my $fhemweb_name    = shift;
     my $name            = shift;
     my $room            = shift;
     my $page_definition = shift;
