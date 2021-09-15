@@ -157,7 +157,6 @@ sub initialize_module {
 
 sub handle_fhemweb_details {
     my $name            = shift;
-    my $room            = shift;
     my $page_definition = shift;
     my $hash            = get_device_definition($name);
 
