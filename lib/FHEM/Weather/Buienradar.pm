@@ -257,7 +257,6 @@ sub handle_set {
     my $hash = shift;
     my $name = shift;
     my $opt  = shift;
-    my @args = shift;
 
     if ( !defined $opt ) {
         return qq{'set $name' needs at least one argument};
