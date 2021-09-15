@@ -249,7 +249,6 @@ sub handle_define {
 
 sub handle_undefine {
     my $hash = shift;
-    my $arg  = shift;
     ::RemoveInternalTimer( $hash, \&update_timer );
     return;
 }
