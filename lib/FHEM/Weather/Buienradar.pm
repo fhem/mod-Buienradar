@@ -917,7 +917,6 @@ sub request_data_update {
 sub chart_html_bar {
     my $name     = shift;
     my $width    = shift;
-    my $hash     = get_device_definition($name);
     my @values   = split /:/xms, ::ReadingsVal( $name, 'rainData', '0:0' );
     my $language = get_global_language();
 
