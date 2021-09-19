@@ -640,7 +640,7 @@ sub parse_http_response {
     $hash->{'.RainStart'} = undef;
 
     Readonly my $INTERVAL_LENGTH_MINUTES    => 5;
-    Readonly my $INTERVAL_LENGHT_SECONDS    => $INTERVAL_LENGTH_MINUTES * ONE_MINUTE;
+    Readonly my $INTERVAL_LENGTH_SECONDS    => $INTERVAL_LENGTH_MINUTES * ONE_MINUTE;
     # todo: secondary usage!
     Readonly my $MINUTES_IN_HOUR            => 60;
     Readonly my $TOTAL_PERCENTAGE           => 100;
@@ -728,7 +728,7 @@ sub parse_http_response {
             my $rain_start    = undef;
             my $rain_end      = undef;
             my $data_start    = $forecast_data->{start};
-            my $data_end = $data_start + ( scalar @precip ) * $INTERVAL_LENGHT_SECONDS;
+            my $data_end = $data_start + ( scalar @precip ) * $INTERVAL_LENGTH_SECONDS;
             my $forecast_start      = $data_start;
             my $rain_now            = undef;
             my $rain_data           = join q{:}, @precip;
@@ -740,8 +740,8 @@ sub parse_http_response {
 
             for my $precip_index ( 0 .. $precip_length-1 ) {
 
-                my $start  = $forecast_start + $precip_index * $INTERVAL_LENGHT_SECONDS;
-                my $end    = $start +  $INTERVAL_LENGHT_SECONDS;
+                my $start  = $forecast_start + $precip_index * $INTERVAL_LENGTH_SECONDS;
+                my $end    = $start +  $INTERVAL_LENGTH_SECONDS;
                 my $precipitation_amount = $precip[$precip_index];
                 $is_raining = undef;    # reset
 
