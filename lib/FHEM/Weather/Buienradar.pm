@@ -10,7 +10,7 @@ use HttpUtils;
 use JSON;
 use List::Util;
 use Time::Seconds;
-use POSIX;
+use POSIX ();
 use Data::Dumper;
 use English qw( -no_match_vars );
 use Storable;
