@@ -886,7 +886,7 @@ sub request_data_update {
     $hash->{URL} =  ::AttrVal( $name, 'BaseUrl',
         sprintf
             q(https://cdn-secure.buienalarm.nl/api/3.4/forecast.php?region=%s&lat=%s&lon=%s&unit=mm/u),
-            $region
+            $region,
             $hash->{LATITUDE},
             $hash->{LONGITUDE},
     );
