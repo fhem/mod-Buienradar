@@ -21,7 +21,7 @@ use Readonly;
 use FHEM::Meta;
 
 ############################################################    Default values
-Readonly our $VERSION               => q{3.0.10};
+Readonly our $VERSION               => q{3.1.0-10};
 Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
 Readonly our $DEBUGGING_MIN_VERBOSE => 2;
 Readonly our $DEFAULT_REGION        => q{de};
