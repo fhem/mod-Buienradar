@@ -10,12 +10,14 @@
 Vagrant.configure("2") do |config|
 
     config.vm.define "buienradar-dev" do |machine|
-        machine.vm.box = "debian/contrib-buster64"
+        machine.vm.box = "debian/bullseye64"
         machine.vm.hostname = "FHEM-Buienradar-Dev"
 
         machine.vm.network "public_network", bridge: [
             "en0: WLAN (AirPort)",
-            "en0: Ethernet"
+            "en0: Ethernet",
+            "en8: Monitor-Ethernet",
+            "en10: Thunderbolt Ethernet Slot 2"
         ]
 
         # mount for later created user "fhem" with later uid 999

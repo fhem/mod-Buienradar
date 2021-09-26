@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  fhem-buienradar:
+    restart: always
+    ports:
+      - "10001:8083"
+    image: fhem/fhem:latest
+    volumes:
+      - ./:/opt/buienradar
