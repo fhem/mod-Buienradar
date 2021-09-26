@@ -21,15 +21,19 @@ use Readonly;
 use FHEM::Meta;
 
 ############################################################    Default values
-Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
-Readonly our $DEBUGGING_MIN_VERBOSE => 2;
-Readonly our $DEFAULT_REGION        => q{de};
-Readonly our $DEFAULT_TEXT_BAR_CHAR => q{=};
-Readonly our $DEFAULT_LANGUAGE      => q{en};
-Readonly our $DEFAULT_LATITUDE      => 51.0;
-Readonly our $DEFAULT_LONGITUDE     => 7.0;
-Readonly our $MAX_TEXT_BAR_LENGTH    => 50;
-Readonly my $VERSION                        => q{3.1.0-11};
+Readonly my $VERSION                        => q{3.1.0-12};
+Readonly my $DEFAULT_INTERVAL               => ONE_MINUTE * 2;
+Readonly my $DEFAULT_REGION                 => q{nl};
+Readonly my $DEFAULT_TEXT_BAR_CHAR          => q{=};
+Readonly my $DEFAULT_LANGUAGE               => q{en};
+Readonly my $DEFAULT_LATITUDE               => 51.0;
+Readonly my $DEFAULT_LONGITUDE              => 7.0;
+Readonly my $MAX_TEXT_BAR_LENGTH            => 50;
+Readonly my $ARGUMENT_LENGTH_WITHOUT_LOC    => 2;
+Readonly my $ARGUMENT_LENGTH_WITH_LOC       => 4;
+Readonly my $ARGUMENT_POSITION_LATITUDE     => 2;
+Readonly my $ARGUMENT_POSITION_LONGITUDE    => 3;
+Readonly my $MAX_RANDOM_WAIT_TIME           => 20;
 
 ############################################################    Translations
 Readonly my %TRANSLATIONS => (
@@ -123,7 +127,6 @@ Readonly my %TRANSLATIONS => (
 
 ############################################################    Global variables
 my @errors;
-my $global_hash;
 
 sub initialize_module {
 
@@ -133,6 +136,7 @@ sub initialize_module {
     $hash->{UndefFn}     = \&handle_undefine;
     $hash->{GetFn}       = \&handle_get;
     $hash->{SetFn}       = \&handle_set;
+    $hash->{NotifyFn}    = \&handle_notification;
     $hash->{AttrFn}      = \&handle_attributes;
     $hash->{FW_detailFn} = \&handle_fhemweb_details;
     $hash->{AttrList}    = join(
@@ -174,68 +178,117 @@ sub handle_fhemweb_details {
 
 sub handle_define {
 
-    my $hash = shift;
-    my $def  = shift;
-    $global_hash = $hash;
+    my $device_hash = shift;
+    my $device_definition  = shift;
 
-    if ( !FHEM::Meta::SetInternals($hash) ) {
+    if ( !FHEM::Meta::SetInternals($device_hash) ) {
         return $EVAL_ERROR;
     }
 
-    my @arguments        = split m{ \s+ }xms, $def;
+    my @arguments        = split m{ \s+ }xms, $device_definition;
     my $name             = $arguments[0];
     my $arguments_length = scalar @arguments;
-    my $latitude;
-    my $longitude;
 
-    Readonly my $ARGUMENT_LENGTH_WITHOUT_LOC    => 2;
-    Readonly my $ARGUMENT_LENGTH_WITH_LOC       => 4;
-    Readonly my $ARGUMENT_POSITION_LATITUDE     => 2;
-    Readonly my $ARGUMENT_POSITION_LONGITUDE    => 3;
-    Readonly my $ARGUMENT_DEFINE_START          => 2;
+    debug_message($device_hash->{NAME}, q{handle_define}, qq{Definition: $device_definition});
 
-    # todo: Refactor to for()
-    if ( $arguments_length == $ARGUMENT_LENGTH_WITHOUT_LOC ) {
-        $latitude  = ::AttrVal( 'global', 'latitude',  $DEFAULT_LATITUDE );
-        $longitude = ::AttrVal( 'global', 'longitude', $DEFAULT_LONGITUDE );
-    }
-    elsif ( $arguments_length == $ARGUMENT_LENGTH_WITH_LOC ) {
-        $latitude  = $arguments[$ARGUMENT_POSITION_LATITUDE];
-        $longitude = $arguments[$ARGUMENT_POSITION_LONGITUDE];
-    }
-    else {
-        return handle_error( $name,
-            q{Syntax: define <name> Buienradar [<latitude> <longitude>]} );
+    for ($arguments_length) {
+        when ( $arguments_length == $ARGUMENT_LENGTH_WITHOUT_LOC ) {
+            $device_hash->{LATITUDE}  = undef;
+            $device_hash->{LONGITUDE} = undef;
+        }
+
+        when ( $arguments_length == $ARGUMENT_LENGTH_WITH_LOC ) {
+            $device_hash->{LATITUDE}  = $arguments[$ARGUMENT_POSITION_LATITUDE];
+            $device_hash->{LONGITUDE} = $arguments[$ARGUMENT_POSITION_LONGITUDE];
+        }
+
+        default {
+            return handle_error( $name, q{Syntax: define <name> Buienradar [<latitude> <longitude>]} );
+        }
     }
 
-    ::readingsSingleUpdate( $hash, 'state', 'Initialized', 1 );
+    $device_hash->{INTERVAL}   = $DEFAULT_INTERVAL;
+    $device_hash->{NOTIFYDEV}  = q{global};
+    $device_hash->{NAME}       = $name;
+    $device_hash->{VERSION}    = $VERSION;
+    $device_hash->{URL}        = undef;
 
-    $hash->{NAME}       = $name;
-    $hash->{VERSION}    = $VERSION;
-    $hash->{INTERVAL}   = $DEFAULT_INTERVAL;
-    $hash->{LATITUDE}   = $latitude;
-    $hash->{LONGITUDE}  = $longitude;
-    $hash->{URL}        = undef;
-    $hash->{DEF}        = join q{ }, @arguments[$ARGUMENT_DEFINE_START .. $arguments_length - 1];
+    ::readingsSingleUpdate( $device_hash, q{state}, q{initialized}, 1 );
 
-    ::readingsBeginUpdate($hash);
-    ::readingsBulkUpdate( $hash, 'rainNow',       'unknown' );
-    ::readingsBulkUpdate( $hash, 'rainDataStart', 'unknown' );
-    ::readingsBulkUpdate( $hash, 'rainBegin',     'unknown' );
-    ::readingsBulkUpdate( $hash, 'rainEnd',       'unknown' );
-    ::readingsEndUpdate( $hash, 1 );
+    debug_message($device_hash->{NAME}, q{handle_define_func}, qq{init done is: $::init_done});
+
+    ## no critic (Variables::ProhibitPackageVars)
+    # @TODO yet, there is not a interface to FHEMs $init_done, so we need to access it this way
+    if ( $::init_done == 1 ) { handle_done_init($device_hash, $device_definition); }
+    ## use critic
+
+    return;
+}
+
+sub handle_notification {
+    my ($device_hash, $caller_hash) = @_;
+    my $device_name = $device_hash->{NAME};
+    my $caller_name = $caller_hash->{NAME};
+    my $events;
+
+    debug_message($device_hash->{NAME}, q{handle_notification_func}, qq{handle_notification was called from $caller_name});
+    debug_message($device_hash->{NAME}, q{handle_notification_func}, qq{init done is: $::init_done});
+
+    Readonly my $EVENTS_WITH_STATE => 1;
+
+    return q{} if(::IsDisabled($device_name) || $caller_name ne q{global});
+
+    debug_message(q{notify_func}, qq{deviceEvents: } . Dumper(::deviceEvents($caller_hash, $EVENTS_WITH_STATE)));
+
+    my $eval_return = eval {
+        $events = ::deviceEvents($caller_hash, $EVENTS_WITH_STATE);
+    };
+
+    if (not defined $events) { return };
+
+    if ( List::Util::any { m{^INITIALIZED$}xms } @{$events} ) {
+        debug_message($device_hash->{NAME}, q{NOTIFY_INIT}, Dumper(@{$events}));
+        handle_done_init($device_hash);
+        return;
+    }
+
+    if ( List::Util::any { m{^REREADCFG$}xms } @{$events} ) {
+        debug_message($device_hash->{NAME}, q{NOTIFY_REREADCFG}, Dumper(@{$events}));
+        handle_done_init($device_hash);
+        return;
+    }
+
+    return;
+}
+
+sub handle_done_init {
+    my $device_hash = shift;
+
+    debug_message($device_hash->{NAME}, q{handle init done called});
+
+    $device_hash->{LATITUDE}  //= ::AttrVal( q{global}, q{latitude},   $DEFAULT_LATITUDE );
+    $device_hash->{LONGITUDE} //= ::AttrVal( q{global}, q{longitude},  $DEFAULT_LONGITUDE );
 
     # set default region nl
-    if ( !::AttrVal( $name, 'region', undef ) ) {
-        ::CommandAttr( undef, qq[$name region nl] );
+    if ( not defined ::AttrVal( $device_hash->{NAME}, q{region}, undef ) ) {
+        ::CommandAttr( undef, qq{$device_hash->{NAME} region $DEFAULT_REGION} );
     }
 
-    if ( !::AttrVal( $name, 'interval', undef ) ) {
-        ::CommandAttr( undef,
-            qq[$name interval $DEFAULT_INTERVAL] );
+    # set default interval
+    if ( not defined ::AttrVal( $device_hash->{NAME}, q{interval}, undef ) ) {
+        ::CommandAttr( undef, qq{$device_hash->{NAME} interval $DEFAULT_INTERVAL} );
     }
 
-    update_timer($hash);
+    ::readingsBeginUpdate(  $device_hash);
+    ::readingsBulkUpdate(   $device_hash, 'rainNow',       'unknown' );
+    ::readingsBulkUpdate(   $device_hash, 'rainDataStart', 'unknown' );
+    ::readingsBulkUpdate(   $device_hash, 'rainBegin',     'unknown' );
+    ::readingsBulkUpdate(   $device_hash, 'rainEnd',       'unknown' );
+    ::readingsEndUpdate(    $device_hash, 1 );
+
+    my $rand = rand($MAX_RANDOM_WAIT_TIME);
+    debug_message($device_hash->{NAME}, qq{Start timer with $rand delay});
+    update_timer($device_hash, $rand);
 
     return;
 }
@@ -361,21 +414,6 @@ sub handle_attributes {
     my $hash            = get_device_definition($name);
     my $language        = get_global_language();
 
-=for comment
-    debug_message(
-        $name,
-        Dumper(
-            {
-                command   => $command,
-                device    => $name,
-                attribute => $attribute_name,
-                value     => $attribute_value
-            }
-        )
-    );
-
-=cut
-
     for ($attribute_name) {
 
         # JFTR: disabled will also set disable to be compatible to FHEM::IsDisabled()
@@ -440,7 +478,7 @@ sub handle_attributes {
                 }
             }
 
-            request_data_update($hash);
+            # request_data_update($hash);
             return;
         }
 
@@ -462,7 +500,7 @@ sub handle_attributes {
                 }
             }
 
-            update_timer($hash);
+            # update_timer($hash);
             return;
         }
 
@@ -624,15 +662,18 @@ sub find_precipitation_interval_by_timestamp {
 
 sub update_timer {
     my ($hash) = shift;
-    my $nextupdate = 0;
+    my $wait_offset = shift || 0;
+    my $next_update_time = 0;
 
     ::RemoveInternalTimer( $hash, \&update_timer );
 
-    $nextupdate = int( time() + $hash->{INTERVAL} );
-    $hash->{NEXTUPDATE} = ::FmtDateTime($nextupdate);
+    if ($wait_offset == 0) { $next_update_time = int( time() + $hash->{INTERVAL} ); }
+    if ($wait_offset != 0) { $next_update_time = int( time() + $wait_offset); }
+
+    $hash->{NEXTUPDATE} = ::FmtDateTime($next_update_time);
     request_data_update($hash);
 
-    ::InternalTimer( $nextupdate, \&update_timer, $hash );
+    ::InternalTimer( $next_update_time, \&update_timer, $hash );
 
     return 1;
 }
@@ -724,8 +765,7 @@ sub parse_http_response {
             @precip = @{ $forecast_data->{'precip'} };
         }
 
-        #debug_message( $name,
-        #    q{Received data: } . Dumper( @{ $forecast_data->{'precip'} } ) );
+        debug_message( $name, q{Received data: } . Dumper( @{ $forecast_data->{'precip'} } ) );
 
         if ( scalar @precip > 0 ) {
             my $data_lametric = join q{,}, map { $_ * $LAMETRIC_MULTIPLIER } @precip[ 0 .. $LAMETRIC_MAX_VALUES-1 ];
@@ -784,7 +824,7 @@ sub parse_http_response {
                 };
             }
 
-            # debug_message( $name, Dumper(%precipitation_forecast) );
+            debug_message( $name, Dumper(%precipitation_forecast) );
 
             $hash->{'.SERIALIZED'} =
                 Storable::freeze( \%precipitation_forecast );
@@ -895,6 +935,7 @@ sub request_data_update {
             $region,
             $hash->{LATITUDE},
             $hash->{LONGITUDE},
+
     );
 
     my $param = {
@@ -906,7 +947,7 @@ sub request_data_update {
     };
 
     ::HttpUtils_NonblockingGet($param);
-    # debug_message( $name, q{Data update requested} );
+    debug_message( $name, q{Data update requested} );
 
     return;
 }
@@ -992,8 +1033,9 @@ sub chart_gchart {
         $hash->{LATITUDE},
         $hash->{LONGITUDE};
     my $legend = $TRANSLATIONS{'chart_gchart'}{'legend'}{$language};
-    #debug_message( $name, qq{Legend langauge is: $language} );
-    #debug_message( $name, qq{Legend is: $legend} );
+
+    debug_message( $name, qq{Legend langauge is: $language} );
+    debug_message( $name, qq{Legend is: $legend} );
 
     return <<"CHART";
 <div id='chart_${name}'; style='width:100%; height:100%'></div>
