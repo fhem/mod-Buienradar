@@ -141,7 +141,8 @@ sub initialize_module {
             'disabled:on,off',
             'region:nl,de',
             'interval:10,60,120,180,240,300',
-            'default_chart:none,HTMLChart,GChart,TextChart'
+            'default_chart:none,HTMLChart,GChart,TextChart',
+            q{debug:0,1}
         )
     ) . qq[ $::readingFnAttributes ];
     $hash->{REGION} = $DEFAULT_REGION;
@@ -416,6 +417,12 @@ sub handle_attributes {
             }
         }
 
+        when (q{debug}) {
+            if ( !List::Util::any { $_ eq $attribute_value } qw{ on off 0 1 } ) {
+                return qq[$attribute_value is not a valid value for debug]
+            }
+        }
+
         when ('region') {
             return handle_error( $name,
                 qq[${attribute_value} ${TRANSLATIONS{'handle_attributes'}{'region'}{$language}}]
@@ -578,9 +585,8 @@ sub debug_message {
     local $OFS = qq{\n};
     my $device_name = shift;
 
-    if ( int( ::AttrVal( $device_name, q{debug}, 0 ) ) == 1 )
-    {
-        ::Debug( join $OFS, ( qq{[$device_name]}, qq{@_} ) );
+    if ( ::AttrVal($device_name, q{debug}, 0) == 1 or ::AttrVal(q{global}, q{br_debug}, 0) == 1 ) {
+        ::Debug( join $OFS, ( qq{[$device_name]}, Dumper(\@_) ) );
     }
 
     return;
