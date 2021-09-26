@@ -21,7 +21,6 @@ use Readonly;
 use FHEM::Meta;
 
 ############################################################    Default values
-Readonly our $VERSION               => q{3.1.0-10};
 Readonly our $DEFAULT_INTERVAL      => ONE_MINUTE * 2;
 Readonly our $DEBUGGING_MIN_VERBOSE => 2;
 Readonly our $DEFAULT_REGION        => q{de};
@@ -30,6 +29,7 @@ Readonly our $DEFAULT_LANGUAGE      => q{en};
 Readonly our $DEFAULT_LATITUDE      => 51.0;
 Readonly our $DEFAULT_LONGITUDE     => 7.0;
 Readonly our $MAX_TEXT_BAR_LENGTH    => 50;
+Readonly my $VERSION                        => q{3.1.0-11};
 
 ############################################################    Translations
 Readonly my %TRANSLATIONS => (
