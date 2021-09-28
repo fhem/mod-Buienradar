@@ -48,6 +48,8 @@ Aktuell liefert Buienradar folgende Readings:
 
 * ``rainBegin``             - Beginn des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.
 
+* `rainBeginUnixtime`       - Beginn des nächsten Niederschlags als Unixzeit (in UTC/GMT), <var>-1</var> wenn kein Niederschlag vorhergesagt wurde
+
 * ``raindEnd``              - Ende des nächsten Niederschlag. Wenn kein Niederschlag gemeldet ist, <var>unknown</var>.
 
 * ``rainDataStart``         - Zeitlicher Beginn der gelieferten Niederschlagsdaten.

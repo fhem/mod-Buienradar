@@ -50,6 +50,8 @@ Buienradar provides several readings:
 
 * ``rainBegin``             - starting time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
 
+* `rainBeginUnixtime`       - starting time of the next precipitation in unix seconds, <var>-1</var> if no precipitation is predicted.
+
 * ``raindEnd``              - ending time of the next precipitation, <var>unknown</var> if no precipitation is predicted.
 
 * ``rainDataStart``         - starting time of gathered data.

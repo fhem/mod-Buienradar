@@ -34,6 +34,7 @@ Readonly my $ARGUMENT_LENGTH_WITH_LOC       => 4;
 Readonly my $ARGUMENT_POSITION_LATITUDE     => 2;
 Readonly my $ARGUMENT_POSITION_LONGITUDE    => 3;
 Readonly my $MAX_RANDOM_WAIT_TIME           => 20;
+Readonly my $RAIN_START_UNIX_NO_RAIN        => -1;
 
 ############################################################    Translations
 Readonly my %TRANSLATIONS => (
@@ -268,6 +269,11 @@ sub handle_done_init {
 
     $device_hash->{LATITUDE}  //= ::AttrVal( q{global}, q{latitude},   $DEFAULT_LATITUDE );
     $device_hash->{LONGITUDE} //= ::AttrVal( q{global}, q{longitude},  $DEFAULT_LONGITUDE );
+
+    my $lat_check = check_latitude($device_hash->{LATITUDE});
+    if ( ref $lat_check eq q{HASH} ) {
+        return $lat_check->{msg};
+    }
 
     # set default region nl
     if ( not defined ::AttrVal( $device_hash->{NAME}, q{region}, undef ) ) {
@@ -658,6 +664,17 @@ sub find_precipitation_interval_by_timestamp {
     return 0;
 }
 
+sub check_latitude {
+    my $value = shift;
+    if (int($value) > 90) { return { status => 0, msg => q{Value too large} } };
+
+    return $value;
+}
+
+sub check_longitude {
+    my $value = shift;
+}
+
 ############################################################    Request handling
 
 sub update_timer {
@@ -860,16 +877,17 @@ sub parse_http_response {
                     localtime $data_end
             );
             ::readingsBulkUpdate( $hash, 'rainMax', sprintf '%.3f', $rain_max );
-            ::readingsBulkUpdate(
-                $hash,
-                'rainBegin',
-                (
-                    ($rain_start)
-                        ? POSIX::strftime '%R',
-                        localtime $rain_start
-                        : 'unknown'
-                )
+            ::readingsBulkUpdate( $hash, 'rainBegin', (
+                ($rain_start)
+                    ? POSIX::strftime '%R', localtime $rain_start
+                    : 'unknown')
             );
+
+            ::readingsBulkUpdate( $hash, q{rainBeginUnixtime},
+                ($rain_start)
+                    ? $rain_start : $RAIN_START_UNIX_NO_RAIN
+            );
+
             ::readingsBulkUpdate(
                 $hash,
                 'rainEnd',
