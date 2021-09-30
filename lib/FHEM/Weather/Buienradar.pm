@@ -21,7 +21,7 @@ use Readonly;
 use FHEM::Meta;
 
 ############################################################    Default values
-Readonly my $VERSION                        => q{3.1.0-12};
+Readonly my $VERSION                        => q{3.1.0-10};
 Readonly my $DEFAULT_INTERVAL               => ONE_MINUTE * 2;
 Readonly my $DEFAULT_REGION                 => q{nl};
 Readonly my $DEFAULT_TEXT_BAR_CHAR          => q{=};
