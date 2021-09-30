@@ -102,27 +102,29 @@ Readonly my %TRANSLATIONS => (
                 q{de} => q{Kein Zeitstempel übergeben. },
                 q{en} => q{Argument does not contain a value, so there is no timestamp for querying.},
             },
-            q{qtime_is_bogus} => {
-                q{de}   => q{},
-                q{en}   => q{},
-            },
-            q{} => {
-                q{de}   => q{},
-                q{en}   => q{},
-            },
-            q{} => {
-                q{de}   => q{},
-                q{en}   => q{},
-            },
-            q{} => {
-                q{de}   => q{},
-                q{en}   => q{},
-            },
-            q{} => {
-                q{de}   => q{},
-                q{en}   => q{},
+            q{qtime_is_bogus}      => {
+                q{de} => q{},
+                q{en} => q{},
             },
         },
+        starts_in       => {
+            no_data_available => {
+                de => q{Keine Daten verfügbar},
+                en => q{No data available},
+            },
+            raining_right_now => {
+                de => q{Es regnet gerade},
+                en => q{It's raining right now},
+            }
+        }
+    },
+    generic             => {
+        generic => {
+            generic => {
+                de => q{Irgendwas lief fürchterlich schief. Viel Glück.},
+                en => q{Something went horribly wrong, but no error message was specified. Good luck.},
+            }
+        }
     },
 );
 
@@ -341,17 +343,21 @@ sub handle_get {
             return $VERSION;
         }
 
-        # @todo I18N
         when ('startsIn') {
-            my $begin = $hash->{'.RainStart'};
+            my $begin = $hash->{'.RainStart'} // undef;
             my $is_raining = (::ReadingsVal($name, q(rainNow), undef) eq q(unknown) ? 0 : 1);
 
-            if ( !$begin ) {
-                return q[No data available];
+            if ( ! defined $begin  || $begin eq q{} || $begin == 0 ) {
+                return get_i18n_translation(q{handle_get}, q{starts_in}, q{no_data_available}, $language);
             }
 
+            debug_message($name, q{0x01 STARTSIN}, Dumper \{
+                begin => $begin,
+                is_raining => $is_raining,
+            });
+
             if ($begin == 0 && $is_raining) {
-                return q[It is raining right now] ;
+                return get_i18n_translation(q{handle_get}, q{starts_in}, q{raining_right_now}, $language);
             }
 
             my $time_diff_in_seconds = $begin - time;
@@ -640,6 +646,17 @@ sub handle_error {
     my $device_name = shift;
     my $message     = shift || q{Something bad happened. Unknown error!};
     return qq{[$device_name] Error: $message};
+}
+
+sub get_i18n_translation {
+    my $section =       shift || q{generic};
+    my $subsection =    shift || q{generic};
+    my $key =           shift || q{generic};
+    my $language =      shift || $DEFAULT_LANGUAGE;
+
+    my $translation = $TRANSLATIONS{$section}{$subsection}{$key}{$language};
+
+    return $translation;
 }
 
 sub find_precipitation_interval_by_timestamp {
