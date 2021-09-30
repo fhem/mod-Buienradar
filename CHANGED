@@ -1,3 +1,4 @@
+2021-09-30 - Back to 3.1.0-10
 2021-09-30 - #329 #328 added i18n for starts in
 2021-09-28 - #130 rainBeginUnixtime added, delivers the next precipitation as unix timestamp or -1 if no precipitation is predicted
 2021-09-26 - Use docker, update vagrant to bullseye
