@@ -118,6 +118,45 @@ Readonly my %TRANSLATIONS => (
             }
         }
     },
+    lang_lat_check => {
+        longitude     => {
+            value_too_small => {
+                de => q{Längengrad zu klein, muss größer als 0 sein},
+                en => q{Longitude too small, must be greater than 0},
+            },
+            value_too_large => {
+                de => q{Längengrad zu groß, muss unter 90 sein},
+                en => q{Longitude too large, must be less than 180},
+            },
+            looks_bogus     => {
+                de => q{Die Längengradangabe sieht nicht wie eine gültige Angabe aus},
+                en => q{Longitude looks not like a valid value},
+            },
+            no_value        => {
+                de => q{Kein Längengrad angegeben},
+                en => q{No longitude given},
+            },
+        },
+        latitude      => {
+            value_too_small     => {
+                de => q{Breitengrad zu klein, muss größer als 0 sein},
+                en => q{Latitude too small, must be greater than 0},
+            },
+            value_too_large     => {
+                de => q{Breitengrad zu groß, muss unter 90 sein},
+                en => q{Latitude too large, must be less than 90},
+            },
+            looks_bogus         => {
+                de => q{Die Breitengradangabe sieht nicht wie eine gültige Angabe aus},
+                en => q{Latitude looks not like a valid value},
+            },
+            no_value            => {
+                de => q{Kein Breitengrad angegeben},
+                en => q{No latitude given},
+            },
+        },
+    },
+
     generic             => {
         generic => {
             generic => {
@@ -201,8 +240,20 @@ sub handle_define {
         }
 
         when ( $arguments_length == $ARGUMENT_LENGTH_WITH_LOC ) {
-            $device_hash->{LATITUDE}  = $arguments[$ARGUMENT_POSITION_LATITUDE];
-            $device_hash->{LONGITUDE} = $arguments[$ARGUMENT_POSITION_LONGITUDE];
+            my $latitude = check_latitude($arguments[$ARGUMENT_POSITION_LATITUDE]);
+
+            if (ref $latitude eq q{HASH}) {
+                return $latitude->{msg} . q{ - } . ref $latitude;
+            }
+
+            my $longitude = check_longitude($arguments[$ARGUMENT_POSITION_LONGITUDE]);
+
+            if (ref $longitude eq q{HASH}) {
+                return $longitude->{msg};
+            }
+
+            $device_hash->{LATITUDE}  = $latitude;
+            $device_hash->{LONGITUDE} = $longitude;
         }
 
         default {
@@ -682,14 +733,65 @@ sub find_precipitation_interval_by_timestamp {
 }
 
 sub check_latitude {
-    my $value = shift;
-    if (int($value) > 90) { return { status => 0, msg => q{Value too large} } };
+    my $language = get_global_language();
+    my $value    = shift || return {
+        status => 0,
+        msg    => get_i18n_translation(q{lang_lat_check}, q{latitude}, q{no_value}, $language)
+    };
+
+    if ( $value !~ m/^0*\d{1,2}(?:(?!.)|\.\d+)$/xms ) {
+        return {
+            status => 0,
+            msg    => get_i18n_translation(q{lang_lat_check}, q{latitude}, q{looks_bogus}, $language),
+        };
+    }
+
+    if (int($value) > 90) {
+        return {
+            status => 0,
+            msg    => get_i18n_translation(q{lang_lat_check}, q{latitude}, q{value_too_large}, $language),
+        };
+    }
+
+    if (int($value) < 0) {
+        return {
+            status => 0,
+            msg    => get_i18n_translation(q{lang_lat_check}, q{latitude}, q{value_too_small}, $language),
+        };
+    }
 
     return $value;
 }
 
 sub check_longitude {
-    my $value = shift;
+    my $language = get_global_language();
+    my $value    = shift || return {
+        status => 0,
+        msg    => get_i18n_translation(q{lang_lat_check}, q{longitude}, q{no_value}, $language)
+    };
+
+    if ($value !~ m/^0*\d{1,3}(?:(?!.)|\.\d+)$/xms) {
+        return {
+            status => 0,
+            msg    => get_i18n_translation(q{lang_lat_check}, q{longitude}, q{looks_bogus}, $language),
+        };
+    }
+
+    if (int($value) > 180) {
+        return {
+            status => 0,
+            msg    => get_i18n_translation(q{lang_lat_check}, q{longitude}, q{value_too_large}, $language),
+        };
+    }
+
+    if (int($value) < 0) {
+        return {
+            status => 0,
+            msg    => get_i18n_translation(q{lang_lat_check}, q{longitude}, q{value_too_small}, $language),
+        };
+    }
+
+    return $value;
 }
 
 ############################################################    Request handling
