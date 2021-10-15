@@ -1,4 +1,4 @@
 DEL lib/FHEM/Weather/Buienradar.pm
-UPD 2021-10-14_12:24:16 61658 lib/FHEM/Weather/Buienradar.pm
+UPD 2021-10-15_09:58:00 61658 lib/FHEM/Weather/Buienradar.pm
 DEL FHEM/59_Buienradar.pm
-UPD 2021-10-14_12:24:16 13537 FHEM/59_Buienradar.pm
+UPD 2021-10-15_09:58:00 13538 FHEM/59_Buienradar.pm
