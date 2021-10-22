@@ -18,9 +18,9 @@ jobs:
         id: extract_branch
       - name: Checkout Repository
         uses: actions/checkout@master
-      - name: Add Documentation
-        run: |
-          bash $DOCUMENTATION_SCRIPT
+#      - name: Add Documentation
+#        run: |
+#          bash $DOCUMENTATION_SCRIPT
       - name: Update CHANGED file
         run: |
           LOG=$(date +"%Y-%m-%d")
